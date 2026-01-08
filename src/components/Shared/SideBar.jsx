@@ -16,6 +16,9 @@ const menus = {
     admin: [
         { section: 'Roles', subs: [{ name: 'Listar Roles', link: '/admin/listar-roles' }] },
     ],
+    cliente: [
+        { section: 'Prestamos', subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] },
+    ],
     contador: [
         { section: 'Prestamos', subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] },
     ],

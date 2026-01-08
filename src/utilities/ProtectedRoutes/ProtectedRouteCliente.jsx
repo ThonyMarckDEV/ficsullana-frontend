@@ -13,7 +13,7 @@ const ProtectedRouteUser = ({ element }) => {
 
   const rol = jwtUtils.getUserRole(refresh_token);
 
-  if (rol !== 'usuario') {
+  if (rol !== 'cliente') {
     return <Navigate to="/404" />;
   }
 

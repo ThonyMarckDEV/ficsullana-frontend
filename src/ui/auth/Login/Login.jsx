@@ -41,9 +41,9 @@ const Login = () => {
           toast.success(`Login exitoso!!`);
           setTimeout(() => navigate('/admin'), 1500);
           break;
-        case 'usuario':
+        case 'cliente':
           toast.success(`Login exitoso!!`);
-          setTimeout(() => navigate('/usuario'), 1500);
+          setTimeout(() => navigate('/cliente'), 1500);
           break;
         default:
           console.error('Rol no reconocido:', rol);

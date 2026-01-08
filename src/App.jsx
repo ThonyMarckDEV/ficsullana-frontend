@@ -30,7 +30,7 @@ import ListarRoles from 'ui/Administrador/roles/listarRoles/ListarRoles';
 
 // Utilities
 import ProtectedRouteHome from 'utilities/ProtectedRoutes/ProtectedRouteHome';
-import ProtectedRouteUsuario from 'utilities/ProtectedRoutes/ProtectedRouteUsuario';
+import ProtectedRouteCliente from 'utilities/ProtectedRoutes/ProtectedRouteCliente';
 import ProtectedRouteAdmin from 'utilities/ProtectedRoutes/ProtectedRouteAdmin';
 
 
@@ -60,14 +60,14 @@ function AppContent() {
 
 
 
-      {/* RUTAS USUARIO */}
+      {/* RUTAS CLIENTE */}
       <Route
-        path="/usuario"
+        path="/cliente"
         element={
-          <ProtectedRouteUsuario element={<SidebarLayout />} />
+          <ProtectedRouteCliente element={<SidebarLayout />} />
         }
       >
-        {/* Ruta Home (cuando solo pones /usuario) */}
+        {/* Ruta Home (cuando solo pones /cliente) */}
         <Route index element={<Home />} />
 
         {/* Aquí agregas más módulos */}
