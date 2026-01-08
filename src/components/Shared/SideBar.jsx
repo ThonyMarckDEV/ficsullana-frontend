@@ -3,39 +3,63 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
     Bars3Icon, 
     ChevronDownIcon, 
-    HomeIcon, 
-    DocumentTextIcon, 
-    ArrowRightOnRectangleIcon 
+    ArrowRightOnRectangleIcon,
+    // ICONOS ESPECÍFICOS 
+    UserGroupIcon,              // Para Roles
+    UsersIcon,                  // Para Clientes
+    BanknotesIcon,              // Para Préstamos
+    ChartBarIcon,               // Para Dashboard
+    ClipboardDocumentCheckIcon, // Para Evaluaciones
+    DocumentTextIcon            // Icono por defecto (fallback)
 } from '@heroicons/react/24/outline'; 
 import jwtUtils from 'utilities/Token/jwtUtils';
 import { logout } from 'js/logout';
 import logoImg from 'assets/img/Logo_FICSULLANA.png'; 
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 
+// 💡 AHORA LOS MENÚS TIENEN UNA PROPIEDAD 'icon'
 const menus = {
     admin: [
-        { section: 'Roles', subs: [{ name: 'Listar Roles', link: '/admin/listar-roles' }] },
+        { 
+            section: 'Roles', 
+            icon: UserGroupIcon, // Icono de grupo de usuarios
+            subs: [{ name: 'Listar Roles', link: '/admin/listar-roles' }] 
+        },
         {
-            section:'Clientes',
-            subs:[
+            section: 'Clientes',
+            icon: UsersIcon, // Icono de múltiples usuarios
+            subs: [
                 { name: 'Agregar Cliente', link: '/admin/agregar-cliente' },
                 { name: 'Listar Clientes', link: '/admin/listar-clientes' },
             ]
         },
     ],
     cliente: [
-        { section: 'Prestamos', subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] },
+        { 
+            section: 'Prestamos', 
+            icon: BanknotesIcon, // Icono de dinero/billetes
+            subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] 
+        },
     ],
     contador: [
-        { section: 'Prestamos', subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] },
+        { 
+            section: 'Prestamos', 
+            icon: BanknotesIcon, 
+            subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] 
+        },
     ],
     jefe_contabilidad: [
-        { section: 'Dashboard', link: '/asesor/dashboard' },
+        { 
+            section: 'Dashboard', 
+            link: '/asesor/dashboard',
+            icon: ChartBarIcon // Icono de gráficos
+        },
         {
-            section:'Evaluaciones',
+            section: 'Evaluaciones',
+            icon: ClipboardDocumentCheckIcon, // Icono de validación/checklist
             subs:[
-                {name:'Evaluar Cliente' , link:'/asesor/evaluacion-cliente'},
-                {name:'Evaluaciones Enviadas' ,  link: '/asesor/evaluaciones-enviadas'}
+                { name: 'Evaluar Cliente', link: '/asesor/evaluacion-cliente' },
+                { name: 'Evaluaciones Enviadas', link: '/asesor/evaluaciones-enviadas' }
             ]
         },
     ],
@@ -104,16 +128,10 @@ const Sidebar = () => {
                     ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full'} 
                     ${sidebarWidth} md:translate-x-0 border-r border-gray-200`}
             >
-                {/* 1. HEADER (Logo) - CORREGIDO PARA MÓVIL */}
-                {/* h-32: Altura base grande para móvil.
-                    md:... : En escritorio usa la lógica condicional.
-                */}
+                {/* 1. HEADER (Logo) */}
                 <div className={`bg-white transition-all duration-300 flex items-center justify-center flex-shrink-0 shadow-md relative z-10
                     h-32 ${isHovered ? 'md:h-40' : 'md:h-24'}`}>
                     
-                    {/* w-40 h-auto: Tamaño base grande para móvil.
-                        md:... : En escritorio alterna entre grande (w-48) y pequeño (w-12 h-12).
-                    */}
                     <img
                         src={logoImg}
                         alt="Logo"
@@ -128,18 +146,24 @@ const Sidebar = () => {
                     {roleMenu.map((item, index) => {
                         const isActive = isSectionActive(item); 
                         const isSubOpen = item.subs && openSection === item.section; 
+                        
+                        // 💡 Obtenemos el icono dinámicamente o usamos uno por defecto
+                        const IconComponent = item.icon || DocumentTextIcon;
 
                         return (
                             <div key={index}>
                                 {item.subs ? (
                                     <>
+                                        {/* --- MENÚ CON SUBMENÚS --- */}
                                         <button
                                             onClick={() => toggleSection(item.section)}
                                             className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group
                                                 ${isActive ? 'bg-white text-red-600 font-bold shadow-sm' : 'text-white hover:bg-white/10'}`}
                                         >
                                             <div className="flex items-center gap-4 overflow-hidden">
-                                                <DocumentTextIcon className="h-6 w-6 min-w-[24px] flex-shrink-0" /> 
+                                                {/* 💡 RENDERIZADO DEL ICONO DINÁMICO */}
+                                                <IconComponent className="h-6 w-6 min-w-[24px] flex-shrink-0" /> 
+                                                
                                                 <span className={`whitespace-nowrap transition-opacity duration-200 
                                                     ${!isHovered ? 'md:hidden md:opacity-0' : 'opacity-100'}`}>
                                                     {item.section}
@@ -151,6 +175,7 @@ const Sidebar = () => {
                                             )}
                                         </button>
 
+                                        {/* Subitems */}
                                         <div className={`overflow-hidden transition-all duration-300 ${isSubOpen ? 'max-h-60 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
                                             {(isHovered || window.innerWidth < 768) && (
                                                 <ul className="ml-4 pl-4 border-l-2 border-white/30 space-y-1">
@@ -173,13 +198,16 @@ const Sidebar = () => {
                                         </div>
                                     </>
                                 ) : (
+                                    /* --- MENÚ SIMPLE (SIN SUBMENÚS) --- */
                                     <Link
                                         to={item.link}
                                         onClick={() => setIsOpen(false)}
                                         className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-200
                                             ${isActive ? 'bg-white text-red-600 font-bold shadow-sm' : 'text-white hover:bg-white/10'}`}
                                     >
-                                        <HomeIcon className="h-6 w-6 min-w-[24px] flex-shrink-0" />
+                                        {/* 💡 RENDERIZADO DEL ICONO DINÁMICO */}
+                                        <IconComponent className="h-6 w-6 min-w-[24px] flex-shrink-0" />
+                                        
                                         <span className={`whitespace-nowrap transition-opacity duration-200 
                                             ${!isHovered ? 'md:hidden md:opacity-0' : 'opacity-100'}`}>
                                             {item.section}
