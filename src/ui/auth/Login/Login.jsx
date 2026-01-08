@@ -84,8 +84,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-gray-100">
-      <ToastContainer position="top-right" />
-
+      
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 sm:p-12">
         <div className="flex flex-col items-center text-center mb-10">
           <div className="h-16 w-16 bg-amber-500 rounded-full flex items-center justify-center mb-4">
