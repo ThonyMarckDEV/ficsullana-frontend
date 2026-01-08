@@ -73,7 +73,7 @@ const AgregarCliente = () => {
     }));
   };
 
-  // El "e.preventDefault()" ya no es estrictamente necesario aquí, pero es buena práctica dejarlo.
+ 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault(); // Previene cualquier comportamiento por si acaso
     setLoading(true);
@@ -127,9 +127,6 @@ const AgregarCliente = () => {
         </ol>
       </div>
 
-      {/* =============================================================== */}
-      {/* CAMBIO 1: SE QUITÓ EL onSubmit DE AQUÍ */}
-      {/* =============================================================== */}
       <form>
         <div className="bg-white p-8 rounded-lg shadow-md">
           {renderFormStep()}
@@ -155,9 +152,6 @@ const AgregarCliente = () => {
               Siguiente
             </button>
           ) : (
-            /* =============================================================== */
-            /* CAMBIO 2: EL BOTÓN AHORA ES TIPO "button" Y USA "onClick" */
-            /* =============================================================== */
             <button
               type="button"
               onClick={handleSubmit}

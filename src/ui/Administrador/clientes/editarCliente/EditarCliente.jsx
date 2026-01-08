@@ -21,10 +21,9 @@ const initialFormData = {
 };
 
 // --- FUNCIÓN DE AYUDA PARA LIMPIAR VALORES NULL ---
-// Recorre un objeto y convierte cualquier valor `null` en una cadena vacía `''`.
 const cleanNulls = (obj) => {
   if (obj === null || obj === undefined) return {};
-  const newObj = { ...obj }; // Copiamos el objeto para no modificar el original
+  const newObj = { ...obj };
   for (const key in newObj) {
     if (newObj[key] === null) {
       newObj[key] = '';
@@ -113,21 +112,15 @@ const EditarCliente = () => {
         } catch (err) {
             let errorDetails = [];
             
-            // Si err.details existe y es un objeto, extraemos todos los mensajes de error
             if (err.details && typeof err.details === 'object') {
-                // Esto aplana el objeto de errores de Laravel a un array de mensajes
-                // Por ejemplo: { 'datos.dni': ['El DNI ya existe'], 'contactos.correo': ['Formato inválido'] }
-                // se convierte en ['El DNI ya existe', 'Formato inválido']
                 errorDetails = Object.values(err.details).flat();
             } else if (err.message) {
-                // Si solo tenemos un mensaje simple, lo envolvemos en un array
                 errorDetails = [err.message];
             }
 
             setAlert({ 
                 type: 'error', 
                 message: 'Error al actualizar', 
-                // 🚨 USAMOS errorDetails QUE SIEMPRE ES UN ARRAY 🚨
                 details: errorDetails 
             });
         } finally {
