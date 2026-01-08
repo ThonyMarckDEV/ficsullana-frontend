@@ -7,7 +7,7 @@ const LoadingScreen = () => {
       <img 
         src={loaderGif} 
         alt="Loading..." 
-        className="w-64 h-64 object-contain" 
+        className="w-20 h-20 object-contain" 
       />
     </div>
   );
