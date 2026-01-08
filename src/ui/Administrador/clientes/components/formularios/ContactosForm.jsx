@@ -4,7 +4,7 @@ import React from 'react';
 const ContactosForm = ({ data, handleChange }) => {
   return (
     <div>
-      <h2 className="text-xl font-semibold text-slate-700 mb-6 border-b pb-2">2.2 Datos de Contacto</h2>
+      <h2 className="text-xl font-semibold text-slate-700 mb-6 border-b pb-2">2. Datos de Contacto</h2>
       {/* Usamos una grilla de 2 columnas para una mejor distribución */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
         

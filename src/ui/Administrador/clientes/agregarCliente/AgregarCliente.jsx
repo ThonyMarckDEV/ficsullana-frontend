@@ -65,14 +65,6 @@ const AgregarCliente = () => {
           };
       });
     };
-
-  const handleAvalesChange = (updatedAvales) => {
-    setFormData((prev) => ({
-      ...prev,
-      avales: updatedAvales,
-    }));
-  };
-
  
   const handleSubmit = async (e) => {
     if (e) e.preventDefault(); // Previene cualquier comportamiento por si acaso
