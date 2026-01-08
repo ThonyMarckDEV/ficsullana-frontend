@@ -17,7 +17,7 @@ import { logout } from 'js/logout';
 import logoImg from 'assets/img/Logo_FICSULLANA.png'; 
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 
-// 💡 AHORA LOS MENÚS TIENEN UNA PROPIEDAD 'icon'
+// PROPIEDAD 'icon'
 const menus = {
     admin: [
         { 
@@ -147,7 +147,7 @@ const Sidebar = () => {
                         const isActive = isSectionActive(item); 
                         const isSubOpen = item.subs && openSection === item.section; 
                         
-                        // 💡 Obtenemos el icono dinámicamente o usamos uno por defecto
+                        // Obtenemos el icono dinámicamente o usamos uno por defecto
                         const IconComponent = item.icon || DocumentTextIcon;
 
                         return (
@@ -205,7 +205,7 @@ const Sidebar = () => {
                                         className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-200
                                             ${isActive ? 'bg-white text-red-600 font-bold shadow-sm' : 'text-white hover:bg-white/10'}`}
                                     >
-                                        {/* 💡 RENDERIZADO DEL ICONO DINÁMICO */}
+                                        {/* RENDERIZADO DEL ICONO DINÁMICO */}
                                         <IconComponent className="h-6 w-6 min-w-[24px] flex-shrink-0" />
                                         
                                         <span className={`whitespace-nowrap transition-opacity duration-200 
