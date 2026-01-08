@@ -24,6 +24,9 @@ import Home from 'ui/home/Home';
 // UIS ADMIN
 import ListarRoles from 'ui/Administrador/roles/listarRoles/ListarRoles';
 
+import AgregarCliente from 'ui/Administrador/clientes/agregarCliente/AgregarCliente';
+import ListarClientes from 'ui/Administrador/clientes/listarClientes/ListarClientes';
+import EditarCliente from 'ui/Administrador/clientes/editarCliente/EditarCliente';
 
 // UIS USUARIO
 
@@ -55,6 +58,14 @@ function AppContent() {
 
         {/* Ruta Listar Roles */}
         <Route path="listar-roles" element={<ListarRoles />} />
+
+        {/* RUTAS CLIENTE */}
+          {/* Ruta Agregar Cliente */}
+          <Route path="agregar-cliente" element={<AgregarCliente />} />
+          {/* Ruta Listar Cliente */}
+          <Route path="listar-clientes" element={<ListarClientes />} />
+          {/* Ruta Editar Cliente */}
+          <Route path="editar-cliente/:id" element={<EditarCliente />} />
 
       </Route>
 

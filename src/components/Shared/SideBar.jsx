@@ -15,6 +15,13 @@ import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 const menus = {
     admin: [
         { section: 'Roles', subs: [{ name: 'Listar Roles', link: '/admin/listar-roles' }] },
+        {
+            section:'Clientes',
+            subs:[
+                { name: 'Agregar Cliente', link: '/admin/agregar-cliente' },
+                { name: 'Listar Clientes', link: '/admin/listar-clientes' },
+            ]
+        },
     ],
     cliente: [
         { section: 'Prestamos', subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] },
