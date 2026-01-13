@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import jwtUtils from 'utilities/Token/jwtUtils';
 
-const ProtectedRouteManager = ({ element }) => {
+const ProtectedRouteOperaciones = ({ element }) => {
   // Obtener el JWT desde localStorage
   const refresh_token = jwtUtils.getRefreshTokenFromCookie();
 
@@ -22,4 +22,4 @@ const ProtectedRouteManager = ({ element }) => {
 
 };
 
-export default ProtectedRouteManager;
+export default ProtectedRouteOperaciones;
