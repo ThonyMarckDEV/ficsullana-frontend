@@ -11,6 +11,8 @@ const ProtectedRoute = ({ element }) => {
 
      // Redirigir según el rol del usuario
      switch (rol) {
+      case 'superadmin':
+        return <Navigate to="/superadmin" />;
       case 'admin':
         return <Navigate to="/admin" />;
       case 'cliente':
