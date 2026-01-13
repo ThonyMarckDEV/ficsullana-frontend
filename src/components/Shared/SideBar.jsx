@@ -16,9 +16,20 @@ import jwtUtils from 'utilities/Token/jwtUtils';
 import { logout } from 'js/logout';
 import logoImg from 'assets/img/Logo_FICSULLANA.png'; 
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
+import { Building2 } from 'lucide-react';
 
 // PROPIEDAD 'icon'
 const menus = {
+    superadmin: [
+        {
+            section: 'Sedes',
+            icon: Building2,
+            subs: [
+                { name: 'Agregar Sede', link: '/superadmin/agregar-sede' },
+                { name: 'Listar Sedes', link: '/superadmin/listar-sedes' },
+            ]
+        },
+    ],
     admin: [
         { 
             section: 'Roles', 

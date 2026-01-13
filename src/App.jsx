@@ -11,6 +11,7 @@ import { ToastContainer } from 'react-toastify';
 
 // Layout
 import SidebarLayout from 'layouts/SidebarLayout';
+import SedeLayout from 'layouts/SedeLayout';
 
 // UIS AUTH
 import ErrorPage404 from 'components/ErrorPage404';
@@ -20,10 +21,17 @@ import Login from 'ui/auth/Login/Login';
 //UI HOME
 import Home from 'ui/home/Home';
 
+//UIS SUPERADMIN
+
+//Modulos Sedes
+import AgregarSede from 'ui/SuperAdministrador/sedes/agregarSede/AgregarSede';
+import ListarSedes from 'ui/SuperAdministrador/sedes/listarSedes/ListarSedes';
+import EditarSede from 'ui/SuperAdministrador/sedes/editarSede/EditarSede';
+
 
 // UIS ADMIN
-import ListarRoles from 'ui/Administrador/roles/listarRoles/ListarRoles';
 
+//Modulos Clientes
 import AgregarCliente from 'ui/Administrador/clientes/agregarCliente/AgregarCliente';
 import ListarClientes from 'ui/Administrador/clientes/listarClientes/ListarClientes';
 import EditarCliente from 'ui/Administrador/clientes/editarCliente/EditarCliente';
@@ -35,6 +43,7 @@ import EditarCliente from 'ui/Administrador/clientes/editarCliente/EditarCliente
 import ProtectedRouteHome from 'utilities/ProtectedRoutes/ProtectedRouteHome';
 import ProtectedRouteCliente from 'utilities/ProtectedRoutes/ProtectedRouteCliente';
 import ProtectedRouteAdmin from 'utilities/ProtectedRoutes/ProtectedRouteAdmin';
+import ProtectedRouteSuperAdmin from 'utilities/ProtectedRoutes/ProtectedRouteSuperAdmin';
 
 
 function AppContent() {
@@ -46,18 +55,43 @@ function AppContent() {
         element={<ProtectedRouteHome element={<Login />} />}
       />
 
+
+      {/* RUTAS SUPERADMIN */}
+      <Route
+        path="/superadmin"
+        element={
+          <ProtectedRouteSuperAdmin element={
+           <SedeLayout>
+              <SidebarLayout />
+           </SedeLayout>
+          } />
+        }
+      >
+        {/* Ruta Home (cuando solo pones /superadmin) */}
+        <Route index element={<Home />} />
+
+        {/* RUTAS SEDES */}
+          {/* Ruta Agregar Sede */}
+          <Route path="agregar-sede" element={<AgregarSede />} />
+          {/* Ruta Listar Sede */}
+          <Route path="listar-sedes" element={<ListarSedes />} />
+          {/* Ruta Editar Sede */}
+          <Route path="editar-sede/:id" element={<EditarSede />} />
+      </Route>
+
       {/* RUTAS ADMIN */}
       <Route
         path="/admin"
         element={
-          <ProtectedRouteAdmin element={<SidebarLayout />} />
+          <ProtectedRouteAdmin element={
+            <SedeLayout>
+              <SidebarLayout />
+            </SedeLayout>
+          } />
         }
       >
         {/* Ruta Home (cuando solo pones /admin) */}
         <Route index element={<Home />} />
-
-        {/* Ruta Listar Roles */}
-        <Route path="listar-roles" element={<ListarRoles />} />
 
         {/* RUTAS CLIENTE */}
           {/* Ruta Agregar Cliente */}

@@ -37,6 +37,10 @@ const Login = () => {
       const rol = jwtUtils.getUserRole(access_token);
 
       switch (rol) {
+        case 'superadmin':
+          toast.success(`Login exitoso!!`);
+          setTimeout(() => navigate('/superadmin'), 1500);
+          break;
         case 'admin':
           toast.success(`Login exitoso!!`);
           setTimeout(() => navigate('/admin'), 1500);
@@ -44,6 +48,22 @@ const Login = () => {
         case 'cliente':
           toast.success(`Login exitoso!!`);
           setTimeout(() => navigate('/cliente'), 1500);
+          break;
+        case 'asesor':
+          toast.success(`Login exitoso!!`);
+          setTimeout(() => navigate('/asesor'), 1500);
+          break;
+        case 'cajero':
+          toast.success(`Login exitoso!!`);
+          setTimeout(() => navigate('/asesor'), 1500);
+          break;  
+        case 'operaciones':
+          toast.success(`Login exitoso!!`);
+          setTimeout(() => navigate('/operaciones'), 1500);
+          break;  
+        case 'contador':
+          toast.success(`Login exitoso!!`);
+          setTimeout(() => navigate('/contador'), 1500);
           break;
         default:
           console.error('Rol no reconocido:', rol);
