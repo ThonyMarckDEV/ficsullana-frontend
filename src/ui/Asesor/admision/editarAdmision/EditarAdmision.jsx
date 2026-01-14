@@ -35,19 +35,19 @@ const EditarAdmision = () => {
                 const response = await showAdmision(id);
                 const data = response.data;
 
-                // 1. Nombre Completo del Solicitante
+                // Nombre Completo del Solicitante
                 const persona = data.cliente ? data.cliente.datos : data.prospecto;
                 const nombreSolicitante = data.cliente 
                     ? `${persona.nombre} ${persona.apellidoPaterno} ${persona.apellidoMaterno || ''}` 
                     : `${persona.nombres} ${persona.apellido_paterno} ${persona.apellido_materno || ''}`;
 
-                // 2. Nombre Completo del Asesor
+                // Nombre Completo del Asesor
                 const asesorDatos = data.asesor?.datos;
                 const nombreAsesor = asesorDatos 
                     ? `${asesorDatos.nombre} ${asesorDatos.apellidoPaterno} ${asesorDatos.apellidoMaterno || ''}` 
                     : 'Desconocido';
 
-                // 3. Setear Cabecera
+                // Setear Cabecera
                 setHeader({
                     tipo_prestamo: data.tipo_prestamo,
                     estado: data.estado,
@@ -59,7 +59,7 @@ const EditarAdmision = () => {
                     sedeName: data.sede?.nombre || 'Sede desconocida'
                 });
 
-                // 4. Setear Grids (Conversión de tipos segura)
+                // Setear Grids (Conversión de tipos segura)
                 if (data.deudas && Array.isArray(data.deudas)) {
                     setDeudas(data.deudas.map(d => ({
                         persona_tipo: d.persona_tipo,
@@ -116,7 +116,6 @@ const EditarAdmision = () => {
             
             if(response.data) {
                 setHeader(prev => ({ ...prev, estado: response.data.estado }));
-                // Opcional: Recargar grids si el backend recalcula algo
             }
             setTimeout(() => navigate('/asesor/listar-admisiones'), 1500);
         } catch (error) {
