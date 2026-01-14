@@ -47,7 +47,7 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
         }
     };
 
-    // NUEVO: Al hacer click en el input, muestra sugerencias/recientes
+   // Al hacer click en el input, muestra sugerencias/recientes
     const handleInputClick = () => {
         if (!showSuggestions) {
             fetchClientes(inputValue);

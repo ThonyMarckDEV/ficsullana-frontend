@@ -29,7 +29,7 @@ const NuevaAdmision = () => {
         cliente_id: null,     
         prospecto_id: null,
         tipo_solicitante: 'CLIENTE',
-        tipo_prestamo: '', // <--- CORRECCIÓN: INICIA VACÍO
+        tipo_prestamo: '',
         observaciones: ''
     });
 
@@ -49,7 +49,6 @@ const NuevaAdmision = () => {
             tipo_solicitante: nuevoTipo,
             cliente_id: null,
             prospecto_id: null,
-            // Si es prospecto es NUEVO fijo, si es cliente esperamos a que seleccione (VACÍO)
             tipo_prestamo: nuevoTipo === 'PROSPECTO' ? 'NUEVO' : '' 
         }));
 
@@ -60,14 +59,13 @@ const NuevaAdmision = () => {
     // --- LÓGICA AUTOMÁTICA (RCS/RSS/NUEVO) ---
     const onSelectCliente = (cliente) => {
         if (cliente) {
-            // Leemos directamente del JSON que me mostraste
             const tipoSugerido = cliente.tipo_financiero; 
 
             setHeader(prev => ({ 
                 ...prev, 
                 cliente_id: cliente.id, 
                 prospecto_id: null,
-                tipo_prestamo: tipoSugerido // Asigna lo que viene del backend (ej: RSS)
+                tipo_prestamo: tipoSugerido
             }));
             
             setClienteSelected(cliente);
