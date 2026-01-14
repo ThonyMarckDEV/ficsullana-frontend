@@ -1,37 +1,20 @@
 // src/pages/clientes/AgregarCliente.jsx
 import React, { useState } from 'react';
-
+import { useNavigate } from 'react-router-dom'; // Importamos hook para volver
 import ClienteForm from '../components/formularios/ClienteForm';
 import ContactosForm from '../components/formularios/ContactosForm';
-
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
-
 import { createCliente } from 'services/clienteService';
+import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 const initialFormData = {
   datos: {
-    nombre: '',
-    apellidoPaterno: '',
-    apellidoMaterno: '',
-    apellidoConyuge: '',
-    estadoCivil: '',
-    sexo: '',
-    dni: '',
-    fechaNacimiento: '',
-    fechaCaducidadDni: '',
-    nacionalidad: '',
-    residePeru: true,
-    nivelEducativo: '',
-    profesion: '',
-    enfermedadesPreexistentes: false,
-    ruc: '',
-    expuestaPoliticamente: false,
+    nombre: '', apellidoPaterno: '', apellidoMaterno: '', apellidoConyuge: '',
+    estadoCivil: '', sexo: '', dni: '', fechaNacimiento: '', fechaCaducidadDni: '',
+    nacionalidad: 'Peruana', residePeru: true, nivelEducativo: '', profesion: '',
+    enfermedadesPreexistentes: false, ruc: '', expuestaPoliticamente: false,
   },
-  contactos: {
-    telefonoMovil: '',
-    telefonoFijo: '',
-    correo: '',
-  }
+  contactos: { telefonoMovil: '', telefonoFijo: '', correo: '' }
 };
 
 const STEPS = [
@@ -40,6 +23,7 @@ const STEPS = [
 ];
 
 const AgregarCliente = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
@@ -49,21 +33,16 @@ const AgregarCliente = () => {
   const handleBack = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const handleChange = (e, section) => {
-      const { name, value, type, checked } = e.target;
-      
-      setFormData(prev => {
-          const newSectionData = {
+      const { name, value, type, checked } = e.target;
+      setFormData(prev => ({
+          ...prev,
+          [section]: {
               ...prev[section],
               [name]: type === 'checkbox' ? checked : value,
-          };
+          }
+      }));
+  };
 
-          return {
-              ...prev,
-              [section]: newSectionData,
-          };
-      });
-    };
- 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
@@ -72,6 +51,8 @@ const AgregarCliente = () => {
       setAlert(response);
       setFormData(initialFormData);
       setCurrentStep(1);
+      // Opcional: Redirigir después de éxito
+      // setTimeout(() => navigate('/admin/listar-clientes'), 2000);
     } catch (error) {
       setAlert(error);
     } finally {
@@ -81,78 +62,103 @@ const AgregarCliente = () => {
 
   const renderFormStep = () => {
     switch (currentStep) {
-      case 1:
-        return <ClienteForm data={formData.datos} handleChange={(e) => handleChange(e, 'datos')} />;
-      case 2:
-        return (
-          <>
-            <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />
-          </>
-        );
-      default:
-        return <ClienteForm data={formData.datosPersonales} handleChange={(e) => handleChange(e, 'datosPersonales')} />;
+      case 1: return <ClienteForm data={formData.datos} handleChange={(e) => handleChange(e, 'datos')} />;
+      case 2: return <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />;
+      default: return null;
     }
   };
 
   return (
     <div className="container mx-auto p-6 min-h-screen">
-      <h1 className="text-3xl font-bold text-slate-800 mb-4">Registro de Nuevo Cliente</h1>
-      <AlertMessage
-        type={alert?.type}
-        message={alert?.message}
-        details={alert?.details}
-        onClose={() => setAlert(null)}
-      />
       
-      {/* Stepper */}
-      <div className="mb-8">
-        <ol className="flex items-center w-full">
-          {STEPS.map((step, index) => (
-            <li key={step.id} className={`flex w-full items-center ${index < STEPS.length - 1 ? "after:content-[''] after:w-full after:h-1 after:border-b after:border-gray-300 after:border-1 after:inline-block" : ""}`}>
-              <span className={`flex items-center justify-center w-10 h-10 rounded-full shrink-0 ${currentStep >= step.id ? 'bg-red-700 text-white' : 'bg-gray-200 text-gray-600'}`}>
-                {step.id}
-              </span>
-            </li>
-          ))}
-        </ol>
+      {/* HEADER DE PÁGINA */}
+      <div className="flex justify-between items-center mb-8 border-b-4 border-fic-red pb-4">
+        <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-50 rounded-lg text-fic-red">
+                <UserPlusIcon className="w-8 h-8" />
+            </div>
+            <div>
+                <h1 className="text-3xl font-black text-fic-dark tracking-tight uppercase">Registro de Cliente</h1>
+                <p className="text-slate-500 font-bold text-sm">Nuevo socio comercial</p>
+            </div>
+        </div>
+        <button onClick={() => navigate('/admin/listar-clientes')} className="font-bold text-slate-500 hover:text-fic-red transition-colors">
+            ← Cancelar
+        </button>
       </div>
 
-      <form>
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          {renderFormStep()}
+      <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
+      
+      {/* STEPPER CORPORATIVO */}
+      <div className="mb-10 max-w-3xl mx-auto">
+        <div className="flex items-center w-full relative">
+            {/* Línea de fondo */}
+            <div className="absolute left-0 top-1/2 w-full h-1 bg-slate-200 -z-10 rounded"></div>
+            
+            {STEPS.map((step, index) => {
+                const isActive = currentStep >= step.id;
+                const isCompleted = currentStep > step.id;
+                
+                return (
+                    <div key={step.id} className="flex-1 flex flex-col items-center relative">
+                        <div className={`
+                            w-12 h-12 rounded-full flex items-center justify-center font-black text-lg border-4 transition-all duration-300 z-10
+                            ${isActive 
+                                ? 'bg-fic-red border-white text-white shadow-lg scale-110' 
+                                : 'bg-white border-slate-300 text-slate-400'}
+                        `}>
+                            {isCompleted ? <CheckIcon className="w-6 h-6"/> : step.id}
+                        </div>
+                        <span className={`mt-2 text-xs font-bold uppercase tracking-wider ${isActive ? 'text-fic-red' : 'text-slate-400'}`}>
+                            {step.name}
+                        </span>
+                    </div>
+                );
+            })}
         </div>
+      </div>
 
-        {/* Botones de navegación */}
-        <div className="flex justify-between mt-8">
-          <button
-            type="button"
-            onClick={handleBack}
-            disabled={currentStep === 1 || loading}
-            className="px-6 py-2 text-white bg-gray-500 rounded-md hover:bg-gray-600 disabled:bg-gray-300"
-          >
-            Anterior
-          </button>
-          {currentStep < STEPS.length ? (
+      <div className="max-w-5xl mx-auto">
+        <form className="bg-white p-8 rounded-xl shadow-xl border border-slate-100 relative">
+          
+          {/* Contenido del Formulario */}
+          <div className="min-h-[400px]">
+            {renderFormStep()}
+          </div>
+
+          {/* Botones de Navegación */}
+          <div className="flex justify-between mt-10 pt-6 border-t border-slate-100">
             <button
               type="button"
-              onClick={handleNext}
-              disabled={loading}
-              className="px-6 py-2 text-white bg-red-700 rounded-md hover:bg-red-800 disabled:opacity-50"
+              onClick={handleBack}
+              disabled={currentStep === 1 || loading}
+              className="px-6 py-3 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 disabled:opacity-50 font-bold transition-colors"
             >
-              Siguiente
+              ← Anterior
             </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="px-6 py-2 text-white bg-amber-500 rounded-md hover:bg-amber-600 disabled:opacity-50"
-            >
-              {loading ? 'Guardando...' : 'Guardar Cliente'}
-            </button>
-          )}
-        </div>
-      </form>
+
+            {currentStep < STEPS.length ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={loading}
+                className="flex items-center gap-2 px-8 py-3 text-white bg-fic-red rounded-lg hover:bg-red-700 disabled:opacity-50 font-black uppercase tracking-wide shadow-lg hover:shadow-xl transition-all"
+              >
+                Siguiente <ChevronRightIcon className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="px-8 py-3 text-fic-dark bg-fic-yellow rounded-lg hover:bg-yellow-400 disabled:opacity-50 font-black uppercase tracking-wide shadow-lg hover:shadow-xl transition-all"
+              >
+                {loading ? 'Procesando...' : 'Guardar Cliente'}
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
