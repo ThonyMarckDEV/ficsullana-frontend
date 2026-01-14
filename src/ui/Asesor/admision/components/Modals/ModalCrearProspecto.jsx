@@ -51,7 +51,7 @@ const ModalCrearProspecto = ({ isOpen, onClose, onSuccess }) => {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1">DNI / CE</label>
+                            <label className="block text-xs font-bold text-slate-500 mb-1">DNI</label>
                             <input name="dni" value={formData.dni} onChange={handleChange} className={inputClass} maxLength={12} required />
                         </div>
                         
