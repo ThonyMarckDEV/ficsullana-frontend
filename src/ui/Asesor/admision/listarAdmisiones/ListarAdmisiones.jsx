@@ -48,10 +48,8 @@ const ListarAdmisiones = () => {
                 ? `${solicitante.nombre} ${solicitante.apellidoPaterno}`
                 : `${solicitante.nombres} ${solicitante.apellido_paterno}`;
 
-            // Obtener etiqueta del estado
             const estadoInfo = ESTADOS[data.estado] || { label: 'DESCONOCIDO' };
 
-            // Transformar data para el modal
             const secciones = [
                 {
                     title: "1. Información General",
@@ -68,7 +66,6 @@ const ListarAdmisiones = () => {
                     title: "2. Resumen Financiero",
                     icon: BanknotesIcon,
                     items: [
-                        // AQUÍ FORMATEAMOS EL ESTADO PARA EL MODAL
                         { label: "Estado", value: estadoInfo.label },
                         { label: "Tipo Préstamo", value: data.tipo_prestamo },
                         { label: "Total Deuda", value: `S/ ${data.total_deuda}` },
@@ -162,7 +159,6 @@ const ListarAdmisiones = () => {
         {
             header: 'Estado',
             render: (row) => {
-                // AQUÍ USAMOS EL MAPA PARA OBTENER COLOR Y TEXTO
                 const config = ESTADOS[row.estado] || { label: 'DESC.', color: 'bg-gray-100' };
                 return (
                     <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full border ${config.color}`}>
