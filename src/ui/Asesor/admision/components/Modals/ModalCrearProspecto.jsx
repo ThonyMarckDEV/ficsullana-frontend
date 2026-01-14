@@ -22,6 +22,13 @@ const ModalCrearProspecto = ({ isOpen, onClose, onSuccess }) => {
         setLoading(true);
         setAlert(null);
 
+        // --- VALIDACIÓN ESTRICTA DNI (8 a 9 dígitos) ---
+        if (formData.dni.length < 8 || formData.dni.length > 9) {
+            setAlert({ type: 'warning', message: 'El DNI debe tener entre 8 y 9 dígitos.' });
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await createProspecto(formData);
             
@@ -51,29 +58,38 @@ const ModalCrearProspecto = ({ isOpen, onClose, onSuccess }) => {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1">DNI</label>
-                            <input name="dni" value={formData.dni} onChange={handleChange} className={inputClass} maxLength={12} required />
+                            <label className="block text-xs font-bold text-slate-500 mb-1">DNI<span className="text-red-500">*</span></label>
+                            <input 
+                                name="dni" 
+                                value={formData.dni} 
+                                onChange={handleChange} 
+                                className={inputClass} 
+                                maxLength={9} // MÁXIMO 9
+                                minLength={8} // MÍNIMO 8
+                                placeholder="8 o 9 dígitos"
+                                required 
+                            />
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">Apellido Paterno</label>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">Apellido Paterno <span className="text-red-500">*</span></label>
                                 <input name="apellido_paterno" value={formData.apellido_paterno} onChange={handleChange} className={inputClass} required />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">Apellido Materno</label>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">Apellido Materno <span className="text-red-500">*</span></label>
                                 <input name="apellido_materno" value={formData.apellido_materno} onChange={handleChange} className={inputClass} required />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1">Nombres</label>
+                            <label className="block text-xs font-bold text-slate-500 mb-1">Nombres <span className="text-red-500">*</span></label>
                             <input name="nombres" value={formData.nombres} onChange={handleChange} className={inputClass} required />
                         </div>
 
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-1">Celular (Opcional)</label>
-                            <input name="celular" value={formData.celular} onChange={handleChange} className={inputClass} maxLength={9} />
+                            <input name="celular" value={formData.celular} onChange={handleChange} className={inputClass} maxLength={9} placeholder="9XXXXXXXX" />
                         </div>
 
                         <div className="pt-4 flex justify-end gap-3">
