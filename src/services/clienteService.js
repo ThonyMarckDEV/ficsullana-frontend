@@ -3,7 +3,7 @@ import API_BASE_URL from 'js/urlHelper';
 import { handleResponse } from 'utilities/Responses/handleResponse'; 
 
 export const createCliente = async (clienteData) => {
-  const url = `${API_BASE_URL}/api/cliente/store`;
+  const url = `${API_BASE_URL}/api/clientes/store`;
 
   const response = await fetchWithAuth(url, {
     method: 'POST',
@@ -32,14 +32,14 @@ export const getClientes = async (page = 1) => {
 
 
 export const showCliente = async (id) => {
-  const url = `${API_BASE_URL}/api/cliente/show/${id}`;
+  const url = `${API_BASE_URL}/api/clientes/show/${id}`;
   const response = await fetchWithAuth(url, { method: 'GET' });
   return handleResponse(response);
 };
 
 
 export const updateCliente = async (id, clienteData) => {
-  const url = `${API_BASE_URL}/api/cliente/update/${id}`;
+  const url = `${API_BASE_URL}/api/clientes/update/${id}`;
   const response = await fetchWithAuth(url, {
     method: 'PUT',
     headers: {
@@ -53,7 +53,7 @@ export const updateCliente = async (id, clienteData) => {
 
 
 export const toggleClienteEstado = async (id, nuevoEstado) => {
-    const url = `${API_BASE_URL}/api/cliente/cambiar-estado/${id}`;
+    const url = `${API_BASE_URL}/api/clientes/cambiar-estado/${id}`;
     
     const response = await fetchWithAuth(url, {
         method: 'PATCH',

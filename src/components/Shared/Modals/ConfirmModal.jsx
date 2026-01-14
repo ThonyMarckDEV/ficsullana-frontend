@@ -30,8 +30,7 @@ const ConfirmModal = ({
                         </p>
                     </div>
                 </div>
-
-                {/* CORRECCIÓN AQUÍ: Eliminé 'sm:justify-end' y dejé 'justify-center' */}
+                
                 <div className="bg-gray-50 px-6 py-4 flex flex-col-reverse sm:flex-row gap-3 justify-center border-t border-gray-100">
                     
                     <button

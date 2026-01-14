@@ -2,80 +2,172 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getClientes, toggleClienteEstado } from 'services/clienteService'; 
+import { getClientes, toggleClienteEstado, showCliente } from 'services/clienteService'; 
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
-import Table from 'components/Shared/Tables/Table'
+import InfoModal from 'components/Shared/Modals/InfoModal';
+import Table from 'components/Shared/Tables/Table';
+import { 
+    PencilSquareIcon, 
+    UsersIcon, 
+    EyeIcon,
+    IdentificationIcon,
+    PhoneIcon
+} from '@heroicons/react/24/outline';
 
 const ListarCliente = () => {
+    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [alert, setAlert] = useState(null);
-
-    const [clienteToToggle, setClienteToToggle] = useState(null);
     const [clientes, setClientes] = useState([]);
     
-    const [paginationInfo, setPaginationInfo] = useState({ 
-        currentPage: 1, 
-        totalPages: 1, 
-        totalItems: 0 
-    });
-    const [currentPage, setCurrentPage] = useState(1);
+    // Paginación y Búsqueda
+    const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
+    const [searchTerm, setSearchTerm] = useState('');
 
-    // DEFINICIÓN DE COLUMNAS
+    // Toggle Estado
+    const [clienteToToggle, setClienteToToggle] = useState(null);
+
+    // --- ESTADOS PARA MODAL GENÉRICO ---
+    const [isInfoOpen, setIsInfoOpen] = useState(false);
+    const [infoLoading, setInfoLoading] = useState(false);
+    const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
+
+    // --- 1. LÓGICA PARA VER DETALLE (MAPPING DE DATOS) ---
+    const handleViewCliente = async (id) => {
+        setIsInfoOpen(true);
+        setInfoLoading(true);
+        try {
+            const response = await showCliente(id);
+            const { datos, contactos } = response.data;
+            const contacto = contactos?.[0] || {};
+
+            // Helper para formatear booleans
+            const formatBool = (val) => val ? 'SÍ' : 'NO';
+
+            // Construimos las secciones para el Modal Genérico
+            const seccionesFormateadas = [
+                {
+                    title: "1. Datos Personales",
+                    icon: IdentificationIcon,
+                    items: [
+                        { label: "Nombre Completo", value: `${datos.nombre} ${datos.apellidoPaterno} ${datos.apellidoMaterno || ''}`, fullWidth: true },
+                        { label: "DNI", value: datos.dni },
+                        { label: "Caducidad DNI", value: datos.fechaCaducidadDni },
+                        { label: "RUC", value: datos.ruc },
+                        { label: "Nacionalidad", value: datos.nacionalidad },
+                        { label: "Sexo", value: datos.sexo },
+                        { label: "Estado Civil", value: datos.estadoCivil },
+                        { label: "Profesión", value: datos.profesion },
+                        { label: "Nivel Educativo", value: datos.nivelEducativo, fullWidth: true },
+                        
+                        // Booleans convertidos a texto legible
+                        { label: "¿Reside en Perú?", value: formatBool(datos.residePeru) },
+                        { label: "¿Enf. Preexistentes?", value: formatBool(datos.enfermedadesPreexistentes) },
+                        { label: "¿Exp. Políticamente?", value: formatBool(datos.expuestaPoliticamente) },
+                    ]
+                },
+                {
+                    title: "2. Datos de Contacto",
+                    icon: PhoneIcon,
+                    items: [
+                        { label: "Teléfono Móvil", value: contacto.telefonoMovil },
+                        { label: "Teléfono Fijo", value: contacto.telefonoFijo },
+                        { label: "Correo Electrónico", value: contacto.correo, fullWidth: true },
+                    ]
+                }
+            ];
+
+            // Actualizamos el estado del modal
+            setModalData({
+                title: "Ficha de Cliente",
+                subtitle: `Visualizando a: ${datos.nombre} ${datos.apellidoPaterno}`,
+                sections: seccionesFormateadas
+            });
+
+        } catch (err) {
+            setAlert({ type: 'error', message: 'No se pudo cargar la información del cliente.' });
+            setIsInfoOpen(false);
+        } finally {
+            setInfoLoading(false);
+        }
+    };
+
+    // --- 2. COLUMNAS DE LA TABLA ---
     const columns = useMemo(() => [
         {
+            header: 'Cliente',
+            render: (row) => (
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-50 text-fic-red rounded-lg border border-red-100">
+                        <UsersIcon className="w-5 h-5"/>
+                    </div>
+                    <div>
+                        <span className="font-black text-fic-dark block uppercase tracking-tight">
+                            {row.datos ? `${row.datos.nombre} ${row.datos.apellidoPaterno} ${row.datos.apellidoMaterno || ''}` : 'Sin Nombre'}
+                        </span>
+                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                            Registrado: {new Date(row.created_at).toLocaleDateString()}
+                        </span>
+                    </div>
+                </div>
+            )
+        },
+        {
             header: 'DNI',
-            // Usamos render porque el dato está anidado en 'datos'
-            render: (cliente) => cliente.datos?.dni || 'N/A'
-        },
-        {
-            header: 'Nombre Completo',
-            render: (cliente) => {
-                const { nombre, apellidoPaterno, apellidoMaterno } = cliente.datos || {};
-                return `${nombre || ''} ${apellidoPaterno || ''} ${apellidoMaterno || ''}`;
-            }
-        },
-        {
-            header: 'Fecha de Registro',
-            render: (cliente) => new Date(cliente.created_at).toLocaleDateString()
+            render: (row) => row.datos?.dni 
+                ? <span className="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200">{row.datos.dni}</span> 
+                : <span className="text-slate-300 italic">N/A</span>
         },
         {
             header: 'Estado',
-            render: (cliente) => (
+            render: (row) => (
                 <button 
-                    onClick={() => handleToggleEstado(cliente.id, cliente.estado)}
-                    disabled={loading}
-                    className={`px-3 py-1 font-semibold leading-tight rounded-full text-sm transition-colors duration-150 ${
-                        cliente.estado === 1
-                            ? 'text-green-700 bg-green-100 hover:bg-red-100 hover:text-red-700'
-                            : 'text-red-700 bg-red-100 hover:bg-green-100 hover:text-green-700'
-                    }`}
+                    onClick={() => setClienteToToggle({ id: row.id, estado: row.estado })}
+                    className={`px-4 py-1 font-black text-xs rounded-md shadow-sm transition-all duration-150 border-b-2 ${
+                        row.estado === 1
+                            ? 'text-white bg-green-600 border-green-800 hover:bg-red-600 hover:border-red-800'
+                            : 'text-white bg-red-600 border-red-800 hover:bg-green-600 hover:border-green-800'
+                    } active:translate-y-0.5`}
                 >
-                    {cliente.estado === 1 ? 'Activo' : 'Inactivo'}
+                    {row.estado === 1 ? 'ACTIVO' : 'INACTIVO'}
                 </button>
             )
         },
         {
             header: 'Acciones',
-            render: (cliente) => (
-                <Link 
-                    to={`/admin/editar-cliente/${cliente.id}`} 
-                    className="text-indigo-600 hover:text-indigo-900 font-medium"
-                >
-                    Editar
-                </Link>
+            render: (row) => (
+                <div className="flex items-center gap-4">
+                    {/* BOTÓN VER */}
+                    <button
+                        onClick={() => handleViewCliente(row.id)}
+                        className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
+                        title="Ver Ficha Completa"
+                    >
+                        <div className="p-1 rounded-full group-hover:bg-slate-200 transition-colors">
+                            <EyeIcon className="w-5 h-5" />
+                        </div>
+                        Ver
+                    </button>
+
+                    {/* BOTÓN EDITAR */}
+                    <Link 
+                        to={`/admin/editar-cliente/${row.id}`} 
+                        className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
+                    >
+                        <PencilSquareIcon className="w-5 h-5" /> Editar
+                    </Link>
+                </div>
             )
         }
-    ], [loading]); // Dependencia 'loading' para deshabilitar botones si es necesario
+    ], []);
 
-    const fetchClientes = useCallback(async (page) => {
+    // --- 3. CARGA DE DATOS ---
+    const fetchClientes = useCallback(async (page, search = '') => {
         setLoading(true);
-        setError(null);
         try {
-            const data = await getClientes(page);
+            const data = await getClientes(page, search);
             setClientes(data.data);
             setPaginationInfo({
                 currentPage: data.current_page,
@@ -83,29 +175,19 @@ const ListarCliente = () => {
                 totalItems: data.total,
             });
         } catch (err) {
-            setError('No se pudieron cargar los clientes. Por favor, intente de nuevo más tarde.');
-            console.error(err);
+            setAlert({ type: 'error', message: 'No se pudieron cargar los clientes.' });
         } finally {
             setLoading(false);
-            if (isInitialLoad) setIsInitialLoad(false); 
         }
-    }, [isInitialLoad]);
+    }, []);
 
     useEffect(() => {
-        fetchClientes(currentPage);
-    }, [currentPage, fetchClientes]);
+        fetchClientes(1, searchTerm);
+    }, [fetchClientes, searchTerm]);
 
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-    };
-
-    const handleToggleEstado = (clienteId, currentEstado) => {
-        setClienteToToggle({ id: clienteId, estado: currentEstado });
-    };
-
+    // --- 4. TOGGLE ESTADO ---
     const executeToggleEstado = async () => {
         if (!clienteToToggle) return;
-
         const { id, estado } = clienteToToggle;
         const nuevoEstado = estado === 1 ? 0 : 1;
         
@@ -115,21 +197,31 @@ const ListarCliente = () => {
         try {
             const response = await toggleClienteEstado(id, nuevoEstado);
             setAlert(response);
-            await fetchClientes(currentPage); 
+            await fetchClientes(paginationInfo.currentPage, searchTerm); 
         } catch (err) {
-            console.error("Error al cambiar estado:", err);
-            setAlert(err); 
+            setAlert({ type: 'error', message: 'Error al cambiar el estado.' }); 
             setLoading(false);
         }
     };
 
-    if (isInitialLoad && loading) return <LoadingScreen />;
-
-    if (error) return <div className="text-center p-8 text-red-600">{error}</div>;
+    if (loading && clientes.length === 0) return <LoadingScreen />;
 
     return (
         <div className="container mx-auto p-6">
-            <h1 className="text-3xl font-bold text-slate-800 mb-6">Listado de Clientes</h1>
+            
+            {/* HEADER */}
+            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
+                <div>
+                    <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Gestión de Clientes</h1>
+                    <p className="text-slate-500 font-bold">Base de datos de socios - Fic Sullana</p>
+                </div>
+                <Link 
+                    to="/admin/agregar-cliente" 
+                    className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95"
+                >
+                    + Nuevo Cliente
+                </Link>
+            </div>
 
             <AlertMessage
                 type={alert?.type}
@@ -138,6 +230,17 @@ const ListarCliente = () => {
                 onClose={() => setAlert(null)}
             />
 
+            {/* MODAL DE INFORMACIÓN GENÉRICO */}
+            <InfoModal 
+                isOpen={isInfoOpen}
+                onClose={() => setIsInfoOpen(false)}
+                title={modalData.title}
+                subtitle={modalData.subtitle}
+                sections={modalData.sections}
+                loading={infoLoading}
+            />
+
+            {/* MODAL DE CONFIRMACIÓN */}
             {clienteToToggle && (
                 <ConfirmModal
                     message={`¿Desea cambiar el estado de este cliente a ${clienteToToggle.estado === 1 ? 'INACTIVO' : 'ACTIVO'}?`}
@@ -145,17 +248,22 @@ const ListarCliente = () => {
                     onCancel={() => setClienteToToggle(null)}
                 />
             )}
-            {/* TABLA REUTILIZABLE */}
-            <Table 
-                columns={columns}
-                data={clientes}
-                loading={loading}
-                pagination={{
-                    currentPage: paginationInfo.currentPage,
-                    totalPages: paginationInfo.totalPages,
-                    onPageChange: handlePageChange
-                }}
-            />
+
+            {/* TABLA */}
+            <div className="rounded-xl overflow-hidden">
+                <Table 
+                    columns={columns}
+                    data={clientes}
+                    loading={loading}
+                    pagination={{
+                        currentPage: paginationInfo.currentPage,
+                        totalPages: paginationInfo.totalPages,
+                        onPageChange: (page) => fetchClientes(page, searchTerm)
+                    }}
+                    onSearch={setSearchTerm}
+                    searchPlaceholder="Buscar por DNI o Nombre..."
+                />
+            </div>
         </div>
     );
 };

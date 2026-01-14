@@ -25,7 +25,7 @@ const AgregarSede = () => {
     try {
       const response = await createSede(formData);
       setAlert(response);
-      setTimeout(() => navigate('/admin/listar-sedes'), 2000);
+      setTimeout(() => navigate('/superadmin/listar-sedes'), 2000);
     } catch (error) { setAlert(error); } finally { setLoading(false); }
   };
 
@@ -33,7 +33,7 @@ const AgregarSede = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6 border-b-2 border-fic-red pb-4">
         <h1 className="text-3xl font-black text-fic-dark">Apertura de Sede</h1>
-        <button onClick={() => navigate('/admin/listar-sedes')} className="font-bold text-slate-500 hover:text-fic-red">← Volver</button>
+        <button onClick={() => navigate('/superadmin/listar-sedes')} className="font-bold text-slate-500 hover:text-fic-red">← Volver</button>
       </div>
       <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
       <form onSubmit={handleSubmit} className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">

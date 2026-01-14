@@ -1,33 +1,93 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getSedes, toggleSedeEstado } from 'services/sedeService'; 
+import { getSedes, toggleSedeEstado, showSede } from 'services/sedeService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
+import InfoModal from 'components/Shared/Modals/InfoModal';
 import Table from 'components/Shared/Tables/Table';
-import { PencilSquareIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline';
+import { 
+    PencilSquareIcon, 
+    BuildingStorefrontIcon, 
+    EyeIcon, 
+    UserCircleIcon,
+    MapPinIcon
+} from '@heroicons/react/24/outline';
 
 const ListarSedes = () => {
+    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
-    const [sedeToToggle, setSedeToToggle] = useState(null);
     const [sedes, setSedes] = useState([]);
     
+    // Paginación y Búsqueda
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Toggle Estado
+    const [sedeToToggle, setSedeToToggle] = useState(null);
+
+    // --- ESTADOS PARA MODAL DE INFORMACIÓN ---
+    const [isInfoOpen, setIsInfoOpen] = useState(false);
+    const [infoLoading, setInfoLoading] = useState(false);
+    const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
+
+    // --- FUNCIÓN PARA VER DETALLE (MAPPING DE DATOS) ---
+    const handleViewSede = async (id) => {
+        setIsInfoOpen(true);
+        setInfoLoading(true);
+        try {
+            const response = await showSede(id);
+            const { sede, admin } = response.data;
+            
+            // Transformamos la data para el InfoModal
+            const seccionesFormateadas = [
+                {
+                    title: "1. Datos del Local",
+                    icon: BuildingStorefrontIcon,
+                    items: [
+                        { label: "Nombre de Sede", value: sede.nombre, fullWidth: true },
+                        { label: "Código SUNAT", value: sede.codigo_sunat },
+                        { label: "Dirección", value: sede.direccion, fullWidth: true },
+                        { label: "Estado Actual", value: sede.estado === 1 ? 'ACTIVO' : 'INACTIVO' },
+                    ]
+                },
+                {
+                    title: "2. Administrador Encargado",
+                    icon: UserCircleIcon,
+                    items: [
+                        { label: "Nombre Completo", value: admin?.datos ? `${admin.datos.nombre} ${admin.datos.apellidoPaterno}` : 'Sin asignar', fullWidth: true },
+                        { label: "DNI", value: admin?.datos?.dni },
+                        { label: "Usuario de Acceso", value: admin?.username },
+                    ]
+                }
+            ];
+
+            setModalData({
+                title: "Ficha de Sede",
+                subtitle: `Detalle de: ${sede.nombre}`,
+                sections: seccionesFormateadas
+            });
+
+        } catch (err) {
+            setAlert({ type: 'error', message: 'No se pudo cargar el detalle de la sede.' });
+            setIsInfoOpen(false);
+        } finally {
+            setInfoLoading(false);
+        }
+    };
+
+    // --- COLUMNAS ---
     const columns = useMemo(() => [
         {
             header: 'Nombre',
             render: (row) => (
                 <div className="flex items-center gap-3">
-                    {/* Icono con fondo rojo suave de la marca */}
                     <div className="p-2 bg-red-50 text-fic-red rounded-lg border border-red-100">
                         <BuildingStorefrontIcon className="w-5 h-5"/>
                     </div>
                     <div>
                         <span className="font-black text-fic-dark block uppercase tracking-tight">{row.nombre}</span>
-                        {/* Badge Principal con Amarillo Fic */}
                         {row.id === 1 && (
                             <span className="text-[10px] bg-fic-yellow text-fic-dark font-black px-2 py-0.5 rounded shadow-sm border border-yellow-400">
                                 PRINCIPAL
@@ -58,7 +118,6 @@ const ListarSedes = () => {
                             ? 'text-white bg-green-600 border-green-800 hover:bg-red-600 hover:border-red-800'
                             : 'text-white bg-red-600 border-red-800 hover:bg-green-600 hover:border-green-800'
                     } ${row.id === 1 ? 'opacity-50 cursor-not-allowed' : 'active:translate-y-0.5'}`}
-                    title={row.id === 1 ? "La sede principal no se puede desactivar" : "Cambiar estado"}
                 >
                     {row.estado === 1 ? 'ACTIVO' : 'INACTIVO'}
                 </button>
@@ -67,12 +126,27 @@ const ListarSedes = () => {
         {
             header: 'Acciones',
             render: (row) => (
-                <Link 
-                    to={`/admin/editar-sede/${row.id}`} 
-                    className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
-                >
-                    <PencilSquareIcon className="w-5 h-5" /> Editar
-                </Link>
+                <div className="flex items-center gap-4">
+                     {/* BOTÓN VER */}
+                     <button
+                        onClick={() => handleViewSede(row.id)}
+                        className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
+                        title="Ver Detalles"
+                    >
+                        <div className="p-1 rounded-full group-hover:bg-slate-200 transition-colors">
+                            <EyeIcon className="w-5 h-5" />
+                        </div>
+                        Ver
+                    </button>
+
+                    {/* BOTÓN EDITAR */}
+                    <Link 
+                        to={`/superadmin/editar-sede/${row.id}`} 
+                        className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
+                    >
+                        <PencilSquareIcon className="w-5 h-5" /> Editar
+                    </Link>
+                </div>
             )
         }
     ], []);
@@ -94,17 +168,13 @@ const ListarSedes = () => {
         }
     }, []);
 
-    useEffect(() => { 
-        fetchSedes(1, searchTerm); 
-    }, [fetchSedes, searchTerm]);
+    useEffect(() => { fetchSedes(1, searchTerm); }, [fetchSedes, searchTerm]);
 
     const executeToggleEstado = async () => {
         if (!sedeToToggle || sedeToToggle.esPrincipal) return;
-
         const nuevoEstado = sedeToToggle.estado === 1 ? 0 : 1;
         setSedeToToggle(null);
         setLoading(true);
-        
         try {
             const response = await toggleSedeEstado(sedeToToggle.id, nuevoEstado);
             setAlert(response);
@@ -125,7 +195,7 @@ const ListarSedes = () => {
                     <p className="text-slate-500 font-bold">Panel de control administrativo - Fic Sullana</p>
                 </div>
                 <Link 
-                    to="/admin/agregar-sede" 
+                    to="/superadmin/agregar-sede" 
                     className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95"
                 >
                     + Nueva Sede
@@ -134,9 +204,20 @@ const ListarSedes = () => {
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
 
+            {/* MODAL DE INFORMACIÓN REUTILIZABLE */}
+            <InfoModal 
+                isOpen={isInfoOpen}
+                onClose={() => setIsInfoOpen(false)}
+                title={modalData.title}
+                subtitle={modalData.subtitle}
+                sections={modalData.sections}
+                loading={infoLoading}
+            />
+
+            {/* MODAL DE CONFIRMACIÓN */}
             {sedeToToggle && (
                 <ConfirmModal
-                    message={`¿Deseas cambiar el estado a ${sedeToToggle.estado === 1 ? 'INACTIVO' : 'ACTIVO'}? Esto afectará las operaciones de este local.`}
+                    message={`¿Deseas cambiar el estado a ${sedeToToggle.estado === 1 ? 'INACTIVO' : 'ACTIVO'}?`}
                     onConfirm={executeToggleEstado}
                     onCancel={() => setSedeToToggle(null)}
                 />

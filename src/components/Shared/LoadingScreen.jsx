@@ -1,5 +1,5 @@
 import React from 'react';
-import loaderGif from '../../assets/gif/loading.gif'; // asegúrate de que el nombre sea correcto
+import loaderGif from '../../assets/gif/loading.gif';
 
 const LoadingScreen = () => {
   return (

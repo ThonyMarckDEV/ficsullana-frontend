@@ -37,7 +37,7 @@ const EditarSede = () => {
     try {
       await updateSede(id, formData);
       setAlert({ type: 'success', message: 'Actualizado correctamente' });
-      setTimeout(() => navigate('/admin/listar-sedes'), 1500);
+      setTimeout(() => navigate('/superadmin/listar-sedes'), 1500);
     } catch (err) { setAlert({ type: 'error', message: 'Error al actualizar' }); } finally { setLoading(false); }
   };
 
@@ -51,7 +51,7 @@ const EditarSede = () => {
         <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100"><SedeForm data={formData.sede} handleChange={handleChange} /></div>
         <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100"><AdminForm data={formData.admin} handleChange={handleChange} isEdit={true} /></div>
         <div className="md:col-span-2 flex justify-end gap-4">
-          <button type="button" onClick={() => navigate('/admin/listar-sedes')} className="px-6 py-3 bg-slate-100 text-slate-600 rounded-lg font-bold">Cancelar</button>
+          <button type="button" onClick={() => navigate('/superadmin/listar-sedes')} className="px-6 py-3 bg-slate-100 text-slate-600 rounded-lg font-bold">Cancelar</button>
           <button type="submit" disabled={loading} className="bg-fic-yellow text-fic-dark px-10 py-3 rounded-lg font-black uppercase shadow-lg hover:bg-yellow-500 transition-all">
             {loading ? 'Procesando...' : 'Guardar Cambios'}
           </button>

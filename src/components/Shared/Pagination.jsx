@@ -50,8 +50,6 @@ const getPaginationRange = ({ totalPages, currentPage, siblingCount = 1 }) => {
 
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  // Ahora la llamada a la función está antes del "if", pero ya no es un Hook
-  // por lo que no hay problema. La lógica sigue siendo la misma.
   const paginationRange = getPaginationRange({ currentPage, totalPages });
 
   if (totalPages <= 1) {
