@@ -18,11 +18,7 @@ import { Building2, House } from 'lucide-react';
 // --- CONFIGURACIÓN DE MENÚS ---
 const menus = {
     superadmin: [
-        { 
-            section: 'Home', 
-            icon: House, 
-            link: '/superadmin'
-        },
+        { section: 'Home', icon: House, link: '/superadmin' },
         {
             section: 'Sedes',
             icon: Building2,
@@ -33,11 +29,7 @@ const menus = {
         },
     ],
     admin: [
-        { 
-            section: 'Home', 
-            icon: House, 
-            link: '/admin' 
-        },
+        { section: 'Home', icon: House, link: '/admin' },
         {
             section: 'Asesores',
             icon: UsersIcon,
@@ -78,26 +70,23 @@ const Sidebar = () => {
 
     const roleMenu = useMemo(() => rol && menus[rol] ? menus[rol] : [], [rol]);
 
+    // --- LOGICA DE VISUALIZACIÓN UNIFICADA ---
+    // Si está abierto en Móvil (isOpen) O si pasas el mouse en PC (isHovered) -> EXPANDIDO
+    const isExpanded = isOpen || isHovered;
+
     const isSectionActive = useCallback((item) => {
-        if (item.subs) {
-            return item.subs.some(sub => location.pathname === sub.link);
-        }
-        if (item.link) {
-            return location.pathname === item.link;
-        }
+        if (item.subs) return item.subs.some(sub => location.pathname === sub.link);
+        if (item.link) return location.pathname === item.link;
         return false;
     }, [location.pathname]);
 
     useEffect(() => {
-        if (!isHovered && window.innerWidth >= 768) return;
-
+        if (!isExpanded) return;
         const activeGroup = roleMenu.find(item => 
             item.subs && item.subs.some(sub => location.pathname === sub.link)
         );
-        if (activeGroup) {
-            setOpenSection(activeGroup.section);
-        }
-    }, [location.pathname, roleMenu, isHovered]);
+        if (activeGroup) setOpenSection(activeGroup.section);
+    }, [location.pathname, roleMenu, isExpanded]);
 
     const handleLogout = () => {
         logout();
@@ -109,8 +98,7 @@ const Sidebar = () => {
         setOpenSection(prev => prev === section ? null : section);
     };
 
-    const isExpanded = (window.innerWidth < 768 && isOpen) || isHovered;
-
+    // Clases del contenedor principal
     const sidebarClasses = `fixed left-0 top-0 h-screen bg-fic-red shadow-2xl z-40 transition-all duration-300 flex flex-col border-r border-white/10
         ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full'} 
         md:translate-x-0 ${isHovered ? 'md:w-64' : 'md:w-20'}
@@ -126,34 +114,35 @@ const Sidebar = () => {
                 <Bars3Icon className="h-6 w-6" />
             </button>
 
-            {/* Overlay para cerrar en móvil */}
+            {/* Overlay Móvil */}
             {isOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm transition-opacity"
+                    className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
                     onClick={() => setIsOpen(false)}
                 />
             )}
 
-            {/* Sidebar Container */}
+            {/* Sidebar */}
             <div
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 className={sidebarClasses}
             >
-                {/* 1. LOGO FIC SULLANA */}
+                {/* 1. LOGO */}
                 <div className={`bg-white transition-all duration-300 flex items-center justify-center flex-shrink-0 relative z-10 overflow-hidden
                     ${isExpanded ? 'h-32' : 'h-24'}`}>
                     
                     <img
                         src={logoImg}
-                        alt="Logo Fic Sullana"
+                        alt="Logo"
+                        // Aquí ajustamos el tamaño: w-16 en modo retraído (más grande que antes)
                         className={`transition-all duration-300 object-contain p-2
                             ${isExpanded ? 'w-48' : 'w-16'} 
                         `} 
                     />
                 </div>
 
-                {/* 2. MENÚ SCROLLABLE (Sin barra visible) */}
+                {/* 2. MENÚ (Sin Scrollbar visible pero funcional) */}
                 <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                     {roleMenu.map((item, index) => {
                         const isActive = isSectionActive(item);
@@ -164,7 +153,7 @@ const Sidebar = () => {
                             <div key={index}>
                                 {item.subs ? (
                                     <>
-                                        {/* BOTÓN PADRE */}
+                                        {/* PADRE CON SUBMENÚ */}
                                         <button
                                             onClick={() => toggleSection(item.section)}
                                             className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group
@@ -172,8 +161,10 @@ const Sidebar = () => {
                                         >
                                             <div className="flex items-center gap-4 overflow-hidden">
                                                 <IconComponent className={`h-6 w-6 min-w-[24px] flex-shrink-0 ${isActive ? 'text-fic-red' : 'text-white'}`} />
-                                                <span className={`whitespace-nowrap transition-opacity duration-200 
-                                                    ${isExpanded ? 'opacity-100' : 'opacity-0 md:opacity-0 hidden md:block'}
+                                                
+                                                {/* TEXTO: Si expandido -> visible. Si no -> width 0 y oculto */}
+                                                <span className={`whitespace-nowrap transition-all duration-200 
+                                                    ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}
                                                 `}>
                                                     {item.section}
                                                 </span>
@@ -209,7 +200,7 @@ const Sidebar = () => {
                                         </div>
                                     </>
                                 ) : (
-                                    /* BOTÓN SIMPLE */
+                                    /* ENLACE SIMPLE */
                                     <Link
                                         to={item.link}
                                         onClick={() => setIsOpen(false)}
@@ -217,8 +208,9 @@ const Sidebar = () => {
                                             ${isActive ? 'bg-white text-fic-red font-bold shadow-lg' : 'text-white hover:bg-white/10'}`}
                                     >
                                         <IconComponent className={`h-6 w-6 min-w-[24px] flex-shrink-0 ${isActive ? 'text-fic-red' : 'text-white'}`} />
-                                        <span className={`whitespace-nowrap transition-opacity duration-200 
-                                            ${isExpanded ? 'opacity-100' : 'opacity-0 md:opacity-0 hidden md:block'}
+                                        
+                                        <span className={`whitespace-nowrap transition-all duration-200 
+                                            ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}
                                         `}>
                                             {item.section}
                                         </span>
@@ -238,8 +230,8 @@ const Sidebar = () => {
                         title="Cerrar Sesión"
                     >
                         <ArrowRightOnRectangleIcon className="h-6 w-6 min-w-[24px] flex-shrink-0" />
-                        <span className={`whitespace-nowrap font-bold transition-opacity duration-200 
-                            ${isExpanded ? 'opacity-100' : 'opacity-0 md:opacity-0 hidden md:block'}
+                        <span className={`whitespace-nowrap font-bold transition-all duration-200 
+                            ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}
                         `}>
                             Cerrar Sesión
                         </span>
@@ -247,10 +239,10 @@ const Sidebar = () => {
                 </div>
             </div>
 
-            {/* MODAL DE CONFIRMACIÓN */}
+            {/* MODAL */}
             {showConfirm && (
                 <ConfirmModal
-                    message="¿Estás seguro de que deseas cerrar sesión en Fic Sullana?"
+                    message="¿Cerrar sesión en Fic Sullana?"
                     onConfirm={handleLogout}
                     onCancel={() => setShowConfirm(false)}
                 />
