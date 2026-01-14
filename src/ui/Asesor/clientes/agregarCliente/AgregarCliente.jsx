@@ -82,7 +82,7 @@ const AgregarCliente = () => {
                 <p className="text-slate-500 font-bold text-sm">Nuevo socio comercial</p>
             </div>
         </div>
-        <button onClick={() => navigate('/admin/listar-clientes')} className="font-bold text-slate-500 hover:text-fic-red transition-colors">
+        <button onClick={() => navigate('/asesor/listar-clientes')} className="font-bold text-slate-500 hover:text-fic-red transition-colors">
             ← Cancelar
         </button>
       </div>

@@ -101,7 +101,7 @@ const EditarCliente = () => {
         try {
             const response = await updateCliente(id, formData);
             setAlert({ type: 'success', message: response.message || 'Cliente actualizado con éxito' });
-            setTimeout(() => navigate('/admin/listar-clientes'), 2000);
+            setTimeout(() => navigate('/asesor/listar-clientes'), 2000);
         } catch (err) {
             let errorDetails = [];
             
@@ -142,7 +142,7 @@ const EditarCliente = () => {
         </div>
 
         <div className="flex justify-end mt-8">
-          <button type="button" onClick={() => navigate('/admin/listar-clientes')} className="px-6 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 mr-4">Cancelar</button>
+          <button type="button" onClick={() => navigate('/asesor/listar-clientes')} className="px-6 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 mr-4">Cancelar</button>
           <button type="submit" disabled={loading} className="px-6 py-2 text-white bg-amber-500 rounded-md hover:bg-amber-600 disabled:opacity-50">
             {loading ? 'Guardando...' : 'Guardar Cambios'}
           </button>
