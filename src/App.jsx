@@ -28,6 +28,11 @@ import AgregarSede from 'ui/SuperAdministrador/sedes/agregarSede/AgregarSede';
 import ListarSedes from 'ui/SuperAdministrador/sedes/listarSedes/ListarSedes';
 import EditarSede from 'ui/SuperAdministrador/sedes/editarSede/EditarSede';
 
+//Modulos Productos
+import AgregarProducto from 'ui/SuperAdministrador/productos/agregarProducto/AgregarProducto';
+import ListarProductos from 'ui/SuperAdministrador/productos/listarProductos/ListarProductos';
+import EditarProducto from 'ui/SuperAdministrador/productos/editarProductos/EditarProducto';
+
 
 // UIS ADMIN
 
@@ -61,6 +66,7 @@ import ProtectedRouteSuperAdmin from 'utilities/ProtectedRoutes/ProtectedRouteSu
 import ProtectedRouteAsesor from 'utilities/ProtectedRoutes/ProtectedRouteAsesor';
 
 
+
 function AppContent() {
   return (
     <Routes>
@@ -92,6 +98,15 @@ function AppContent() {
           <Route path="listar-sedes" element={<ListarSedes />} />
           {/* Ruta Editar Sede */}
           <Route path="editar-sede/:id" element={<EditarSede />} />
+
+        {/* RUTAS PRODUCTOS */}
+          {/* Ruta Agregar Producto */}
+          <Route path="agregar-producto" element={<AgregarProducto />} />
+          {/* Ruta Listar Productos */}
+          <Route path="listar-productos" element={<ListarProductos />} />
+          {/* Ruta Editar Producto */}
+          <Route path="editar-producto/:id" element={<EditarProducto />} />
+
       </Route>
 
       {/* RUTAS ADMIN */}
@@ -147,6 +162,8 @@ function AppContent() {
           <Route path="listar-admisiones" element={<ListarAdmisiones />} />
           {/* Ruta Editar Admision */}
           <Route path="editar-admision/:id" element={<EditarAdmision />} />
+
+
 
       </Route>
 

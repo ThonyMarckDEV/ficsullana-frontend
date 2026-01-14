@@ -14,7 +14,7 @@ import jwtUtils from 'utilities/Token/jwtUtils';
 import { logout } from 'js/logout';
 import logoImg from 'assets/img/Logo_FICSULLANA.png'; 
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
-import { Building2, House } from 'lucide-react';
+import { Building2, House, ListChecksIcon } from 'lucide-react';
 
 // --- CONFIGURACIÓN DE MENÚS ---
 const menus = {
@@ -26,6 +26,14 @@ const menus = {
             subs: [
                 { name: 'Agregar Sede', link: '/superadmin/agregar-sede' },
                 { name: 'Listar Sedes', link: '/superadmin/listar-sedes' },
+            ]
+        },
+        {
+            section: 'Productos',
+            icon: ListChecksIcon,
+            subs: [
+                { name: 'Agregar Producto', link: '/superadmin/agregar-producto' },
+                { name: 'Listar Productos', link: '/superadmin/listar-productos' },
             ]
         },
     ],
