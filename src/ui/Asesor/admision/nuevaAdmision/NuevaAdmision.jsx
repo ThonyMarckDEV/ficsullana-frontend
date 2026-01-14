@@ -28,8 +28,8 @@ const NuevaAdmision = () => {
     const [header, setHeader] = useState({
         cliente_id: null,     
         prospecto_id: null,
-        tipo_solicitante: 'CLIENTE', // 'CLIENTE' o 'PROSPECTO'
-        tipo_prestamo: 'RCS', // Por defecto RCS si arranca como cliente
+        tipo_solicitante: 'CLIENTE',
+        tipo_prestamo: 'RCS',
         observaciones: ''
     });
 
@@ -49,17 +49,11 @@ const NuevaAdmision = () => {
         setHeader(prev => ({
             ...prev,
             tipo_solicitante: nuevoTipo,
-            // Limpiamos los IDs cruzados para evitar errores
             cliente_id: null,
             prospecto_id: null,
-            
-            // LÓGICA DE NEGOCIO CORREGIDA:
-            // Prospecto -> Siempre NUEVO
-            // Cliente   -> Default RCS (Recurrente con Saldo)
             tipo_prestamo: nuevoTipo === 'PROSPECTO' ? 'NUEVO' : 'RCS'
         }));
 
-        // Limpiamos las selecciones visuales
         setClienteSelected(null);
         setProspectoSelected(null);
     };
@@ -71,7 +65,7 @@ const NuevaAdmision = () => {
                 ...prev, 
                 cliente_id: cliente.id, 
                 prospecto_id: null,
-                tipo_prestamo: 'RCS' // Default al seleccionar cliente
+                tipo_prestamo: 'RCS' 
             }));
             setClienteSelected(cliente);
             setAlert({ type: 'info', message: 'Cliente seleccionado. Verifique si es RCS o RSS.' });
@@ -88,10 +82,10 @@ const NuevaAdmision = () => {
                 ...prev, 
                 prospecto_id: prospecto.id, 
                 cliente_id: null,
-                tipo_prestamo: 'NUEVO' // Obligatorio
+                tipo_prestamo: 'NUEVO'
             }));
             setProspectoSelected(prospecto);
-            setAlert({ type: 'warning', message: 'Prospecto seleccionado. Aplica solo a Primer Crédito.' });
+            setAlert({ type: 'info', message: 'Prospecto seleccionado. Aplica solo a Primer Crédito.' });
         } else {
             setHeader(prev => ({ ...prev, prospecto_id: null }));
             setProspectoSelected(null);
@@ -102,7 +96,6 @@ const NuevaAdmision = () => {
     const handleProspectoCreado = (prospectoData) => {
         const nombreCompleto = `${prospectoData.nombres} ${prospectoData.apellido_paterno} ${prospectoData.apellido_materno}`;
         
-        // Simulamos la selección como si viniera del combobox
         const prospectoObj = { 
             id: prospectoData.id, 
             nombre: nombreCompleto, 
@@ -119,16 +112,13 @@ const NuevaAdmision = () => {
         setLoading(true);
         setAlert(null);
 
-        // Validaciones Finales
         if (header.tipo_solicitante === 'CLIENTE' && !header.cliente_id) {
             setAlert({ type: 'error', message: 'Debe buscar y seleccionar un Cliente.' });
-            setLoading(false);
-            return;
+            setLoading(false); return;
         }
         if (header.tipo_solicitante === 'PROSPECTO' && !header.prospecto_id) {
             setAlert({ type: 'error', message: 'Debe buscar o crear un Prospecto.' });
-            setLoading(false);
-            return;
+            setLoading(false); return;
         }
 
         const payload = {
@@ -154,17 +144,16 @@ const NuevaAdmision = () => {
     if (loading) return <LoadingScreen />;
 
     return (
-        <div className="container mx-auto p-6">
-
+        <div className="container mx-auto p-4 lg:p-6">
             <div className="flex justify-between items-center mb-6 border-b-2 border-fic-red pb-4">
-                <div>
-                    <h1 className="text-3xl font-black text-fic-dark">Nueva Admisión</h1>
-                </div>
-                <button onClick={() => navigate('/asesor/listar-admisiones')} className="font-bold text-slate-500 hover:text-fic-red transition-colors">
+                <h1 className="text-3xl font-black text-fic-dark">Nueva Admisión</h1>
+                <button 
+                    onClick={() => navigate('/asesor/listar-admisiones')} 
+                    className="font-bold text-slate-500 hover:text-fic-red transition-colors"
+                >
                     ← Volver
                 </button>
             </div>
-
 
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
@@ -175,9 +164,10 @@ const NuevaAdmision = () => {
                 onSuccess={handleProspectoCreado} 
             />
 
-            <form onSubmit={handleSubmit} className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* AUMENTO DE ANCHO Y CAMBIO DE COLUMNAS A 1/4 y 3/4 */}
+            <form onSubmit={handleSubmit} className="w-full max-w-[95%] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
                 
-                {/* --- COLUMNA IZQUIERDA: IDENTIFICACIÓN --- */}
+                {/* --- COLUMNA IZQUIERDA: DATOS (25% ancho) --- */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 sticky top-6">
                         <h2 className="text-lg font-bold text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">
@@ -212,19 +202,18 @@ const NuevaAdmision = () => {
                                     onSelect={onSelectProspecto} 
                                     selectedId={header.prospecto_id}
                                     initialName={prospectoSelected?.nombre}
-                                    onOpenModal={() => setIsModalProspectoOpen(true)}
+                                    onOpenModal={() => setIsModalProspectoOpen(true)} // Pasamos la función para abrir el modal
                                 />
                             </div>
                         )}
 
-                        {/* SELECTOR DE TIPO PRÉSTAMO (LÓGICA CORREGIDA) */}
+                        {/* SELECTOR DE TIPO PRÉSTAMO */}
                         <div className="mb-4">
                             <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Tipo de Préstamo</label>
                             <select 
                                 name="tipo_prestamo" 
                                 value={header.tipo_prestamo} 
                                 onChange={(e) => setHeader(prev => ({ ...prev, tipo_prestamo: e.target.value }))}
-                                // Si es prospecto, se deshabilita para que no lo cambien
                                 disabled={header.tipo_solicitante === 'PROSPECTO'}
                                 className={`w-full px-3 py-2 border rounded-md outline-none text-sm font-bold transition-colors ${
                                     header.tipo_solicitante === 'PROSPECTO' 
@@ -232,8 +221,6 @@ const NuevaAdmision = () => {
                                         : 'bg-white text-slate-700'
                                 }`}
                             >
-                                {/* OPCIONES EXCLUSIVAS SEGÚN TIPO */}
-                                
                                 {header.tipo_solicitante === 'PROSPECTO' && (
                                     <option value="NUEVO">NUEVO (Primer Crédito)</option>
                                 )}
@@ -246,7 +233,6 @@ const NuevaAdmision = () => {
                                 )}
                             </select>
                             
-                            {/* Mensajes Informativos de Ayuda */}
                             {header.tipo_solicitante === 'PROSPECTO' && (
                                 <p className="text-[10px] text-green-600 mt-1 font-bold bg-green-50 p-1 rounded border border-green-100">
                                     ⓘ Los prospectos inician obligatoriamente con crédito NUEVO.
@@ -272,14 +258,19 @@ const NuevaAdmision = () => {
                     </div>
                 </div>
 
-                {/* --- COLUMNA DERECHA: GRIDS FINANCIEROS --- */}
-                <div className="lg:col-span-2 space-y-6">
+                {/* --- COLUMNA DERECHA: GRIDS FINANCIEROS (75% ancho) --- */}
+                <div className="lg:col-span-3 space-y-6">
                     <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 min-h-[500px]">
                         <h2 className="text-lg font-bold text-slate-700 mb-4 border-b pb-2">2. Evaluación Financiera</h2>
                         
                         {/* Bloqueo visual si no hay solicitante seleccionado */}
                         <div className={!header.cliente_id && !header.prospecto_id ? 'opacity-50 pointer-events-none grayscale' : ''}>
-                            <DeudasGrid deudas={deudas} setDeudas={setDeudas} />
+                            {/* AQUÍ PASAMOS EL TIPO DE PRÉSTAMO AL GRID PARA ACTIVAR % CANCELACION */}
+                            <DeudasGrid 
+                                deudas={deudas} 
+                                setDeudas={setDeudas} 
+                                tipoPrestamo={header.tipo_prestamo} 
+                            />
                             <ProtestosGrid protestos={protestos} setProtestos={setProtestos} />
                         </div>
 

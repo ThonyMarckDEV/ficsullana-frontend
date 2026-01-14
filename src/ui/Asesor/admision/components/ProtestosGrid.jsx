@@ -6,8 +6,8 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
     const addRow = () => {
         setProtestos([...protestos, {
             entidad_acreedora: '',
-            monto_deuda: 0,
-            dias_vencimiento: 0,
+            monto_deuda: '',
+            dias_vencimiento: '',
             documento_tipo: 'LETRA'
         }]);
     };
@@ -22,7 +22,7 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
         setProtestos(newProtestos);
     };
 
-    const inputClass = "w-full text-xs px-2 py-1 border border-slate-300 rounded focus:border-fic-red outline-none";
+    const inputClass = "w-full text-xs px-2 py-1 border border-slate-300 rounded focus:border-fic-red outline-none invalid:border-red-500 invalid:text-red-600 transition-colors";
 
     return (
         <div className="space-y-2 mt-6">
@@ -35,7 +35,7 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
             
             <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-500 uppercase font-bold">
+                    <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px]">
                         <tr>
                             <th className="p-2">Entidad Acreedora</th>
                             <th className="p-2 w-32">Documento</th>
@@ -67,18 +67,20 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
                                 </td>
                                 <td className="p-1">
                                     <input 
-                                        type="number" step="0.01"
+                                        type="number" step="0.01" min="0.01" // <--- VALIDACIÓN: > 0
                                         value={row.monto_deuda} 
                                         onChange={(e) => handleChange(i, 'monto_deuda', e.target.value)}
                                         className={inputClass}
+                                        placeholder=">0.00"
                                     />
                                 </td>
                                 <td className="p-1">
                                     <input 
-                                        type="number"
+                                        type="number" min="1" step="1" // <--- VALIDACIÓN: > 0
                                         value={row.dias_vencimiento} 
                                         onChange={(e) => handleChange(i, 'dias_vencimiento', e.target.value)}
                                         className={`${inputClass} ${row.dias_vencimiento > 0 ? 'text-red-600 font-bold' : ''}`}
+                                        placeholder=">0"
                                     />
                                 </td>
                                 <td className="p-1 text-center">

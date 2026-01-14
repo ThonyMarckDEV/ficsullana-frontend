@@ -7,8 +7,7 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [hasSearched, setHasSearched] = useState(false);
-
+    
     const wrapperRef = useRef(null);
 
     useEffect(() => {
@@ -26,14 +25,13 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [wrapperRef]);
 
-    const fetchProspectos = async (searchTerm) => {
-        if (!searchTerm) return;
+    const fetchProspectos = async (searchTerm = '') => {
         setLoading(true);
         try {
+            // Enviamos vacío para traer los últimos, o el término para filtrar
             const response = await getProspectos(1, searchTerm);
             setSuggestions(response.data || []);
             setShowSuggestions(true);
-            setHasSearched(true);
         } catch (error) {
             console.error("Error buscando prospectos", error);
             setSuggestions([]);
@@ -45,6 +43,12 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
+            fetchProspectos(inputValue);
+        }
+    };
+
+    const handleInputClick = () => {
+        if (!showSuggestions) {
             fetchProspectos(inputValue);
         }
     };
@@ -71,12 +75,14 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                         if (selectedId) onSelect(null);
                     }}
                     onKeyDown={handleKeyDown}
+                    onClick={handleInputClick} // <--- AQUÍ ESTÁ LA CLAVE
                     placeholder="Buscar Prospecto..."
                     className={`w-full border rounded-md shadow-sm py-2 pl-3 pr-10 outline-none text-sm transition-colors ${
                         selectedId 
                             ? 'border-green-500 bg-green-50 text-green-800 font-bold' 
                             : 'border-gray-300 focus:border-fic-red focus:ring-1 focus:ring-fic-red'
                     }`}
+                    autoComplete="off"
                 />
 
                 <button
@@ -124,7 +130,7 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                                     type="button"
                                     onClick={() => {
                                         setShowSuggestions(false);
-                                        onOpenModal(); // <--- ABRE EL MODAL AQUÍ
+                                        onOpenModal();
                                     }}
                                     className="bg-green-600 text-white text-xs px-4 py-2 rounded-md font-bold shadow hover:bg-green-700 w-full flex items-center justify-center gap-2"
                                 >
@@ -136,7 +142,7 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                 )}
             </div>
             
-            {/* Si no ha buscado y no hay selección, mostramos el botón directo */}
+            {/* Si no ha seleccionado nada, botón de ayuda rápida */}
             {!selectedId && !inputValue && (
                 <div className="mt-2 text-right">
                     <button 

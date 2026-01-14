@@ -1,19 +1,22 @@
 import React from 'react';
 import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 
-const DeudasGrid = ({ deudas, setDeudas }) => {
+const DeudasGrid = ({ deudas, setDeudas, tipoPrestamo }) => {
     
     const addRow = () => {
         setDeudas([...deudas, {
             persona_tipo: 'TITULAR',
             dni_relacionado: '',
             nombre_entidad: '',
+            es_tienda_departamento: false,
             tipo_credito: 'CONSUMO',
-            saldo_capital: 0,
-            plazo_pendiente: 0,
-            monto_cuota: 0,
+            saldo_capital: '',
+            linea_credito: 0,
+            plazo_pendiente: '',
+            monto_cuota: '',
             frecuencia_pago: 'MENSUAL',
             fecha_pago: '',
+            porcentaje_cancelacion: 0
         }]);
     };
 
@@ -25,10 +28,16 @@ const DeudasGrid = ({ deudas, setDeudas }) => {
     const handleChange = (index, field, value) => {
         const newDeudas = [...deudas];
         newDeudas[index][field] = value;
+        
+        // Limpiar línea de crédito si no es tienda
+        if (field === 'es_tienda_departamento' && value === false) {
+            newDeudas[index]['linea_credito'] = 0;
+        }
+
         setDeudas(newDeudas);
     };
 
-    const inputClass = "w-full text-xs px-2 py-1 border border-slate-300 rounded focus:border-fic-red outline-none";
+    const inputClass = "w-full text-xs px-2 py-1 border border-slate-300 rounded focus:border-fic-red outline-none disabled:bg-slate-100 disabled:text-slate-400 transition-colors invalid:border-red-500 invalid:text-red-600";
 
     return (
         <div className="space-y-2">
@@ -41,16 +50,19 @@ const DeudasGrid = ({ deudas, setDeudas }) => {
             
             <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-500 uppercase font-bold">
+                    <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px]">
                         <tr>
-                            <th className="p-2">Titular/Aval</th>
+                            <th className="p-2 w-20">Persona</th>
                             <th className="p-2 w-24">DNI</th>
-                            <th className="p-2">Entidad</th>
-                            <th className="p-2 w-24">Saldo Cap.</th>
-                            <th className="p-2 w-16">Plazo</th>
-                            <th className="p-2 w-20">Cuota</th>
-                            <th className="p-2">Vencimiento</th>
-                            <th className="p-2 w-10"></th>
+                            <th className="p-2 min-w-[120px]">Entidad</th>
+                            <th className="p-2 w-10 text-center" title="¿Es Tienda por Departamento?">Tienda?</th>
+                            <th className="p-2 w-20">Saldo Cap.</th>
+                            <th className="p-2 w-20">Línea Créd.</th>
+                            <th className="p-2 w-12">Plazo</th>
+                            <th className="p-2 w-16">Cuota</th>
+                            <th className="p-2 w-24">Vencimiento</th>
+                            {tipoPrestamo === 'RCS' && <th className="p-2 w-12 text-center">% Canc.</th>}
+                            <th className="p-2 w-8"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -72,7 +84,7 @@ const DeudasGrid = ({ deudas, setDeudas }) => {
                                         onChange={(e) => handleChange(i, 'dni_relacionado', e.target.value)}
                                         className={inputClass}
                                         maxLength={12}
-                                        placeholder="DNI/CE"
+                                        placeholder="DNI"
                                     />
                                 </td>
                                 <td className="p-1">
@@ -83,28 +95,49 @@ const DeudasGrid = ({ deudas, setDeudas }) => {
                                         placeholder="Banco..."
                                     />
                                 </td>
+                                <td className="p-1 text-center">
+                                    <input 
+                                        type="checkbox"
+                                        checked={row.es_tienda_departamento}
+                                        onChange={(e) => handleChange(i, 'es_tienda_departamento', e.target.checked)}
+                                        className="accent-fic-red w-4 h-4 cursor-pointer"
+                                    />
+                                </td>
                                 <td className="p-1">
                                     <input 
-                                        type="number" step="0.01"
+                                        type="number" step="0.01" min="0"
                                         value={row.saldo_capital} 
                                         onChange={(e) => handleChange(i, 'saldo_capital', e.target.value)}
                                         className={inputClass}
+                                        placeholder="0.00"
                                     />
                                 </td>
                                 <td className="p-1">
                                     <input 
-                                        type="number"
+                                        type="number" step="0.01" min="0"
+                                        value={row.linea_credito} 
+                                        onChange={(e) => handleChange(i, 'linea_credito', e.target.value)}
+                                        disabled={!row.es_tienda_departamento}
+                                        className={`${inputClass} ${!row.es_tienda_departamento ? 'bg-slate-100' : 'bg-yellow-50 font-bold'}`}
+                                        placeholder="---"
+                                    />
+                                </td>
+                                <td className="p-1">
+                                    <input 
+                                        type="number" min="1" step="1" // <--- VALIDACIÓN: Mínimo 1 cuota
                                         value={row.plazo_pendiente} 
                                         onChange={(e) => handleChange(i, 'plazo_pendiente', e.target.value)}
                                         className={inputClass}
+                                        placeholder=">0"
                                     />
                                 </td>
                                 <td className="p-1">
                                     <input 
-                                        type="number" step="0.01"
+                                        type="number" step="0.01" min="0.01" // <--- VALIDACIÓN: Mínimo 0.01
                                         value={row.monto_cuota} 
                                         onChange={(e) => handleChange(i, 'monto_cuota', e.target.value)}
                                         className={inputClass}
+                                        placeholder=">0"
                                     />
                                 </td>
                                 <td className="p-1">
@@ -115,6 +148,17 @@ const DeudasGrid = ({ deudas, setDeudas }) => {
                                         className={inputClass}
                                     />
                                 </td>
+                                {tipoPrestamo === 'RCS' && (
+                                    <td className="p-1">
+                                        <input 
+                                            type="number" min="0" max="100"
+                                            value={row.porcentaje_cancelacion} 
+                                            onChange={(e) => handleChange(i, 'porcentaje_cancelacion', e.target.value)}
+                                            className="w-full text-xs px-1 py-1 border border-blue-300 rounded focus:border-blue-500 font-bold text-blue-700 text-center outline-none"
+                                            placeholder="%"
+                                        />
+                                    </td>
+                                )}
                                 <td className="p-1 text-center">
                                     <button type="button" onClick={() => removeRow(i)} className="text-red-400 hover:text-red-600">
                                         <TrashIcon className="w-4 h-4"/>

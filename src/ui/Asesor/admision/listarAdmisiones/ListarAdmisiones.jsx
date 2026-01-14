@@ -7,10 +7,10 @@ import InfoModal from 'components/Shared/Modals/InfoModal';
 import Table from 'components/Shared/Tables/Table';
 import { 
     PencilSquareIcon, 
-    DocumentTextIcon, 
     EyeIcon, 
     UserIcon,
-    BanknotesIcon
+    BanknotesIcon,
+    ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 const ListarAdmisiones = () => {
@@ -62,14 +62,35 @@ const ListarAdmisiones = () => {
                         { label: "Total Deuda", value: `S/ ${data.total_deuda}` },
                         { label: "Total Protestos", value: `S/ ${data.total_protestos}` },
                         { label: "N° Entidades", value: data.total_ifis },
-                        { label: "Excepción", value: data.excepcion_detectada ? 'SÍ (RIESGO)' : 'NO' },
+                        // Si hay excepción, lo mostramos en Rojo
+                        { 
+                            label: "Riesgo Detectado", 
+                            value: data.excepcion_detectada ? 'SÍ (OBSERVADO)' : 'NO (CALIFICA)',
+                            className: data.excepcion_detectada ? 'text-red-600 font-black' : 'text-green-600 font-bold'
+                        },
+                    ]
+                },
+                // --- NUEVA SECCIÓN DE OBSERVACIONES ---
+                {
+                    title: "3. Observaciones y Análisis",
+                    icon: ExclamationTriangleIcon,
+                    items: [
+                        { 
+                            label: "Detalle de Observaciones", 
+                            value: data.observaciones || 'Sin observaciones registradas.', 
+                            fullWidth: true,
+                            // Si el sistema detectó excepción, resaltamos el texto
+                            className: data.excepcion_detectada 
+                                ? 'bg-red-50 text-red-800 p-3 rounded-md border border-red-200 font-medium' 
+                                : 'text-slate-600'
+                        }
                     ]
                 }
             ];
 
             setModalData({
                 title: "Ficha de Admisión",
-                subtitle: `Evaluación #${data.id} - ${data.created_at.split('T')[0]}`,
+                subtitle: `Evaluación #${data.id} - Creado el: ${new Date(data.created_at).toLocaleDateString()}`,
                 sections: secciones
             });
 

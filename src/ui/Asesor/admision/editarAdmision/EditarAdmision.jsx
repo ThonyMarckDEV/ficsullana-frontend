@@ -130,16 +130,17 @@ const EditarAdmision = () => {
 
     return (
         <div className="container mx-auto p-6">
-            
-            <div className="flex justify-between items-center mb-6 border-b-2 border-fic-red pb-4">
+
+            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
                 <div>
-                    <h1 className="text-3xl font-black text-fic-dark">Editar Evaluación #{id}</h1>
+                    <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Editar Admisión #{id}</h1>
                     <p className="text-sm text-slate-500 font-bold">Solicitante: {header.solicitanteName}</p>
                 </div>
                 <button onClick={() => navigate('/asesor/listar-admisiones')} className="font-bold text-slate-500 hover:text-fic-red transition-colors">
                     ← Volver
                 </button>
             </div>
+            
 
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
