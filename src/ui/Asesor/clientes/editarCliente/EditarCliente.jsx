@@ -4,6 +4,8 @@ import { showCliente, updateCliente } from 'services/clienteService';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+
 import ClienteForm from '../components/formularios/ClienteForm';
 import ContactosForm from '../components/formularios/ContactosForm';
 
@@ -68,7 +70,7 @@ const EditarCliente = () => {
 
       } catch (err) {
         console.error("Error al procesar datos del cliente:", err);
-        setError("No se pudo cargar la información del cliente. Revisa la consola.");
+        setError("No se pudo cargar la información del cliente.");
       } finally {
         setLoading(false);
       }
@@ -87,56 +89,75 @@ const EditarCliente = () => {
     }));
   };
 
-   const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setAlert(null);
-        try {
-            const response = await updateCliente(id, formData);
-            setAlert({ type: 'success', message: response.message || 'Cliente actualizado con éxito' });
-            setTimeout(() => navigate('/asesor/listar-clientes'), 2000);
-        } catch (err) {
-            let errorDetails = [];
-            
-            if (err.details && typeof err.details === 'object') {
-                errorDetails = Object.values(err.details).flat();
-            } else if (err.message) {
-                errorDetails = [err.message];
-            }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setAlert(null);
 
-            setAlert({ 
-                type: 'error', 
-                message: 'Error al actualizar', 
-                details: errorDetails 
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    try {
+        const response = await updateCliente(id, formData);
+        
+        setAlert({ 
+            type: 'success', 
+            message: response.message || 'Cliente actualizado con éxito' 
+        });
+        
+        setTimeout(() => navigate('/asesor/listar-clientes'), 2000);
+
+    } catch (err) {
+        // USAR LA UTILIDAD PARA ESTANDARIZAR EL ERROR
+        setAlert(handleApiError(err, 'Error al actualizar el cliente'));
+    } finally {
+        setLoading(false);
+    }
+  };
 
   if (loading) return <LoadingScreen />;
-  if (error) return <div className="text-center p-8 text-red-600">{error}</div>;
+  if (error) return <div className="text-center p-8 text-red-600 font-bold border-2 border-red-100 rounded-lg m-4">{error}</div>;
 
   return (
     <div className="container mx-auto p-6 ">
       <h1 className="text-3xl font-bold text-slate-800 mb-4">
-        Editando Cliente: {formData?.datos?.nombre} {formData?.datos?.apellidoPaterno} {formData?.datos?.apellidoMaterno}
+        Editando Cliente: <span className="text-fic-red">{formData?.datos?.nombre} {formData?.datos?.apellidoPaterno}</span>
       </h1>
-      <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
+      
+      {/* ALERTA (Mantiene 'details' para mostrar lista de errores) */}
+      <AlertMessage 
+        type={alert?.type} 
+        message={alert?.message} 
+        details={alert?.details} 
+        onClose={() => setAlert(null)} 
+      />
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-12">
           {formData && (
             <>
-              <div className="bg-white p-8 rounded-lg shadow-md"><ClienteForm data={formData.datos} handleChange={(e) => handleChange(e, 'datos')} /></div>
-              <div className="bg-white p-8 rounded-lg shadow-md"><ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} /></div>
+              <div className="bg-white p-8 rounded-lg shadow-md border border-slate-100">
+                  <h2 className="text-xl font-bold text-slate-700 mb-4 border-b pb-2">Datos Personales</h2>
+                  <ClienteForm data={formData.datos} handleChange={(e) => handleChange(e, 'datos')} />
+              </div>
+              <div className="bg-white p-8 rounded-lg shadow-md border border-slate-100">
+                  <h2 className="text-xl font-bold text-slate-700 mb-4 border-b pb-2">Información de Contacto</h2>
+                  <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />
+              </div>
             </>
           )}
         </div>
 
-        <div className="flex justify-end mt-8">
-          <button type="button" onClick={() => navigate('/asesor/listar-clientes')} className="px-6 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 mr-4">Cancelar</button>
-          <button type="submit" disabled={loading} className="px-6 py-2 text-white bg-amber-500 rounded-md hover:bg-amber-600 disabled:opacity-50">
+        <div className="flex justify-end mt-8 gap-4">
+          <button 
+            type="button" 
+            onClick={() => navigate('/asesor/listar-clientes')} 
+            className="px-6 py-2 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 font-bold"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="px-6 py-2 text-white bg-fic-yellow text-fic-dark font-black uppercase rounded-md hover:bg-yellow-500 shadow-lg disabled:opacity-50 transition-all"
+          >
             {loading ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
