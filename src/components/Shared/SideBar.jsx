@@ -4,12 +4,10 @@ import {
     Bars3Icon, 
     ChevronDownIcon, 
     ArrowRightOnRectangleIcon,
-    UserGroupIcon,
     UsersIcon,
     BanknotesIcon,
-    ChartBarIcon,
-    ClipboardDocumentCheckIcon,
-    DocumentTextIcon
+    DocumentTextIcon,
+    UserGroupIcon
 } from '@heroicons/react/24/outline'; 
 import jwtUtils from 'utilities/Token/jwtUtils';
 import { logout } from 'js/logout';
@@ -59,7 +57,7 @@ const menus = {
     asesor: [
         {
             section: 'Clientes',
-            icon: UsersIcon,
+            icon: UserGroupIcon,
             subs: [
                 { name: 'Agregar Cliente', link: '/asesor/agregar-cliente' },
                 { name: 'Listar Clientes', link: '/asesor/listar-clientes' },

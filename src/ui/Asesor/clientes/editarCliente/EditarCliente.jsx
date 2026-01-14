@@ -87,14 +87,7 @@ const EditarCliente = () => {
     }));
   };
 
-  const handleAvalesChange = (updatedAvales) => {
-    setFormData((prev) => ({
-      ...prev,
-      avales: updatedAvales,
-    }));
-  };
-
-    const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setAlert(null);

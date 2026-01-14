@@ -10,8 +10,7 @@ import {
     PencilSquareIcon, 
     BuildingStorefrontIcon, 
     EyeIcon, 
-    UserCircleIcon,
-    MapPinIcon
+    UserCircleIcon
 } from '@heroicons/react/24/outline';
 
 const ListarSedes = () => {
