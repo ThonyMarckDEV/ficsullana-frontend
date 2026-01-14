@@ -7,7 +7,8 @@ import {
     UsersIcon,
     BanknotesIcon,
     DocumentTextIcon,
-    UserGroupIcon
+    UserGroupIcon,
+    ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline'; 
 import jwtUtils from 'utilities/Token/jwtUtils';
 import { logout } from 'js/logout';
@@ -53,6 +54,14 @@ const menus = {
             subs: [
                 { name: 'Agregar Cliente', link: '/asesor/agregar-cliente' },
                 { name: 'Listar Clientes', link: '/asesor/listar-clientes' },
+            ]
+        },
+        {
+            section: 'Admisiones',
+            icon: ClipboardDocumentListIcon,
+            subs: [
+                { name: 'Nueva Admision', link: '/asesor/nueva-admision' },
+                { name: 'Listar Admisiones', link: '/asesor/listar-admisiones' },
             ]
         },
     ]

@@ -1,0 +1,300 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createAdmision } from 'services/admisionService';
+
+// Componentes de Búsqueda (Comboboxes Inteligentes)
+import ClienteSearchSelect from 'components/Shared/Comboboxes/ClienteSearchSelect';
+import ProspectoSearchSelect from 'components/Shared/Comboboxes/ProspectoSearchSelect';
+
+// Componentes de Admisión
+import DeudasGrid from '../components/DeudasGrid';
+import ProtestosGrid from '../components/ProtestosGrid';
+import ModalCrearProspecto from '../components/Modals/ModalCrearProspecto';
+
+import AlertMessage from 'components/Shared/Errors/AlertMessage';
+import LoadingScreen from 'components/Shared/LoadingScreen';
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import { UserPlusIcon } from '@heroicons/react/24/outline';
+
+const NuevaAdmision = () => {
+    const navigate = useNavigate();
+    
+    // --- ESTADOS DE UI ---
+    const [loading, setLoading] = useState(false);
+    const [alert, setAlert] = useState(null);
+    const [isModalProspectoOpen, setIsModalProspectoOpen] = useState(false);
+
+    // --- ESTADOS DE DATOS ---
+    const [header, setHeader] = useState({
+        cliente_id: null,     
+        prospecto_id: null,
+        tipo_solicitante: 'CLIENTE',
+        tipo_prestamo: 'NUEVO',
+        observaciones: ''
+    });
+
+    const [clienteSelected, setClienteSelected] = useState(null);
+    const [prospectoSelected, setProspectoSelected] = useState(null);
+
+    const [deudas, setDeudas] = useState([]);
+    const [protestos, setProtestos] = useState([]);
+
+    // --- MANEJADORES DE SELECCIÓN ---
+
+    // 1. Cambio de Tipo (Cliente vs Prospecto)
+    const handleTipoSolicitanteChange = (e) => {
+        const nuevoTipo = e.target.value;
+        
+        setHeader(prev => ({
+            ...prev,
+            tipo_solicitante: nuevoTipo,
+            // Limpiamos los IDs cruzados para evitar errores
+            cliente_id: null,
+            prospecto_id: null,
+            // Si cambia a Prospecto, forzamos NUEVO
+            tipo_prestamo: nuevoTipo === 'PROSPECTO' ? 'NUEVO' : 'NUEVO'
+        }));
+
+        // Limpiamos las selecciones visuales
+        setClienteSelected(null);
+        setProspectoSelected(null);
+    };
+
+    // 2. Selección de CLIENTE desde el Combobox
+    const onSelectCliente = (cliente) => {
+        if (cliente) {
+            setHeader(prev => ({ ...prev, cliente_id: cliente.id, prospecto_id: null }));
+            setClienteSelected(cliente); // Guardamos para mostrar nombre
+            setAlert({ type: 'info', message: 'Cliente seleccionado. Puede elegir cualquier tipo de préstamo.' });
+        } else {
+            setHeader(prev => ({ ...prev, cliente_id: null }));
+            setClienteSelected(null);
+        }
+    };
+
+    // 3. Selección de PROSPECTO desde el Combobox
+    const onSelectProspecto = (prospecto) => {
+        if (prospecto) {
+            setHeader(prev => ({ 
+                ...prev, 
+                prospecto_id: prospecto.id, 
+                cliente_id: null,
+                tipo_prestamo: 'NUEVO' // Regla de Negocio: Prospecto siempre es NUEVO
+            }));
+            setProspectoSelected(prospecto);
+            setAlert({ type: 'warning', message: 'Prospecto seleccionado. Solo aplica para crédito NUEVO.' });
+        } else {
+            setHeader(prev => ({ ...prev, prospecto_id: null }));
+            setProspectoSelected(null);
+        }
+    };
+
+    // 4. Creación Exitosa desde el Modal (+ Nuevo)
+    const handleProspectoCreado = (prospectoData) => {
+        const nombreCompleto = `${prospectoData.nombres} ${prospectoData.apellido_paterno} ${prospectoData.apellido_materno}`;
+        
+        // Simulamos la selección como si viniera del combobox
+        const prospectoObj = { 
+            id: prospectoData.id, 
+            nombre: nombreCompleto, 
+            dni: prospectoData.dni 
+        };
+
+        onSelectProspecto(prospectoObj);
+        setAlert({ type: 'success', message: 'Prospecto creado y asignado correctamente.' });
+    };
+
+    // --- SUBMIT ---
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setAlert(null);
+
+        // Validaciones Finales
+        if (header.tipo_solicitante === 'CLIENTE' && !header.cliente_id) {
+            setAlert({ type: 'error', message: 'Debe buscar y seleccionar un Cliente.' });
+            setLoading(false);
+            return;
+        }
+        if (header.tipo_solicitante === 'PROSPECTO' && !header.prospecto_id) {
+            setAlert({ type: 'error', message: 'Debe buscar o crear un Prospecto.' });
+            setLoading(false);
+            return;
+        }
+
+        const payload = {
+            cliente_id: header.tipo_solicitante === 'CLIENTE' ? header.cliente_id : null,
+            prospecto_id: header.tipo_solicitante === 'PROSPECTO' ? header.prospecto_id : null,
+            tipo_prestamo: header.tipo_prestamo,
+            observaciones: header.observaciones,
+            deudas: deudas,
+            protestos: protestos
+        };
+
+        try {
+            const response = await createAdmision(payload);
+            setAlert({ type: 'success', message: response.message || 'Evaluación registrada exitosamente.' });
+            setTimeout(() => navigate('/asesor/listar-admisiones'), 2000);
+        } catch (error) {
+            setAlert(handleApiError(error, 'Error al registrar la admisión'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) return <LoadingScreen />;
+
+    return (
+        <div className="container mx-auto p-6">
+            <div className="flex justify-between items-center mb-6 border-b-2 border-fic-red pb-4">
+                <h1 className="text-3xl font-black text-fic-dark">Nueva Admisión</h1>
+                <button 
+                    onClick={() => navigate('/asesor/listar-admisiones')} 
+                    className="font-bold text-slate-500 hover:text-fic-red transition-colors"
+                >
+                    ← Volver
+                </button>
+            </div>
+
+            <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
+
+            {/* MODAL DE CREACIÓN RÁPIDA DE PROSPECTO */}
+            <ModalCrearProspecto 
+                isOpen={isModalProspectoOpen} 
+                onClose={() => setIsModalProspectoOpen(false)} 
+                onSuccess={handleProspectoCreado} 
+            />
+
+            <form onSubmit={handleSubmit} className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {/* --- COLUMNA IZQUIERDA: IDENTIFICACIÓN --- */}
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 sticky top-6">
+                        <h2 className="text-lg font-bold text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">
+                            <UserPlusIcon className="w-5 h-5 text-fic-red"/> 1. Solicitante
+                        </h2>
+                        
+                        {/* SELECTOR DE TIPO */}
+                        <div className="mb-4">
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Tipo de Persona</label>
+                            <select 
+                                value={header.tipo_solicitante} 
+                                onChange={handleTipoSolicitanteChange}
+                                className="w-full px-3 py-2 border rounded-md focus:ring-1 focus:ring-fic-red outline-none text-sm font-bold text-slate-700"
+                            >
+                                <option value="CLIENTE">Cliente Registrado</option>
+                                <option value="PROSPECTO">Prospecto Nuevo</option>
+                            </select>
+                        </div>
+
+                        {/* COMBOBOXES CONDICIONALES */}
+                        {header.tipo_solicitante === 'CLIENTE' ? (
+                            <div className="mb-4 animate-fade-in-down">
+                                <ClienteSearchSelect 
+                                    onSelect={onSelectCliente} 
+                                    selectedId={header.cliente_id}
+                                    initialName={clienteSelected?.nombre}
+                                />
+                            </div>
+                        ) : (
+                            <div className="mb-4 animate-fade-in-down">
+                                <ProspectoSearchSelect 
+                                    onSelect={onSelectProspecto} 
+                                    selectedId={header.prospecto_id}
+                                    initialName={prospectoSelected?.nombre}
+                                    onOpenModal={() => setIsModalProspectoOpen(true)} // Pasamos la función para abrir el modal
+                                />
+                            </div>
+                        )}
+
+                        {/* SELECTOR DE TIPO PRÉSTAMO */}
+                        <div className="mb-4">
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Tipo de Préstamo</label>
+                            <select 
+                                name="tipo_prestamo" 
+                                value={header.tipo_prestamo} 
+                                onChange={(e) => setHeader(prev => ({ ...prev, tipo_prestamo: e.target.value }))}
+                                // BLOQUEO: Si es prospecto, deshabilita el select
+                                disabled={header.tipo_solicitante === 'PROSPECTO'}
+                                className={`w-full px-3 py-2 border rounded-md outline-none text-sm font-bold transition-colors ${
+                                    header.tipo_solicitante === 'PROSPECTO' 
+                                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                                        : 'bg-white text-slate-700'
+                                }`}
+                            >
+                                <option value="NUEVO">NUEVO (Cliente Nuevo)</option>
+                                {/* Opciones adicionales solo visibles/habilitadas para Clientes */}
+                                {header.tipo_solicitante === 'CLIENTE' && (
+                                    <>
+                                        <option value="RCS">RCS (Recurrente con Saldo)</option>
+                                        <option value="RSS">RSS (Recurrente sin Saldo)</option>
+                                    </>
+                                )}
+                            </select>
+                            
+                            {/* Mensaje Informativo */}
+                            {header.tipo_solicitante === 'PROSPECTO' && (
+                                <p className="text-[10px] text-green-600 mt-1 font-bold bg-green-50 p-1 rounded border border-green-100">
+                                    ⓘ Los prospectos inician con crédito NUEVO.
+                                </p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Observaciones</label>
+                            <textarea 
+                                name="observaciones" 
+                                value={header.observaciones} 
+                                onChange={(e) => setHeader(prev => ({ ...prev, observaciones: e.target.value }))}
+                                className="w-full px-3 py-2 border rounded-md outline-none text-sm h-24 resize-none focus:border-fic-red"
+                                placeholder="Notas del asesor..."
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- COLUMNA DERECHA: GRIDS FINANCIEROS --- */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 min-h-[500px]">
+                        <h2 className="text-lg font-bold text-slate-700 mb-4 border-b pb-2">2. Evaluación Financiera</h2>
+                        
+                        {/* Bloqueo visual si no hay solicitante seleccionado */}
+                        <div className={!header.cliente_id && !header.prospecto_id ? 'opacity-50 pointer-events-none grayscale' : ''}>
+                            <DeudasGrid deudas={deudas} setDeudas={setDeudas} />
+                            <ProtestosGrid protestos={protestos} setProtestos={setProtestos} />
+                        </div>
+
+                        {/* Mensaje si no hay selección */}
+                        {!header.cliente_id && !header.prospecto_id && (
+                            <div className="text-center py-8 bg-slate-50 border border-dashed border-slate-300 rounded-lg mt-[-200px] relative z-10 mx-4">
+                                <p className="text-slate-400 font-bold text-sm">
+                                    🔍 Seleccione un Cliente o Prospecto para habilitar la carga de datos financieros.
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="mt-8 pt-4 border-t border-slate-100 flex justify-end gap-4">
+                            <button 
+                                type="button" 
+                                onClick={() => navigate('/asesor/listar-admisiones')} 
+                                className="px-6 py-2 text-slate-600 font-bold bg-slate-100 rounded hover:bg-slate-200 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                type="submit" 
+                                disabled={loading || (!header.cliente_id && !header.prospecto_id)} 
+                                className="bg-fic-red text-white px-8 py-2 rounded font-black uppercase shadow-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                            >
+                                {loading ? 'Procesando...' : 'Finalizar Evaluación'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    );
+};
+
+export default NuevaAdmision;

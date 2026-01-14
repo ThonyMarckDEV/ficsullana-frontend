@@ -44,6 +44,12 @@ import AgregarCliente from 'ui/Asesor/clientes/agregarCliente/AgregarCliente';
 import ListarClientes from 'ui/Asesor/clientes/listarClientes/ListarClientes';
 import EditarCliente from 'ui/Asesor/clientes/editarCliente/EditarCliente';
 
+//Modulos Admisiones
+import NuevaAdmision from 'ui/Asesor/admision/nuevaAdmision/NuevaAdmision';
+import ListarAdmisiones from 'ui/Asesor/admision/listarAdmisiones/ListarAdmisiones';
+import EditarAdmision from 'ui/Asesor/admision/editarAdmision/EditarAdmision';
+
+
 // UIS USUARIO
 
 
@@ -133,6 +139,14 @@ function AppContent() {
           <Route path="listar-clientes" element={<ListarClientes />} />
           {/* Ruta Editar Cliente */}
           <Route path="editar-cliente/:id" element={<EditarCliente />} />
+
+        {/* RUTAS ADMISIONES */}
+          {/* Ruta Nueva Admision */}
+          <Route path="nueva-admision" element={<NuevaAdmision />} />
+          {/* Ruta Listar Admisiones */}
+          <Route path="listar-admisiones" element={<ListarAdmisiones />} />
+          {/* Ruta Editar Admision */}
+          <Route path="editar-admision/:id" element={<EditarAdmision />} />
 
       </Route>
 
