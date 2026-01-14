@@ -31,10 +31,18 @@ import EditarSede from 'ui/SuperAdministrador/sedes/editarSede/EditarSede';
 
 // UIS ADMIN
 
+//Modulos Asesores
+import AgregarAsesor from 'ui/Administrador/asesores/agregarAsesor/AgregarAsesor';
+import ListarAsesores from 'ui/Administrador/asesores/listarAsesores/ListarAsesores';
+import EditarAsesor from 'ui/Administrador/asesores/editarAsesor/EditarAsesor';
+
+
+//UIS ASESOR
+
 //Modulos Clientes
-import AgregarCliente from 'ui/Administrador/clientes/agregarCliente/AgregarCliente';
-import ListarClientes from 'ui/Administrador/clientes/listarClientes/ListarClientes';
-import EditarCliente from 'ui/Administrador/clientes/editarCliente/EditarCliente';
+import AgregarCliente from 'ui/Asesor/clientes/agregarCliente/AgregarCliente';
+import ListarClientes from 'ui/Asesor/clientes/listarClientes/ListarClientes';
+import EditarCliente from 'ui/Asesor/clientes/editarCliente/EditarCliente';
 
 // UIS USUARIO
 
@@ -44,6 +52,7 @@ import ProtectedRouteHome from 'utilities/ProtectedRoutes/ProtectedRouteHome';
 import ProtectedRouteCliente from 'utilities/ProtectedRoutes/ProtectedRouteCliente';
 import ProtectedRouteAdmin from 'utilities/ProtectedRoutes/ProtectedRouteAdmin';
 import ProtectedRouteSuperAdmin from 'utilities/ProtectedRoutes/ProtectedRouteSuperAdmin';
+import ProtectedRouteAsesor from 'utilities/ProtectedRoutes/ProtectedRouteAsesor';
 
 
 function AppContent() {
@@ -91,6 +100,30 @@ function AppContent() {
         }
       >
         {/* Ruta Home (cuando solo pones /admin) */}
+        <Route index element={<Home />} />
+
+        {/* RUTAS ASESOR */}
+          {/* Ruta Agregar Asesor */}
+          <Route path="agregar-asesor" element={<AgregarAsesor />} />
+          {/* Ruta Listar Asesor */}
+          <Route path="listar-asesores" element={<ListarAsesores />} />
+          {/* Ruta Editar Asesor */}
+          <Route path="editar-asesor/:id" element={<EditarAsesor />} />
+      </Route>
+
+
+      {/* RUTAS ASESOR */}
+      <Route
+        path="/asesor"
+        element={
+          <ProtectedRouteAsesor element={
+            <SedeLayout>
+              <SidebarLayout />
+            </SedeLayout>
+          } />
+        }
+      >
+        {/* Ruta Home (cuando solo pones /asesor) */}
         <Route index element={<Home />} />
 
         {/* RUTAS CLIENTE */}

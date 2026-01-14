@@ -54,7 +54,7 @@ const ContactosForm = ({ data, handleChange }) => {
             type="email"
             value={data.correo}
             onChange={handleChange}
-            placeholder="cliente@ejemplo.com"
+            placeholder="asesor@ejemplo.com"
             className={inputClass}
           />
           <p className="mt-1 text-[10px] text-fic-red font-medium italic">

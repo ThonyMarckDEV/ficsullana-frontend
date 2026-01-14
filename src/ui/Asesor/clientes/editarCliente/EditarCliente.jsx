@@ -4,12 +4,9 @@ import { showCliente, updateCliente } from 'services/clienteService';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 
-// Importa todos tus componentes de formulario
 import ClienteForm from '../components/formularios/ClienteForm';
 import ContactosForm from '../components/formularios/ContactosForm';
 
-// --- PLANTILLA DE DATOS VACÍOS ---
-// Define la estructura completa que esperan los formularios para evitar errores.
 const initialFormData = {
   datos: {
     nombre: '', apellidoPaterno: '', apellidoMaterno: '', apellidoConyuge: '',
@@ -20,7 +17,6 @@ const initialFormData = {
   contactos: { telefonoMovil: '', telefonoFijo: '', correo: '' },
 };
 
-// --- FUNCIÓN DE AYUDA PARA LIMPIAR VALORES NULL ---
 const cleanNulls = (obj) => {
   if (obj === null || obj === undefined) return {};
   const newObj = { ...obj };
@@ -51,21 +47,18 @@ const EditarCliente = () => {
           throw new Error("La respuesta de la API no contiene los datos del cliente.");
         }
 
-        // 1. Limpiamos los datos de la API para eliminar valores `null`
         const datosApi = cleanNulls(clienteData.datos);
         const contactosApi = cleanNulls(clienteData.contactos?.[0]);
         
-        // 2. Preparamos los datos personales con las transformaciones necesarias
         const datosLimpios = {
-            ...initialFormData.datos, // Empezamos con la plantilla
-            ...datosApi, // Sobrescribimos con los datos limpios de la API
+            ...initialFormData.datos,
+            ...datosApi,
             sexo: datosApi.sexo === 'Masculino' ? 'Masculino' : 'Femenino',
             residePeru: !!datosApi.residePeru,
             enfermedadesPreexistentes: !!datosApi.enfermedadesPreexistentes,
             expuestaPoliticamente: !!datosApi.expuestaPoliticamente,
         };
 
-        // 3. Construimos el estado final del formulario
         const structuredData = {
           datos: datosLimpios,
           contactos: { ...initialFormData.contactos, ...contactosApi },

@@ -34,7 +34,6 @@ const ListarCliente = () => {
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-    // --- 1. LÓGICA PARA VER DETALLE (MAPPING DE DATOS) ---
     const handleViewCliente = async (id) => {
         setIsInfoOpen(true);
         setInfoLoading(true);
@@ -43,10 +42,8 @@ const ListarCliente = () => {
             const { datos, contactos } = response.data;
             const contacto = contactos?.[0] || {};
 
-            // Helper para formatear booleans
             const formatBool = (val) => val ? 'SÍ' : 'NO';
 
-            // Construimos las secciones para el Modal Genérico
             const seccionesFormateadas = [
                 {
                     title: "1. Datos Personales",
@@ -62,7 +59,7 @@ const ListarCliente = () => {
                         { label: "Profesión", value: datos.profesion },
                         { label: "Nivel Educativo", value: datos.nivelEducativo, fullWidth: true },
                         
-                        // Booleans convertidos a texto legible
+    
                         { label: "¿Reside en Perú?", value: formatBool(datos.residePeru) },
                         { label: "¿Enf. Preexistentes?", value: formatBool(datos.enfermedadesPreexistentes) },
                         { label: "¿Exp. Políticamente?", value: formatBool(datos.expuestaPoliticamente) },
@@ -79,7 +76,7 @@ const ListarCliente = () => {
                 }
             ];
 
-            // Actualizamos el estado del modal
+
             setModalData({
                 title: "Ficha de Cliente",
                 subtitle: `Visualizando a: ${datos.nombre} ${datos.apellidoPaterno}`,
@@ -94,7 +91,7 @@ const ListarCliente = () => {
         }
     };
 
-    // --- 2. COLUMNAS DE LA TABLA ---
+    // ---  COLUMNAS DE LA TABLA ---
     const columns = useMemo(() => [
         {
             header: 'Cliente',
@@ -163,7 +160,6 @@ const ListarCliente = () => {
         }
     ], []);
 
-    // --- 3. CARGA DE DATOS ---
     const fetchClientes = useCallback(async (page, search = '') => {
         setLoading(true);
         try {
@@ -185,7 +181,6 @@ const ListarCliente = () => {
         fetchClientes(1, searchTerm);
     }, [fetchClientes, searchTerm]);
 
-    // --- 4. TOGGLE ESTADO ---
     const executeToggleEstado = async () => {
         if (!clienteToToggle) return;
         const { id, estado } = clienteToToggle;

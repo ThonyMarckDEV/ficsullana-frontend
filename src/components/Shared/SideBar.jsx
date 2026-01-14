@@ -41,11 +41,11 @@ const menus = {
             link: '/admin' 
         },
         {
-            section: 'Clientes',
+            section: 'Asesores',
             icon: UsersIcon,
             subs: [
-                { name: 'Agregar Cliente', link: '/admin/agregar-cliente' },
-                { name: 'Listar Clientes', link: '/admin/listar-clientes' },
+                { name: 'Agregar Asesor', link: '/admin/agregar-asesor' },
+                { name: 'Listar Asesores', link: '/admin/listar-asesores' },
             ]
         },
     ],
@@ -56,11 +56,14 @@ const menus = {
             subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] 
         },
     ],
-    contador: [
-        { 
-            section: 'Prestamos', 
-            icon: BanknotesIcon, 
-            subs: [{ name: 'Pagar Prestamo', link: '/cliente/pagar-prestamo' }] 
+    asesor: [
+        {
+            section: 'Clientes',
+            icon: UsersIcon,
+            subs: [
+                { name: 'Agregar Cliente', link: '/asesor/agregar-cliente' },
+                { name: 'Listar Clientes', link: '/asesor/listar-clientes' },
+            ]
         },
     ]
 };
