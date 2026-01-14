@@ -227,7 +227,7 @@ const ListarAdmisiones = () => {
                     to="/asesor/nueva-admision" 
                     className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95"
                 >
-                    + Nueva Evaluación
+                    + Nueva Admisión
                 </Link>
             </div>
 
