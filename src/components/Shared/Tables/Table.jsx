@@ -1,19 +1,17 @@
-// src/components/Shared/Table.jsx
 import React from 'react';
 import Pagination from '../Pagination';
 
-const Table = ({ 
-    columns, 
-    data, 
-    loading = false, 
+const Table = ({
+    columns,
+    data,
+    loading = false,
     pagination = null,
     onSearch,
     searchPlaceholder = "Buscar..."
 }) => {
-    
     return (
         <div className="w-full space-y-4">
-            {/* Buscador opcional con colores de la marca */}
+            {/* --- BUSCADOR --- */}
             {onSearch && (
                 <div className="relative max-w-sm">
                     <input
@@ -30,51 +28,57 @@ const Table = ({
                 </div>
             )}
 
-            {/* Contenedor de la tabla */}
-            <div className={`bg-white shadow-xl rounded-xl overflow-hidden border border-slate-100 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full leading-normal">
-                        <thead>
-                            {/* Encabezado con el Rojo de Fic Sullana */}
-                            <tr className="bg-fic-dark text-white text-left uppercase text-xs tracking-widest">
-                                {columns.map((col, index) => (
-                                    <th key={index} className="px-6 py-4 font-black">
-                                        {col.header}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {data.length > 0 ? (
-                                data.map((row, rowIndex) => (
-                                    <tr key={row.id || rowIndex} className="hover:bg-red-50/30 transition-colors group">
-                                        {columns.map((col, colIndex) => (
-                                            <td key={`${rowIndex}-${colIndex}`} className="px-6 py-4 text-sm font-medium text-slate-700">
-                                                {col.render 
-                                                    ? col.render(row) 
-                                                    : <span className="truncate block">{row[col.accessor]}</span>}
-                                            </td>
-                                        ))}
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={columns.length} className="text-center py-12">
-                                        <div className="flex flex-col items-center justify-center text-slate-400">
-                                            <svg className="w-12 h-12 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="box-open" />
-                                            </svg>
-                                            <p className="font-bold">No se encontraron datos.</p>
-                                        </div>
-                                    </td>
+            {/* --- CONTENEDOR DE LA TABLA (CARD) --- */}
+            <div className={`bg-white shadow-xl rounded-xl border border-slate-100 transition-opacity duration-300 flex flex-col ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                
+                {/* Contenedor de Scroll Horizontal */}
+                <div className="overflow-x-auto w-full block max-w-full touch-pan-x scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                    
+                    {/* Contenedor interno para alineación perfecta */}
+                    <div className="inline-block min-w-full align-middle">
+                        
+                        <table className="min-w-full divide-y divide-slate-100">
+                            <thead>
+                                <tr className="bg-fic-dark text-white text-left uppercase text-xs tracking-widest">
+                                    {columns.map((col, index) => (
+                                        <th key={index} scope="col" className="px-6 py-4 font-black whitespace-nowrap">
+                                            {col.header}
+                                        </th>
+                                    ))}
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                                {data.length > 0 ? (
+                                    data.map((row, rowIndex) => (
+                                        <tr key={row.id || rowIndex} className="hover:bg-red-50/30 transition-colors group">
+                                            {columns.map((col, colIndex) => (
+                                                <td key={`${rowIndex}-${colIndex}`} className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
+                                                    {col.render
+                                                        ? col.render(row)
+                                                        : <span className="block">{row[col.accessor]}</span>}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={columns.length} className="text-center py-12">
+                                            <div className="flex flex-col items-center justify-center text-slate-400">
+                                                <svg className="w-12 h-12 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                                </svg>
+                                                <p className="font-bold">No se encontraron datos.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            {/* Paginación con margen superior */}
+            {/* --- PAGINACIÓN --- */}
             {pagination && (
                 <div className="flex justify-center md:justify-end py-2">
                     <Pagination

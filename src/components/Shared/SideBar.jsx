@@ -79,18 +79,14 @@ const Sidebar = () => {
     const roleMenu = useMemo(() => rol && menus[rol] ? menus[rol] : [], [rol]);
 
     const isSectionActive = useCallback((item) => {
-
         if (item.subs) {
             return item.subs.some(sub => location.pathname === sub.link);
         }
-        
         if (item.link) {
             return location.pathname === item.link;
         }
-        
         return false;
     }, [location.pathname]);
-
 
     useEffect(() => {
         if (!isHovered && window.innerWidth >= 768) return;
@@ -103,7 +99,6 @@ const Sidebar = () => {
         }
     }, [location.pathname, roleMenu, isHovered]);
 
-
     const handleLogout = () => {
         logout();
         setShowConfirm(false);
@@ -114,41 +109,52 @@ const Sidebar = () => {
         setOpenSection(prev => prev === section ? null : section);
     };
 
-    // Control de ancho del sidebar
-    const sidebarWidth = isHovered ? 'md:w-64' : 'md:w-20';
+    const isExpanded = (window.innerWidth < 768 && isOpen) || isHovered;
+
+    const sidebarClasses = `fixed left-0 top-0 h-screen bg-fic-red shadow-2xl z-40 transition-all duration-300 flex flex-col border-r border-white/10
+        ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full'} 
+        md:translate-x-0 ${isHovered ? 'md:w-64' : 'md:w-20'}
+    `;
 
     return (
         <>
             {/* Botón Móvil */}
             <button
-                className="md:hidden fixed top-4 left-4 z-50 p-2 bg-fic-red text-white rounded-lg shadow-lg"
+                className="md:hidden fixed top-4 left-4 z-50 p-2 bg-fic-red text-white rounded-lg shadow-lg active:scale-95 transition-transform"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <Bars3Icon className="h-6 w-6" />
             </button>
 
+            {/* Overlay para cerrar en móvil */}
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm transition-opacity"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
             {/* Sidebar Container */}
             <div
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                className={`fixed left-0 top-0 h-screen bg-fic-red shadow-2xl z-40 transition-all duration-300 flex flex-col
-                    ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full'} 
-                    ${sidebarWidth} md:translate-x-0 border-r border-white/10`}
+                className={sidebarClasses}
             >
                 {/* 1. LOGO FIC SULLANA */}
-                <div className={`bg-white transition-all duration-300 flex items-center justify-center flex-shrink-0 relative z-10
-                    ${isHovered ? 'h-32' : 'h-24'}`}>
+                <div className={`bg-white transition-all duration-300 flex items-center justify-center flex-shrink-0 relative z-10 overflow-hidden
+                    ${isExpanded ? 'h-32' : 'h-24'}`}>
+                    
                     <img
                         src={logoImg}
                         alt="Logo Fic Sullana"
                         className={`transition-all duration-300 object-contain p-2
-                            ${isHovered ? 'w-48' : 'w-12'}
-                        `}
+                            ${isExpanded ? 'w-48' : 'w-16'} 
+                        `} 
                     />
                 </div>
 
-                {/* 2. MENÚ SCROLLABLE */}
-                <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 scrollbar-thin scrollbar-thumb-white/20">
+                {/* 2. MENÚ SCROLLABLE (Sin barra visible) */}
+                <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                     {roleMenu.map((item, index) => {
                         const isActive = isSectionActive(item);
                         const isSubOpen = item.subs && openSection === item.section;
@@ -158,7 +164,7 @@ const Sidebar = () => {
                             <div key={index}>
                                 {item.subs ? (
                                     <>
-                                        {/* BOTÓN PADRE (CON SUBMENÚS) */}
+                                        {/* BOTÓN PADRE */}
                                         <button
                                             onClick={() => toggleSection(item.section)}
                                             className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group
@@ -166,18 +172,20 @@ const Sidebar = () => {
                                         >
                                             <div className="flex items-center gap-4 overflow-hidden">
                                                 <IconComponent className={`h-6 w-6 min-w-[24px] flex-shrink-0 ${isActive ? 'text-fic-red' : 'text-white'}`} />
-                                                <span className={`whitespace-nowrap transition-opacity duration-200 ${!isHovered ? 'md:hidden md:opacity-0' : 'opacity-100'}`}>
+                                                <span className={`whitespace-nowrap transition-opacity duration-200 
+                                                    ${isExpanded ? 'opacity-100' : 'opacity-0 md:opacity-0 hidden md:block'}
+                                                `}>
                                                     {item.section}
                                                 </span>
                                             </div>
-                                            {(isHovered || window.innerWidth < 768) && (
+                                            {isExpanded && (
                                                 <ChevronDownIcon className={`h-4 w-4 transition-transform ${isSubOpen ? 'rotate-180' : ''}`}/>
                                             )}
                                         </button>
 
-                                        {/* LISTA DE SUBMENÚS */}
+                                        {/* SUBMENÚS */}
                                         <div className={`overflow-hidden transition-all duration-300 ${isSubOpen ? 'max-h-60 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
-                                            {(isHovered || window.innerWidth < 768) && (
+                                            {isExpanded && (
                                                 <ul className="ml-4 pl-4 border-l-2 border-white/30 space-y-1">
                                                     {item.subs.map((sub, idx) => {
                                                         const isSubActive = location.pathname === sub.link;
@@ -201,7 +209,7 @@ const Sidebar = () => {
                                         </div>
                                     </>
                                 ) : (
-                                    /* BOTÓN SIMPLE (SIN SUBMENÚS - EJ: HOME) */
+                                    /* BOTÓN SIMPLE */
                                     <Link
                                         to={item.link}
                                         onClick={() => setIsOpen(false)}
@@ -209,7 +217,9 @@ const Sidebar = () => {
                                             ${isActive ? 'bg-white text-fic-red font-bold shadow-lg' : 'text-white hover:bg-white/10'}`}
                                     >
                                         <IconComponent className={`h-6 w-6 min-w-[24px] flex-shrink-0 ${isActive ? 'text-fic-red' : 'text-white'}`} />
-                                        <span className={`whitespace-nowrap transition-opacity duration-200 ${!isHovered ? 'md:hidden md:opacity-0' : 'opacity-100'}`}>
+                                        <span className={`whitespace-nowrap transition-opacity duration-200 
+                                            ${isExpanded ? 'opacity-100' : 'opacity-0 md:opacity-0 hidden md:block'}
+                                        `}>
                                             {item.section}
                                         </span>
                                     </Link>
@@ -224,11 +234,13 @@ const Sidebar = () => {
                     <button
                         onClick={() => setShowConfirm(true)}
                         className={`w-full flex items-center gap-4 p-3 rounded-xl text-white hover:bg-red-800 transition-colors
-                            ${!isHovered ? 'md:justify-center' : ''}`}
+                            ${!isExpanded ? 'justify-center' : ''}`}
                         title="Cerrar Sesión"
                     >
                         <ArrowRightOnRectangleIcon className="h-6 w-6 min-w-[24px] flex-shrink-0" />
-                        <span className={`whitespace-nowrap font-bold transition-opacity duration-200 ${!isHovered ? 'md:hidden md:opacity-0' : 'opacity-100'}`}>
+                        <span className={`whitespace-nowrap font-bold transition-opacity duration-200 
+                            ${isExpanded ? 'opacity-100' : 'opacity-0 md:opacity-0 hidden md:block'}
+                        `}>
                             Cerrar Sesión
                         </span>
                     </button>
