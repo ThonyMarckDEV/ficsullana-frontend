@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getClientes } from 'services/clienteService'; // Asegúrate de tener este servicio
+import { getClientes } from 'services/clienteService'; 
 import { MagnifyingGlassIcon, UserIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
@@ -7,11 +7,9 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [hasSearched, setHasSearched] = useState(false);
 
     const wrapperRef = useRef(null);
 
-    // Sincronizar nombre si viene del padre (Edición o reset)
     useEffect(() => {
         if (!selectedId) setInputValue('');
         else if (initialName) setInputValue(initialName);
@@ -28,15 +26,12 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [wrapperRef]);
 
-    const fetchClientes = async (searchTerm) => {
-        if (!searchTerm) return;
+    const fetchClientes = async (searchTerm = '') => {
         setLoading(true);
         try {
-            // Llama a tu endpoint: /api/clientes/index?search=...
             const response = await getClientes(1, searchTerm); 
             setSuggestions(response.data || []);
             setShowSuggestions(true);
-            setHasSearched(true);
         } catch (error) {
             console.error("Error buscando clientes", error);
             setSuggestions([]);
@@ -52,16 +47,26 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
         }
     };
 
-    const handleSelect = (cliente) => {
-        // Tu backend devuelve: user.datos.nombre, etc.
+    // NUEVO: Al hacer click en el input, muestra sugerencias/recientes
+    const handleInputClick = () => {
+        if (!showSuggestions) {
+            fetchClientes(inputValue);
+        }
+    };
+
+   const handleSelect = (cliente) => {
         const d = cliente.datos; 
-        const nombreCompleto = `${d.nombre} ${d.apellidoPaterno} ${d.apellidoMaterno}`;
+        const nombreCompleto = `${d.nombre} ${d.apellidoPaterno} ${d.apellidoMaterno || ''}`;
         
         setInputValue(nombreCompleto);
         setShowSuggestions(false);
         
-        // Enviamos el ID del USUARIO (cliente.id) al padre
-        onSelect({ id: cliente.id, nombre: nombreCompleto, dni: d.dni });
+        onSelect({ 
+            id: cliente.id, 
+            nombre: nombreCompleto, 
+            dni: d.dni,
+            tipo_financiero: cliente.tipo_financiero
+        });
     };
 
     return (
@@ -76,15 +81,17 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                     value={inputValue}
                     onChange={(e) => {
                         setInputValue(e.target.value);
-                        if (selectedId) onSelect(null); // Reset si el usuario edita el texto
+                        if (selectedId) onSelect(null); 
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder="Escribe DNI o Nombre y presiona ENTER"
+                    onClick={handleInputClick}
+                    placeholder="Buscar Cliente..."
                     className={`w-full border rounded-md shadow-sm py-2 pl-3 pr-10 outline-none text-sm transition-colors ${
                         selectedId 
                             ? 'border-green-500 bg-green-50 text-green-800 font-bold' 
                             : 'border-gray-300 focus:border-fic-red focus:ring-1 focus:ring-fic-red'
                     }`}
+                    autoComplete="off"
                 />
 
                 <button
@@ -134,7 +141,7 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                 )}
             </div>
             {selectedId && (
-                <p className="text-[10px] text-green-600 mt-1 font-bold">✓ Cliente seleccionado correctamente</p>
+                <p className="text-[10px] text-green-600 mt-1 font-bold animate-pulse">✓ Cliente seleccionado correctamente</p>
             )}
         </div>
     );
