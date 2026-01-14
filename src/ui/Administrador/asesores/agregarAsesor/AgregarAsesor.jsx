@@ -4,6 +4,8 @@ import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/o
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { createAsesor } from 'services/asesorService';
 
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+
 // Componentes
 import DatosAsesorForm from '../components/formularios/DatosAsesorForm';
 import CuentaAsesorForm from '../components/formularios/CuentaAsesorForm';
@@ -42,14 +44,24 @@ const AgregarAsesor = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
+    setAlert(null); 
+
     try {
       const response = await createAsesor(formData);
-      setAlert(response);
+      
+      setAlert({
+        type: 'success',
+        message: response.message || 'Asesor registrado correctamente.'
+      });
+      
       setFormData(initialFormData);
       setCurrentStep(1);
+      
       // setTimeout(() => navigate('/admin/listar-asesores'), 1500); 
+
     } catch (error) {
-      setAlert(error);
+      // USAR LA UTILIDAD PARA ESTANDARIZAR EL ERROR
+      setAlert(handleApiError(error, 'Error al registrar el asesor'));
     } finally {
       setLoading(false);
     }
@@ -82,7 +94,13 @@ const AgregarAsesor = () => {
         </button>
       </div>
 
-      <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
+      {/* 3. ALERTA (Con soporte para detalles) */}
+      <AlertMessage 
+        type={alert?.type} 
+        message={alert?.message} 
+        details={alert?.details} 
+        onClose={() => setAlert(null)} 
+      />
       
       {/* STEPPER */}
       <div className="mb-10 max-w-3xl mx-auto">

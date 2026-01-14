@@ -1,4 +1,3 @@
-// src/pages/clientes/AgregarCliente.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClienteForm from '../components/formularios/ClienteForm';
@@ -6,6 +5,9 @@ import ContactosForm from '../components/formularios/ContactosForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { createCliente } from 'services/clienteService';
 import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/outline';
+
+// 1. IMPORTAR LA UTILIDAD
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 const initialFormData = {
   datos: {
@@ -46,15 +48,23 @@ const AgregarCliente = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
+    setAlert(null); 
     try {
       const response = await createCliente(formData);
-      setAlert(response);
+      
+      setAlert({
+        type: 'success',
+        message: response.message || 'Cliente registrado exitosamente.'
+      });
+      
       setFormData(initialFormData);
       setCurrentStep(1);
-      // Opcional: Redirigir después de éxito
+      
+      // Opcional: Redirigir
       // setTimeout(() => navigate('/admin/listar-clientes'), 2000);
+
     } catch (error) {
-      setAlert(error);
+      setAlert(handleApiError(error, 'Error al registrar el cliente'));
     } finally {
       setLoading(false);
     }
@@ -87,7 +97,13 @@ const AgregarCliente = () => {
         </button>
       </div>
 
-      <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
+      {/* 3. ALERTA (Ya tenía la propiedad details, así que está perfecto) */}
+      <AlertMessage 
+        type={alert?.type} 
+        message={alert?.message} 
+        details={alert?.details} 
+        onClose={() => setAlert(null)} 
+      />
       
       {/* STEPPER CORPORATIVO */}
       <div className="mb-10 max-w-3xl mx-auto">

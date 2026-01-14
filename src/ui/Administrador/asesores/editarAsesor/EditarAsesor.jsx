@@ -1,9 +1,10 @@
-// src/pages/asesores/EditarAsesor.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { showAsesor, updateAsesor } from 'services/asesorService'; 
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
+
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 import DatosAsesorForm from '../components/formularios/DatosAsesorForm';
 import CuentaAsesorForm from '../components/formularios/CuentaAsesorForm';
@@ -65,7 +66,6 @@ const EditarAsesor = () => {
                 password: '', 
                 password_confirmation: '' 
             },
-
             contactos: cleanNulls(contactoData) 
         });
       } catch (err) {
@@ -88,15 +88,21 @@ const EditarAsesor = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setAlert(null); // Limpiar alertas previas
+
     try {
       await updateAsesor(id, formData);
-      setAlert({ type: 'success', message: 'Asesor actualizado correctamente' });
+      
+      setAlert({ 
+        type: 'success', 
+        message: 'Asesor actualizado correctamente' 
+      });
+      
       setTimeout(() => navigate('/admin/listar-asesores'), 1500);
+      
     } catch (err) {
-       let errorDetails = [];
-       if (err.details && typeof err.details === 'object') errorDetails = Object.values(err.details).flat();
-       else if (err.message) errorDetails = [err.message];
-       setAlert({ type: 'error', message: 'Error al actualizar', details: errorDetails });
+       // USAR LA UTILIDAD PARA ESTANDARIZAR EL ERROR
+       setAlert(handleApiError(err, 'Error al actualizar el asesor'));
     } finally {
       setLoading(false);
     }
@@ -110,7 +116,13 @@ const EditarAsesor = () => {
         Editando Asesor: <span className="text-fic-red">{formData.datos.nombre} {formData.datos.apellidoPaterno}</span>
       </h1>
       
-      <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
+      {/* ALERTA (Mantiene 'details' para mostrar lista de errores) */}
+      <AlertMessage 
+        type={alert?.type} 
+        message={alert?.message} 
+        details={alert?.details} 
+        onClose={() => setAlert(null)} 
+      />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         
