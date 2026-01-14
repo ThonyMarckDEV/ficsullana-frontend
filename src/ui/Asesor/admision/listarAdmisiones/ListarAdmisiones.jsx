@@ -13,6 +13,14 @@ import {
     ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
+// --- MAPA DE ESTADOS (TRADUCCIÓN DE NÚMERO A TEXTO/COLOR) ---
+const ESTADOS = {
+    0: { label: 'PENDIENTE', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+    1: { label: 'APROBADO',  color: 'bg-green-100 text-green-800 border-green-200' },
+    2: { label: 'OBSERVADO', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+    3: { label: 'RECHAZADO', color: 'bg-red-100 text-red-800 border-red-200' },
+};
+
 const ListarAdmisiones = () => {
     // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
@@ -40,6 +48,9 @@ const ListarAdmisiones = () => {
                 ? `${solicitante.nombre} ${solicitante.apellidoPaterno}`
                 : `${solicitante.nombres} ${solicitante.apellido_paterno}`;
 
+            // Obtener etiqueta del estado
+            const estadoInfo = ESTADOS[data.estado] || { label: 'DESCONOCIDO' };
+
             // Transformar data para el modal
             const secciones = [
                 {
@@ -57,12 +68,12 @@ const ListarAdmisiones = () => {
                     title: "2. Resumen Financiero",
                     icon: BanknotesIcon,
                     items: [
-                        { label: "Estado", value: data.estado },
+                        // AQUÍ FORMATEAMOS EL ESTADO PARA EL MODAL
+                        { label: "Estado", value: estadoInfo.label },
                         { label: "Tipo Préstamo", value: data.tipo_prestamo },
                         { label: "Total Deuda", value: `S/ ${data.total_deuda}` },
                         { label: "Total Protestos", value: `S/ ${data.total_protestos}` },
                         { label: "N° Entidades", value: data.total_ifis },
-                        // Si hay excepción, lo mostramos en Rojo
                         { 
                             label: "Riesgo Detectado", 
                             value: data.excepcion_detectada ? 'SÍ (OBSERVADO)' : 'NO (CALIFICA)',
@@ -70,7 +81,6 @@ const ListarAdmisiones = () => {
                         },
                     ]
                 },
-                // --- NUEVA SECCIÓN DE OBSERVACIONES ---
                 {
                     title: "3. Observaciones y Análisis",
                     icon: ExclamationTriangleIcon,
@@ -79,7 +89,6 @@ const ListarAdmisiones = () => {
                             label: "Detalle de Observaciones", 
                             value: data.observaciones || 'Sin observaciones registradas.', 
                             fullWidth: true,
-                            // Si el sistema detectó excepción, resaltamos el texto
                             className: data.excepcion_detectada 
                                 ? 'bg-red-50 text-red-800 p-3 rounded-md border border-red-200 font-medium' 
                                 : 'text-slate-600'
@@ -143,7 +152,7 @@ const ListarAdmisiones = () => {
                     </div>
                     <div className="flex justify-between w-32">
                         <span className="text-slate-500">Protestos:</span>
-                        <span className={`font-bold ${row.total_protestos > 0 ? 'text-red-600' : 'text-slate-700'}`}>
+                        <span className={`font-bold ${parseFloat(row.total_protestos) > 0 ? 'text-red-600' : 'text-slate-700'}`}>
                             S/ {row.total_protestos}
                         </span>
                     </div>
@@ -153,15 +162,11 @@ const ListarAdmisiones = () => {
         {
             header: 'Estado',
             render: (row) => {
-                const colors = {
-                    PENDIENTE: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                    APROBADO: 'bg-green-100 text-green-800 border-green-200',
-                    OBSERVADO: 'bg-orange-100 text-orange-800 border-orange-200',
-                    RECHAZADO: 'bg-red-100 text-red-800 border-red-200',
-                };
+                // AQUÍ USAMOS EL MAPA PARA OBTENER COLOR Y TEXTO
+                const config = ESTADOS[row.estado] || { label: 'DESC.', color: 'bg-gray-100' };
                 return (
-                    <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full border ${colors[row.estado] || 'bg-gray-100'}`}>
-                        {row.estado}
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full border ${config.color}`}>
+                        {config.label}
                     </span>
                 );
             }
@@ -179,8 +184,9 @@ const ListarAdmisiones = () => {
                         </div>
                         Ver
                     </button>
-                    {/* Solo editable si no está aprobado/rechazado final */}
-                    {row.estado === 'PENDIENTE' || row.estado === 'OBSERVADO' ? (
+                    
+                    {/* Solo editable si es PENDIENTE (0) u OBSERVADO (2) */}
+                    {(row.estado === 0 || row.estado === 2) ? (
                         <Link 
                             to={`/asesor/editar-admision/${row.id}`} 
                             className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
@@ -216,7 +222,6 @@ const ListarAdmisiones = () => {
 
     return (
         <div className="container mx-auto p-6">
-            
             <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
                 <div>
                     <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Admisiones</h1>

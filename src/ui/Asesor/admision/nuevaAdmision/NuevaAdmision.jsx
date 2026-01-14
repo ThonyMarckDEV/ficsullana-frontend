@@ -164,14 +164,11 @@ const NuevaAdmision = () => {
 
     return (
         <div className="container mx-auto p-4 lg:p-6">
-            <div className="flex justify-between items-center mb-6 border-b-2 border-fic-red pb-4">
-                <h1 className="text-3xl font-black text-fic-dark">Nueva Evaluación</h1>
-                <button 
-                    onClick={() => navigate('/asesor/listar-admisiones')} 
-                    className="font-bold text-slate-500 hover:text-fic-red transition-colors"
-                >
-                    ← Volver
-                </button>
+
+            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
+                <div>
+                    <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Nueva Admisión</h1>
+                </div>
             </div>
 
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
@@ -311,7 +308,7 @@ const NuevaAdmision = () => {
                                 disabled={loading || !header.tipo_prestamo} 
                                 className="bg-fic-red text-white px-8 py-2 rounded font-black uppercase shadow-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                             >
-                                {loading ? 'Procesando...' : 'Finalizar Evaluación'}
+                                {loading ? 'Procesando...' : 'Finalizar Admisión'}
                             </button>
                         </div>
                     </div>
