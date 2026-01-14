@@ -23,10 +23,8 @@ const ModalCrearProspecto = ({ isOpen, onClose, onSuccess }) => {
         setAlert(null);
 
         try {
-            // Asumiendo que tienes un servicio createProspecto
             const response = await createProspecto(formData);
             
-            // Éxito: Pasamos el objeto creado al padre y cerramos
             onSuccess(response.data); 
             onClose(); 
             

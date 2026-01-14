@@ -195,6 +195,7 @@ const ListarAdmisiones = () => {
 
     return (
         <div className="container mx-auto p-6">
+            
             <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
                 <div>
                     <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Admisiones</h1>
