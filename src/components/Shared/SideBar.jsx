@@ -44,7 +44,7 @@ const menus = {
             icon: UsersIcon,
             subs: [
                 { name: 'Agregar Jefe Negocio', link: '/admin/agregar-jefe-negocio' },
-                { name: 'Listar Jefes Negocio', link: '/admin/listar-jefe-negocio' },
+                { name: 'Listar Jefes Negocio', link: '/admin/listar-jefes-negocio' },
             ]
         },
     ],

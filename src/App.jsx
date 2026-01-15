@@ -137,7 +137,7 @@ function AppContent() {
           {/* Ruta Agregar Jefe Negocio */}
           <Route path="agregar-jefe-negocio" element={<AgregarJefeNegocio />} />
           {/* Ruta Listar Jefe Negocio */}
-          <Route path="listar-jefe-negocio" element={<ListarJefesNegocio />} />
+          <Route path="listar-jefes-negocio" element={<ListarJefesNegocio />} />
           {/* Ruta Editar Jefe Negocio */}
           <Route path="editar-jefe-negocio/:id" element={<EditarJefeNegocio />} />
 
