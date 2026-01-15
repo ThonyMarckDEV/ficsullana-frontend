@@ -14,11 +14,14 @@ const EditarSede = () => {
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
 
-  // Cargar datos iniciales
   useEffect(() => {
     const load = async () => {
       try {
-        const { data } = await showSede(id);
+        const response = await showSede(id);
+        const { data } = response;
+
+        const datosAdmin = data.admin.datos_empleado || {}; 
+
         setFormData({
           sede: { 
             nombre: data.sede.nombre, 
@@ -26,14 +29,15 @@ const EditarSede = () => {
             codigo_sunat: data.sede.codigo_sunat 
           },
           admin: { 
-            nombre: data.admin.datos.nombre, 
-            apellidoPaterno: data.admin.datos.apellidoPaterno, 
-            dni: data.admin.datos.dni, 
-            username: data.admin.username, 
+            nombre: datosAdmin.nombre || '', 
+            apellidoPaterno: datosAdmin.apellidoPaterno || '', 
+            dni: datosAdmin.dni || '', 
+            username: data.admin.username || '', 
             password: ''
           }
         });
       } catch (e) { 
+        console.error(e);
         setAlert({ type: 'error', message: 'No se pudo cargar la información de la sede.' }); 
       } finally { 
         setLoading(false); 
@@ -72,10 +76,23 @@ const EditarSede = () => {
 
   if (loading) return <LoadingScreen />;
 
+  if (!formData) {
+    return (
+        <div className="container mx-auto p-6">
+            <AlertMessage 
+                type="error" 
+                message="Error crítico" 
+                details="No se pudieron cargar los datos. Por favor regrese e intente nuevamente." 
+            />
+            <button onClick={() => navigate(-1)} className="mt-4 text-fic-red font-bold">Volver</button>
+        </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-black text-fic-dark mb-6 border-b-2 border-fic-red pb-4">
-        Editar Sede: <span className="text-slate-500">{formData?.sede.nombre}</span>
+        Editar Sede: <span className="text-slate-500">{formData.sede.nombre}</span>
       </h1>
       
       <AlertMessage 
@@ -92,7 +109,7 @@ const EditarSede = () => {
             <h2 className="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2 border-b pb-2">
                 🏢 Datos de la Sede
             </h2>
-            <SedeForm data={formData.sede} handleChange={handleChange} />
+            <SedeForm data={formData.sede} handleChange={(e) => handleChange(e, 'sede')} />
         </div>
 
         {/* CARD 2: DATOS ADMIN */}
@@ -100,7 +117,7 @@ const EditarSede = () => {
             <h2 className="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2 border-b pb-2">
                 👤 Administrador Encargado
             </h2>
-            <AdminForm data={formData.admin} handleChange={handleChange} isEdit={true} />
+            <AdminForm data={formData.admin} handleChange={(e) => handleChange(e, 'admin')} isEdit={true} />
         </div>
 
         {/* BOTONES */}

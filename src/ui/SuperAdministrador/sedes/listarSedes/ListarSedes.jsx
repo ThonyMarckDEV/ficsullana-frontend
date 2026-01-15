@@ -55,8 +55,8 @@ const ListarSedes = () => {
                     title: "2. Administrador Encargado",
                     icon: UserCircleIcon,
                     items: [
-                        { label: "Nombre Completo", value: admin?.datos ? `${admin.datos.nombre} ${admin.datos.apellidoPaterno}` : 'Sin asignar', fullWidth: true },
-                        { label: "DNI", value: admin?.datos?.dni },
+                        { label: "Nombre Completo", value: admin?.datos_empleado ? `${admin.datos_empleado.nombre} ${admin.datos_empleado.apellidoPaterno}` : 'Sin asignar', fullWidth: true },
+                        { label: "DNI", value: admin?.datos_empleado?.dni },
                         { label: "Usuario de Acceso", value: admin?.username },
                     ]
                 }
