@@ -28,7 +28,6 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
     const fetchProspectos = async (searchTerm = '') => {
         setLoading(true);
         try {
-            // Enviamos vacío para traer los últimos, o el término para filtrar
             const response = await getProspectos(1, searchTerm);
             setSuggestions(response.data || []);
             setShowSuggestions(true);
@@ -75,7 +74,7 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                         if (selectedId) onSelect(null);
                     }}
                     onKeyDown={handleKeyDown}
-                    onClick={handleInputClick} // <--- AQUÍ ESTÁ LA CLAVE
+                    onClick={handleInputClick}
                     placeholder="Buscar Prospecto..."
                     className={`w-full border rounded-md shadow-sm py-2 pl-3 pr-10 outline-none text-sm transition-colors ${
                         selectedId 

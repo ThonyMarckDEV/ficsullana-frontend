@@ -55,7 +55,7 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     };
 
    const handleSelect = (cliente) => {
-        const d = cliente.datos; 
+        const d = cliente.datos_cliente; 
         const nombreCompleto = `${d.nombre} ${d.apellidoPaterno} ${d.apellidoMaterno || ''}`;
         
         setInputValue(nombreCompleto);
@@ -124,10 +124,10 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                                     </div>
                                     <div>
                                         <p className="font-bold text-slate-700 uppercase text-xs">
-                                            {cli.datos.nombre} {cli.datos.apellidoPaterno}
+                                            {cli.datos_cliente.nombre} {cli.datos_cliente.apellidoPaterno}
                                         </p>
                                         <p className="text-[10px] text-slate-400 font-mono">
-                                            DNI: {cli.datos.dni}
+                                            DNI: {cli.datos_cliente.dni}
                                         </p>
                                     </div>
                                 </li>

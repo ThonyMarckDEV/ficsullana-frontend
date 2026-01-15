@@ -93,7 +93,7 @@ const NuevaAdmision = () => {
                 tipo_prestamo: 'NUEVO'
             }));
             setProspectoSelected(prospecto);
-            setAlert({ type: 'warning', message: 'Prospecto seleccionado. Aplica solo a Primer Crédito.' });
+            setAlert({ type: 'info', message: 'Prospecto seleccionado. Aplica solo a Primer Crédito.' });
         } else {
             setHeader(prev => ({ ...prev, prospecto_id: null, tipo_prestamo: '' }));
             setProspectoSelected(null);
