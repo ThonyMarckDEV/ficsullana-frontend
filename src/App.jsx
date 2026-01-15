@@ -22,37 +22,46 @@ import Login from 'ui/auth/Login/Login';
 import Home from 'ui/home/Home';
 
 //UIS SUPERADMIN
-
 //Modulos Sedes
 import AgregarSede from 'ui/SuperAdministrador/sedes/agregarSede/AgregarSede';
 import ListarSedes from 'ui/SuperAdministrador/sedes/listarSedes/ListarSedes';
 import EditarSede from 'ui/SuperAdministrador/sedes/editarSede/EditarSede';
-
 //Modulos Productos
 import AgregarProducto from 'ui/SuperAdministrador/productos/agregarProducto/AgregarProducto';
 import ListarProductos from 'ui/SuperAdministrador/productos/listarProductos/ListarProductos';
 import EditarProducto from 'ui/SuperAdministrador/productos/editarProductos/EditarProducto';
 
 
-// UIS ADMIN
 
+// UIS ADMIN
+//Modulos Jefe Negocio
+import AgregarJefeNegocio from 'ui/Administrador/jefe_negocios/agregarJefeNegocio/AgregarJefeNegocio';
+import ListarJefesNegocio from 'ui/Administrador/jefe_negocios/listarJefesNegocio/ListarJefesNegocio';
+import EditarJefeNegocio  from 'ui/Administrador/jefe_negocios/editarJefeNegocio/EditarJefeNegocio';
+
+
+
+
+//UIS JEFE NEGOCIO
 //Modulos Asesores
-import AgregarAsesor from 'ui/Administrador/asesores/agregarAsesor/AgregarAsesor';
-import ListarAsesores from 'ui/Administrador/asesores/listarAsesores/ListarAsesores';
-import EditarAsesor from 'ui/Administrador/asesores/editarAsesor/EditarAsesor';
+import AgregarAsesor from 'ui/JefeNegocio/asesores/agregarAsesor/AgregarAsesor';
+import ListarAsesores from 'ui/JefeNegocio/asesores/listarAsesores/ListarAsesores';
+import EditarAsesor from 'ui/JefeNegocio/asesores/editarAsesor/EditarAsesor';
+
+
 
 
 //UIS ASESOR
-
 //Modulos Clientes
 import AgregarCliente from 'ui/Asesor/clientes/agregarCliente/AgregarCliente';
 import ListarClientes from 'ui/Asesor/clientes/listarClientes/ListarClientes';
 import EditarCliente from 'ui/Asesor/clientes/editarCliente/EditarCliente';
-
 //Modulos Admisiones
 import NuevaAdmision from 'ui/Asesor/admision/nuevaAdmision/NuevaAdmision';
 import ListarAdmisiones from 'ui/Asesor/admision/listarAdmisiones/ListarAdmisiones';
 import EditarAdmision from 'ui/Asesor/admision/editarAdmision/EditarAdmision';
+
+
 
 
 // UIS USUARIO
@@ -64,6 +73,7 @@ import ProtectedRouteCliente from 'utilities/ProtectedRoutes/ProtectedRouteClien
 import ProtectedRouteAdmin from 'utilities/ProtectedRoutes/ProtectedRouteAdmin';
 import ProtectedRouteSuperAdmin from 'utilities/ProtectedRoutes/ProtectedRouteSuperAdmin';
 import ProtectedRouteAsesor from 'utilities/ProtectedRoutes/ProtectedRouteAsesor';
+import ProtectedRouteJefeNegocio from 'utilities/ProtectedRoutes/ProtectedRouteJefeNegocio';
 
 
 
@@ -123,6 +133,31 @@ function AppContent() {
         {/* Ruta Home (cuando solo pones /admin) */}
         <Route index element={<Home />} />
 
+        {/* RUTAS JEFE NEGOCIO */}
+          {/* Ruta Agregar Jefe Negocio */}
+          <Route path="agregar-jefe-negocio" element={<AgregarJefeNegocio />} />
+          {/* Ruta Listar Jefe Negocio */}
+          <Route path="listar-jefe-negocio" element={<ListarJefesNegocio />} />
+          {/* Ruta Editar Jefe Negocio */}
+          <Route path="editar-jefe-negocio/:id" element={<EditarJefeNegocio />} />
+
+      </Route>
+
+
+    {/* RUTAS JEFE NEGOCIO */}
+      <Route
+        path="/jefe-negocio"
+        element={
+          <ProtectedRouteJefeNegocio element={
+            <SedeLayout>
+              <SidebarLayout />
+            </SedeLayout>
+          } />
+        }
+      >
+        {/* Ruta Home (cuando solo pones /jefe-negocio) */}
+        <Route index element={<Home />} />
+
         {/* RUTAS ASESOR */}
           {/* Ruta Agregar Asesor */}
           <Route path="agregar-asesor" element={<AgregarAsesor />} />
@@ -130,6 +165,7 @@ function AppContent() {
           <Route path="listar-asesores" element={<ListarAsesores />} />
           {/* Ruta Editar Asesor */}
           <Route path="editar-asesor/:id" element={<EditarAsesor />} />
+
       </Route>
 
 

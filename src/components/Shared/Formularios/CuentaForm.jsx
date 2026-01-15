@@ -1,7 +1,7 @@
 import React from 'react';
 import { KeyIcon } from '@heroicons/react/24/outline';
 
-const CuentaAsesorForm = ({ data, handleChange, isEdit = false }) => {
+const CuentaForm = ({ data, handleChange, isEdit = false }) => {
   const inputClass = "w-full px-3 py-2.5 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-fic-red focus:border-fic-red outline-none transition-all text-sm font-medium text-slate-700";
   const labelClass = "block text-xs font-black text-slate-500 mb-1.5 uppercase tracking-wide";
 
@@ -68,4 +68,4 @@ const CuentaAsesorForm = ({ data, handleChange, isEdit = false }) => {
   );
 };
 
-export default CuentaAsesorForm;
+export default CuentaForm;

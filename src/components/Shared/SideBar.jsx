@@ -40,11 +40,11 @@ const menus = {
     admin: [
         { section: 'Home', icon: House, link: '/admin' },
         {
-            section: 'Asesores',
+            section: 'Jefes de Negocio',
             icon: UsersIcon,
             subs: [
-                { name: 'Agregar Asesor', link: '/admin/agregar-asesor' },
-                { name: 'Listar Asesores', link: '/admin/listar-asesores' },
+                { name: 'Agregar Jefe Negocio', link: '/admin/agregar-jefe-negocio' },
+                { name: 'Listar Jefes Negocio', link: '/admin/listar-jefe-negocio' },
             ]
         },
     ],
@@ -72,7 +72,17 @@ const menus = {
                 { name: 'Listar Admisiones', link: '/asesor/listar-admisiones' },
             ]
         },
-    ]
+    ],
+    jefe_negocio: [
+        {
+            section: 'Asesores',
+            icon: UsersIcon,
+            subs: [
+                { name: 'Agregar Asesor', link: '/admin/agregar-asesor' },
+                { name: 'Listar Asesores', link: '/admin/listar-asesores' },
+            ]
+        },
+    ],
 };
 
 const Sidebar = () => {
