@@ -10,7 +10,7 @@ import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/o
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 const initialFormData = {
-  datos: {
+  datos_cliente: {
     nombre: '', apellidoPaterno: '', apellidoMaterno: '', apellidoConyuge: '',
     estadoCivil: '', sexo: '', dni: '', fechaNacimiento: '', fechaCaducidadDni: '',
     nacionalidad: 'Peruana', residePeru: true, nivelEducativo: '', profesion: '',
@@ -72,7 +72,7 @@ const AgregarCliente = () => {
 
   const renderFormStep = () => {
     switch (currentStep) {
-      case 1: return <ClienteForm data={formData.datos} handleChange={(e) => handleChange(e, 'datos')} />;
+      case 1: return <ClienteForm data={formData.datos_cliente} handleChange={(e) => handleChange(e, 'datos_cliente')} />;
       case 2: return <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />;
       default: return null;
     }

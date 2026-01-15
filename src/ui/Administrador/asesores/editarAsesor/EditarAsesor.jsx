@@ -3,12 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { showAsesor, updateAsesor } from 'services/asesorService'; 
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
-
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 import DatosAsesorForm from '../components/formularios/DatosAsesorForm';
 import CuentaAsesorForm from '../components/formularios/CuentaAsesorForm';
-import ContactosForm from '../components/formularios/ContactosAsesorForm';
 
 const cleanNulls = (obj) => {
   if (!obj) return {};
@@ -24,23 +22,22 @@ const EditarAsesor = () => {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-      datos: { 
+      datos_empleado: { 
           nombre: '', 
           apellidoPaterno: '', 
           apellidoMaterno: '', 
           dni: '', 
-          fechaNacimiento: '' 
+          fechaNacimiento: '',
+          sexo: '',
+          estadoCivil: '',
+          direccion: '',
+          telefono: ''
       },
       asesor: { 
           username: '', 
           password: '', 
           password_confirmation: '', 
           sede_id: '' 
-      },
-      contactos: { 
-          telefonoMovil: '', 
-          telefonoFijo: '', 
-          correo: '' 
       }
   });
 
@@ -52,21 +49,16 @@ const EditarAsesor = () => {
       try {
         const response = await showAsesor(id);
         
-        const { datos, username, sede_id, contactos } = response.data; 
-
-        const contactoData = (contactos && contactos.length > 0) 
-            ? contactos[0] 
-            : {}; 
+        const { datos_empleado, username, sede_id } = response.data; 
         
         setFormData({
-            datos: cleanNulls(datos),
+            datos_empleado: cleanNulls(datos_empleado),
             asesor: { 
                 username: username || '', 
                 sede_id: sede_id || '', 
                 password: '', 
                 password_confirmation: '' 
-            },
-            contactos: cleanNulls(contactoData) 
+            }
         });
       } catch (err) {
         setAlert({ type: 'error', message: 'No se pudo cargar la información del asesor.' });
@@ -88,7 +80,7 @@ const EditarAsesor = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setAlert(null); // Limpiar alertas previas
+    setAlert(null);
 
     try {
       await updateAsesor(id, formData);
@@ -101,7 +93,6 @@ const EditarAsesor = () => {
       setTimeout(() => navigate('/admin/listar-asesores'), 1500);
       
     } catch (err) {
-       // USAR LA UTILIDAD PARA ESTANDARIZAR EL ERROR
        setAlert(handleApiError(err, 'Error al actualizar el asesor'));
     } finally {
       setLoading(false);
@@ -112,11 +103,10 @@ const EditarAsesor = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold text-slate-800 mb-6">
-        Editando Asesor: <span className="text-fic-red">{formData.datos.nombre} {formData.datos.apellidoPaterno}</span>
+      <h1 className="text-3xl font-black text-slate-800 mb-6 uppercase tracking-tighter">
+        Editando Asesor: <span className="text-fic-red">{formData.datos_empleado.nombre} {formData.datos_empleado.apellidoPaterno} {formData.datos_empleado.apellidoMaterno}</span>
       </h1>
       
-      {/* ALERTA (Mantiene 'details' para mostrar lista de errores) */}
       <AlertMessage 
         type={alert?.type} 
         message={alert?.message} 
@@ -126,27 +116,29 @@ const EditarAsesor = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* Datos Personales */}
-        <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-fic-yellow">
-            <DatosAsesorForm data={formData.datos} handleChange={(e) => handleChange(e, 'datos')} />
+        {/* Datos Personales y de Contacto (Unificados en el nuevo DatosAsesorForm) */}
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 border-t-4 border-fic-yellow">
+            <DatosAsesorForm data={formData.datos_empleado} handleChange={(e) => handleChange(e, 'datos_empleado')} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Cuenta de Usuario */}
-            <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-slate-400">
-                <CuentaAsesorForm data={formData.asesor} handleChange={(e) => handleChange(e, 'asesor')} isEdit={true} />
-            </div>
-            {/* Contactos */}
-            <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-slate-400">
-                <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />
-            </div>
+        {/* Cuenta de Usuario */}
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 border-t-4 border-slate-400 max-w-2xl">
+            <CuentaAsesorForm data={formData.asesor} handleChange={(e) => handleChange(e, 'asesor')} isEdit={true} />
         </div>
 
         <div className="flex justify-end gap-4 mt-8">
-          <button type="button" onClick={() => navigate('/admin/listar-asesores')} className="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 font-bold">
+          <button 
+            type="button" 
+            onClick={() => navigate('/admin/listar-asesores')} 
+            className="px-6 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-bold transition-colors"
+          >
             Cancelar
           </button>
-          <button type="submit" disabled={loading} className="px-8 py-2 bg-fic-red text-white rounded-lg hover:bg-red-700 font-bold shadow-lg">
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="px-8 py-2 bg-fic-red text-white rounded-lg hover:bg-red-700 font-black uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50"
+          >
             {loading ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>

@@ -39,7 +39,7 @@ const ListarCliente = () => {
         setInfoLoading(true);
         try {
             const response = await showCliente(id);
-            const { datos, contactos } = response.data;
+            const { datos_cliente, contactos } = response.data;
             const contacto = contactos?.[0] || {};
 
             const formatBool = (val) => val ? 'SÍ' : 'NO';
@@ -49,20 +49,20 @@ const ListarCliente = () => {
                     title: "1. Datos Personales",
                     icon: IdentificationIcon,
                     items: [
-                        { label: "Nombre Completo", value: `${datos.nombre} ${datos.apellidoPaterno} ${datos.apellidoMaterno || ''}`, fullWidth: true },
-                        { label: "DNI", value: datos.dni },
-                        { label: "Caducidad DNI", value: datos.fechaCaducidadDni },
-                        { label: "RUC", value: datos.ruc },
-                        { label: "Nacionalidad", value: datos.nacionalidad },
-                        { label: "Sexo", value: datos.sexo },
-                        { label: "Estado Civil", value: datos.estadoCivil },
-                        { label: "Profesión", value: datos.profesion },
-                        { label: "Nivel Educativo", value: datos.nivelEducativo, fullWidth: true },
+                        { label: "Nombre Completo", value: `${datos_cliente.nombre} ${datos_cliente.apellidoPaterno} ${datos_cliente.apellidoMaterno || ''}`, fullWidth: true },
+                        { label: "DNI", value: datos_cliente.dni },
+                        { label: "Caducidad DNI", value: datos_cliente.fechaCaducidadDni },
+                        { label: "RUC", value: datos_cliente.ruc },
+                        { label: "Nacionalidad", value: datos_cliente.nacionalidad },
+                        { label: "Sexo", value: datos_cliente.sexo },
+                        { label: "Estado Civil", value: datos_cliente.estadoCivil },
+                        { label: "Profesión", value: datos_cliente.profesion },
+                        { label: "Nivel Educativo", value: datos_cliente.nivelEducativo, fullWidth: true },
                         
     
-                        { label: "¿Reside en Perú?", value: formatBool(datos.residePeru) },
-                        { label: "¿Enf. Preexistentes?", value: formatBool(datos.enfermedadesPreexistentes) },
-                        { label: "¿Exp. Políticamente?", value: formatBool(datos.expuestaPoliticamente) },
+                        { label: "¿Reside en Perú?", value: formatBool(datos_cliente.residePeru) },
+                        { label: "¿Enf. Preexistentes?", value: formatBool(datos_cliente.enfermedadesPreexistentes) },
+                        { label: "¿Exp. Políticamente?", value: formatBool(datos_cliente.expuestaPoliticamente) },
                     ]
                 },
                 {
@@ -79,7 +79,7 @@ const ListarCliente = () => {
 
             setModalData({
                 title: "Ficha de Cliente",
-                subtitle: `Visualizando a: ${datos.nombre} ${datos.apellidoPaterno}`,
+                subtitle: `Visualizando a: ${datos_cliente.nombre} ${datos_cliente.apellidoPaterno}`,
                 sections: seccionesFormateadas
             });
 
@@ -102,7 +102,7 @@ const ListarCliente = () => {
                     </div>
                     <div>
                         <span className="font-black text-fic-dark block uppercase tracking-tight">
-                            {row.datos ? `${row.datos.nombre} ${row.datos.apellidoPaterno} ${row.datos.apellidoMaterno || ''}` : 'Sin Nombre'}
+                            {row.datos_cliente ? `${row.datos_cliente.nombre} ${row.datos_cliente.apellidoPaterno} ${row.datos_cliente.apellidoMaterno || ''}` : 'Sin Nombre'}
                         </span>
                         <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
                             Registrado: {new Date(row.created_at).toLocaleDateString()}
@@ -113,8 +113,8 @@ const ListarCliente = () => {
         },
         {
             header: 'DNI',
-            render: (row) => row.datos?.dni 
-                ? <span className="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200">{row.datos.dni}</span> 
+            render: (row) => row.datos_cliente?.dni 
+                ? <span className="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200">{row.datos_cliente.dni}</span> 
                 : <span className="text-slate-300 italic">N/A</span>
         },
         {

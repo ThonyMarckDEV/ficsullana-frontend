@@ -10,7 +10,7 @@ import ClienteForm from '../components/formularios/ClienteForm';
 import ContactosForm from '../components/formularios/ContactosForm';
 
 const initialFormData = {
-  datos: {
+  datos_cliente: {
     nombre: '', apellidoPaterno: '', apellidoMaterno: '', apellidoConyuge: '',
     estadoCivil: '', sexo: '', dni: '', fechaNacimiento: '', fechaCaducidadDni: '',
     nacionalidad: '', residePeru: false, nivelEducativo: '', profesion: '',
@@ -45,31 +45,28 @@ const EditarCliente = () => {
         const response = await showCliente(id);
         const clienteData = response.data; 
 
-        if (!clienteData) {
-          throw new Error("La respuesta de la API no contiene los datos del cliente.");
-        }
-
-        const datosApi = cleanNulls(clienteData.datos);
+        // IMPORTANTE: El backend devuelve datos_cliente (con guion bajo)
+        const datosApi = cleanNulls(clienteData.datos_cliente);
         const contactosApi = cleanNulls(clienteData.contactos?.[0]);
         
-        const datosLimpios = {
-            ...initialFormData.datos,
+        const structuredData = {
+          // CAMBIO: Asegurar que la clave sea datos_cliente
+          datos_cliente: {
+            ...initialFormData.datos_cliente,
             ...datosApi,
-            sexo: datosApi.sexo === 'Masculino' ? 'Masculino' : 'Femenino',
+            sexo: datosApi.sexo || '',
             residePeru: !!datosApi.residePeru,
             enfermedadesPreexistentes: !!datosApi.enfermedadesPreexistentes,
             expuestaPoliticamente: !!datosApi.expuestaPoliticamente,
-        };
-
-        const structuredData = {
-          datos: datosLimpios,
-          contactos: { ...initialFormData.contactos, ...contactosApi },
+          },
+          contactos: { 
+            ...initialFormData.contactos, 
+            ...contactosApi 
+          },
         };
         
         setFormData(structuredData);
-
       } catch (err) {
-        console.error("Error al procesar datos del cliente:", err);
         setError("No se pudo cargar la información del cliente.");
       } finally {
         setLoading(false);
@@ -77,6 +74,20 @@ const EditarCliente = () => {
     };
     fetchCliente();
   }, [id]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+        const response = await updateCliente(id, formData);
+        setAlert({ type: 'success', message: 'Cliente actualizado con éxito' });
+        setTimeout(() => navigate('/asesor/listar-clientes'), 2000);
+    } catch (err) {
+        setAlert(handleApiError(err, 'Error al actualizar el cliente'));
+    } finally {
+        setLoading(false);
+    }
+  };
 
   const handleChange = (e, section) => {
     const { name, value, type, checked } = e.target;
@@ -89,28 +100,6 @@ const EditarCliente = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setAlert(null);
-
-    try {
-        const response = await updateCliente(id, formData);
-        
-        setAlert({ 
-            type: 'success', 
-            message: response.message || 'Cliente actualizado con éxito' 
-        });
-        
-        setTimeout(() => navigate('/asesor/listar-clientes'), 2000);
-
-    } catch (err) {
-        // USAR LA UTILIDAD PARA ESTANDARIZAR EL ERROR
-        setAlert(handleApiError(err, 'Error al actualizar el cliente'));
-    } finally {
-        setLoading(false);
-    }
-  };
 
   if (loading) return <LoadingScreen />;
   if (error) return <div className="text-center p-8 text-red-600 font-bold border-2 border-red-100 rounded-lg m-4">{error}</div>;
@@ -118,7 +107,7 @@ const EditarCliente = () => {
   return (
     <div className="container mx-auto p-6 ">
       <h1 className="text-3xl font-bold text-slate-800 mb-4">
-        Editando Cliente: <span className="text-fic-red">{formData?.datos?.nombre} {formData?.datos?.apellidoPaterno}</span>
+        Editando Cliente: <span className="text-fic-red">{formData?.datos_cliente?.nombre} {formData?.datos_cliente?.apellidoPaterno}</span>
       </h1>
       
       {/* ALERTA (Mantiene 'details' para mostrar lista de errores) */}
@@ -135,7 +124,7 @@ const EditarCliente = () => {
             <>
               <div className="bg-white p-8 rounded-lg shadow-md border border-slate-100">
                   <h2 className="text-xl font-bold text-slate-700 mb-4 border-b pb-2">Datos Personales</h2>
-                  <ClienteForm data={formData.datos} handleChange={(e) => handleChange(e, 'datos')} />
+                  <ClienteForm data={formData.datos_cliente} handleChange={(e) => handleChange(e, 'datos_cliente')} />
               </div>
               <div className="bg-white p-8 rounded-lg shadow-md border border-slate-100">
                   <h2 className="text-xl font-bold text-slate-700 mb-4 border-b pb-2">Información de Contacto</h2>
