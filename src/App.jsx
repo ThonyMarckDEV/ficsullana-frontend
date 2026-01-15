@@ -146,7 +146,7 @@ function AppContent() {
 
     {/* RUTAS JEFE NEGOCIO */}
       <Route
-        path="/jefe-negocio"
+        path="/jefe_negocio"
         element={
           <ProtectedRouteJefeNegocio element={
             <SedeLayout>
@@ -155,7 +155,7 @@ function AppContent() {
           } />
         }
       >
-        {/* Ruta Home (cuando solo pones /jefe-negocio) */}
+        {/* Ruta Home (cuando solo pones /jefe_negocio) */}
         <Route index element={<Home />} />
 
         {/* RUTAS ASESOR */}

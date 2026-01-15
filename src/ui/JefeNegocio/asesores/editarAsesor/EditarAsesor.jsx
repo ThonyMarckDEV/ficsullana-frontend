@@ -57,7 +57,7 @@ const EditarAsesor = () => {
     try {
       await updateAsesor(id, formData);
       setAlert({ type: 'success', message: 'Asesor actualizado correctamente' });
-      setTimeout(() => navigate('/admin/listar-asesores'), 1500);
+      setTimeout(() => navigate('/jefe_negocio/listar-asesores'), 1500);
     } catch (err) {
        setAlert(handleApiError(err, 'Error al actualizar el asesor'));
     } finally {

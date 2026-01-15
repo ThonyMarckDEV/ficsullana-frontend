@@ -43,7 +43,8 @@ const Login = () => {
           asesor: '/asesor',
           cajero: '/asesor',
           operaciones: '/operaciones',
-          contador: '/contador'
+          contador: '/contador',
+          jefe_negocio: '/jefe_negocio'
       };
 
       if (rutas[rol]) {

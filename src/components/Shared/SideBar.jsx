@@ -78,8 +78,8 @@ const menus = {
             section: 'Asesores',
             icon: UsersIcon,
             subs: [
-                { name: 'Agregar Asesor', link: '/admin/agregar-asesor' },
-                { name: 'Listar Asesores', link: '/admin/listar-asesores' },
+                { name: 'Agregar Asesor', link: '/jefe_negocio/agregar-asesor' },
+                { name: 'Listar Asesores', link: '/jefe_negocio/listar-asesores' },
             ]
         },
     ],

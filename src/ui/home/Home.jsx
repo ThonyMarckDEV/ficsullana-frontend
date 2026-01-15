@@ -59,7 +59,7 @@ const Home = () => {
         </p>
       )}
 
-      {rol === "jefe_negocios" && (
+      {rol === "jefe_negocio" && (
         <p className="mt-4 text-gray-500 font-semibold">
           Herramientas de jefe negocios.
         </p>

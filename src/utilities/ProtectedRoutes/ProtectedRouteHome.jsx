@@ -24,7 +24,9 @@ const ProtectedRoute = ({ element }) => {
       case 'operaciones':
         return <Navigate to="/operaciones" />;   
       case 'contador':
-        return <Navigate to="/contador" />;       
+        return <Navigate to="/contador" />;     
+      case 'jefe_negocio':
+        return <Navigate to="/jefe_negocio" />;     
       default:
         return element;
     }

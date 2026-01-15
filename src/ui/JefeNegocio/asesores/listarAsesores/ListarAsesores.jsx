@@ -101,7 +101,7 @@ const ListarAsesores = () => {
             render: (row) => (
                 <div className="flex items-center gap-4">
                     <button onClick={() => handleView(row.id)} className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark text-xs uppercase"><EyeIcon className="w-5 h-5"/> Ver</button>
-                    <Link to={`/admin/editar-asesor/${row.id}`} className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 text-xs uppercase"><PencilSquareIcon className="w-5 h-5"/> Editar</Link>
+                    <Link to={`/jefe_negocio/editar-asesor/${row.id}`} className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 text-xs uppercase"><PencilSquareIcon className="w-5 h-5"/> Editar</Link>
                 </div>
             )
         }
@@ -111,7 +111,7 @@ const ListarAsesores = () => {
         <div className="container mx-auto p-6">
             <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
                 <div><h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Gestión de Asesores</h1><p className="text-slate-500 font-bold">Personal Operativo</p></div>
-                <Link to="/admin/agregar-asesor" className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95">+ Nuevo Asesor</Link>
+                <Link to="/jefe_negocio/agregar-asesor" className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95">+ Nuevo Asesor</Link>
             </div>
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
             <div className="rounded-xl overflow-hidden">
