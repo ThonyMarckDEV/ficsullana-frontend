@@ -12,15 +12,23 @@ import CuentaAsesorForm from '../components/formularios/CuentaAsesorForm';
 import ContactosForm from '../components/formularios/ContactosAsesorForm';
 
 const initialFormData = {
-  datos: { nombres: '', apellidos: '', ci: '', fecha_nacimiento: ''},
-  asesor: { username: '', password: '', password_confirmation: '' },
-  contactos: { celular: '', telefono: '', email: '' }
+  datos: { 
+    nombre: '', 
+    apellidoPaterno: '', 
+    apellidoMaterno: '', 
+    dni: '', 
+    fechaNacimiento: '',
+    sexo: '',
+    estadoCivil: '',
+    direccion: '',
+    telefono: ''
+  },
+  asesor: { username: '', password: '', password_confirmation: '' }
 };
 
 const STEPS = [
   { id: 1, name: 'Datos Personales' },
   { id: 2, name: 'Cuenta Acceso' },
-  { id: 3, name: 'Contacto' },
 ];
 
 const AgregarAsesor = () => {
@@ -71,7 +79,6 @@ const AgregarAsesor = () => {
     switch (currentStep) {
       case 1: return <DatosAsesorForm data={formData.datos} handleChange={(e) => handleChange(e, 'datos')} />;
       case 2: return <CuentaAsesorForm data={formData.asesor} handleChange={(e) => handleChange(e, 'asesor')} />;
-      case 3: return <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />;
       default: return null;
     }
   };

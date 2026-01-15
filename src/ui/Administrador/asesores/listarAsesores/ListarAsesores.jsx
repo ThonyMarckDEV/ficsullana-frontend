@@ -44,18 +44,11 @@ const ListarAsesores = () => {
         setInfoOpen(true);
         try {
             const { data } = await showAsesor(id);
-
-            // 1. Datos personales
-            const datos = data.datos || {};
-            
-            // 2. Contactos
-            const contacto = (data.contactos && data.contactos.length > 0) 
-                ? data.contactos[0] 
-                : {}; 
+            const datos = data.datos_empleado || {}; 
 
             setModalData({
                 title: 'Ficha de Asesor',
-                subtitle: `Usuario: ${data.username}`,
+                subtitle: `Usuario: @${data.username}`,
                 sections: [
                     {
                         title: 'Datos Personales',
@@ -64,31 +57,31 @@ const ListarAsesores = () => {
                             { label: 'Nombre Completo', value: `${datos.nombre} ${datos.apellidoPaterno} ${datos.apellidoMaterno}`, fullWidth: true },
                             { label: 'DNI', value: datos.dni },
                             { label: 'Fecha Nacimiento', value: datos.fechaNacimiento },
+                            { label: 'Sexo', value: datos.sexo },
+                            { label: 'Estado Civil', value: datos.estadoCivil },
                         ]
                     },
                     {
-                        title: 'Cuenta & Sede',
-                        icon: BriefcaseIcon,
-                        items: [
-                            { label: 'Usuario', value: data.username },
-                            { label: 'Sede Asignada', value: data.sede?.nombre || 'Sin Sede' },
-                            { label: 'Fecha Registro', value: data.created_at ? new Date(data.created_at).toLocaleDateString() : '---' },
-                        ]
-                    },
-                    {
-                        title: 'Contacto',
+                        title: 'Contacto y Ubicación',
                         icon: PhoneIcon,
                         items: [
-                             { label: 'Celular', value: contacto.telefonoMovil || '---' },
-                             { label: 'Teléfono Fijo', value: contacto.telefonoFijo || '---' },
-                             { label: 'Email', value: contacto.correo || '---', fullWidth: true },
+                            { label: 'Teléfono', value: datos.telefono },
+                            { label: 'Dirección', value: datos.direccion, fullWidth: true },
+                        ]
+                    },
+                    {
+                        title: 'Información Laboral',
+                        icon: BriefcaseIcon,
+                        items: [
+                            { label: 'Sede', value: data.sede?.nombre || 'Sin Sede' },
+                            { label: 'Fecha Registro', value: new Date(data.created_at).toLocaleDateString() },
                         ]
                     }
                 ]
             });
         } catch(e) { 
             setInfoOpen(false);
-            setAlert({ type: 'error', message: 'No se pudieron cargar los detalles.' });
+            setAlert({ type: 'error', message: 'Error al cargar detalles.' });
         }
     };
 
@@ -114,7 +107,7 @@ const ListarAsesores = () => {
                     </div>
                     <div>
                         <span className="font-black text-slate-700 block uppercase tracking-tight">
-                            {row.datos?.nombre} {row.datos?.apellidoPaterno} {row.datos?.apellidoMaterno}
+                            {row.datos_empleado?.nombre} {row.datos_empleado?.apellidoPaterno} {row.datos_empleado?.apellidoMaterno}
                         </span>
                         <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
                             Sede: {row.sede?.nombre || 'N/A'}
@@ -125,8 +118,8 @@ const ListarAsesores = () => {
         },
         {
             header: 'DNI',
-            render: (row) => row.datos?.dni 
-                ? <span className="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200">{row.datos.dni}</span>
+            render: (row) => row.datos_empleado?.dni 
+                ? <span className="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200">{row.datos_empleado.dni}</span>
                 : <span className="text-slate-300 italic">---</span>
         },
         {
