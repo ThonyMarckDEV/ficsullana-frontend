@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const CuentaForm = ({ data, handleChange, isEdit = false }) => {
   const [showPassword, setShowPassword] = useState(false);

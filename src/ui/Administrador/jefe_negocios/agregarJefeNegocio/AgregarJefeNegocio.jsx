@@ -20,7 +20,7 @@ const initialFormData = {
 const STEPS = [{ id: 1, name: 'Datos Personales' }, { id: 2, name: 'Cuenta Acceso' }];
 
 const AgregarJefeNegocio = () => {
-  const navigate = useNavigate();
+  useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);

@@ -26,7 +26,7 @@ const STEPS = [
 ];
 
 const AgregarCliente = () => {
-  const navigate = useNavigate();
+  useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
