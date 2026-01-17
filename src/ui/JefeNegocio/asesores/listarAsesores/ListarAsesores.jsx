@@ -5,7 +5,10 @@ import Table from 'components/Shared/Tables/Table';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import InfoModal from 'components/Shared/Modals/InfoModal';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 import { PencilSquareIcon, EyeIcon, IdentificationIcon, PhoneIcon, UserCircleIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
+import { UsersIcon } from 'lucide-react';
+
 
 const ListarAsesores = () => {
     const [loading, setLoading] = useState(true);
@@ -109,10 +112,15 @@ const ListarAsesores = () => {
 
     return (
         <div className="container mx-auto p-6">
-            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
-                <div><h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Gestión de Asesores</h1><p className="text-slate-500 font-bold">Personal Operativo</p></div>
-                <Link to="/jefe_negocio/agregar-asesor" className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95">+ Nuevo Asesor</Link>
-            </div>
+
+            <PageHeader 
+                title="Gestión de Asesores"
+                subtitle="Personal Operativo de Créditos"
+                buttonText="+ Nuevo Asesor"
+                buttonLink="/jefe_negocio/agregar-asesor"
+                icon={UsersIcon}
+            />
+
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
             <div className="rounded-xl overflow-hidden">
                 <Table columns={columns} data={asesores} loading={loading} pagination={{ currentPage: pagination.page, totalPages: pagination.totalPages, onPageChange: (p) => fetchAsesores(p, search) }} onSearch={setSearch} searchPlaceholder="Buscar Asesor..." />
