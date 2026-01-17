@@ -79,7 +79,7 @@ const EditarCliente = () => {
     e.preventDefault();
     setLoading(true);
     try {
-        const response = await updateCliente(id, formData);
+        await updateCliente(id, formData);
         setAlert({ type: 'success', message: 'Cliente actualizado con éxito' });
         setTimeout(() => navigate('/asesor/listar-clientes'), 2000);
     } catch (err) {
