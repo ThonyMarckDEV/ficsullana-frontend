@@ -6,7 +6,8 @@ import ProtestosGrid from '../components/ProtestosGrid';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import { UserIcon, IdentificationIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { UserIcon, IdentificationIcon, BuildingOfficeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const EditarAdmision = () => {
     const { id } = useParams();
