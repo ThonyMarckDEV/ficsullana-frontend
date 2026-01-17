@@ -6,6 +6,8 @@ import AdminForm from '../components/AdminForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 
 import { handleApiError } from 'utilities/Errors/apiErrorHandler'; 
+import PageHeader from 'components/Shared/Headers/PageHeader';
+import { BuildingOffice2Icon } from '@heroicons/react/24/outline';
 
 const AgregarSede = () => {
   const navigate = useNavigate();
@@ -48,17 +50,15 @@ const AgregarSede = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6 border-b-2 border-fic-red pb-4">
-        <h1 className="text-3xl font-black text-fic-dark">Apertura de Sede</h1>
-        <button 
-            onClick={() => navigate('/superadmin/listar-sedes')} 
-            className="font-bold text-slate-500 hover:text-fic-red transition-colors"
-        >
-            ← Volver
-        </button>
-      </div>
 
-      {/* 3. PASAR 'DETAILS' AL COMPONENTE DE ALERTA */}
+      <PageHeader 
+        title="Apertura de Sede"
+        subtitle="Configuración de nueva unidad de negocio"
+        icon={BuildingOffice2Icon}
+        buttonText="← Volver al listado"
+        buttonLink="/superadmin/listar-sedes"
+      />
+
       <AlertMessage 
         type={alert?.type} 
         message={alert?.message} 

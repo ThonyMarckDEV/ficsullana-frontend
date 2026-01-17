@@ -9,8 +9,10 @@ import {
     PencilSquareIcon, 
     CreditCardIcon, 
     EyeIcon, 
-    ReceiptPercentIcon
+    ReceiptPercentIcon,
+    CubeIcon
 } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const ListarProductos = () => {
     // --- ESTADOS ---
@@ -138,18 +140,15 @@ const ListarProductos = () => {
 
     return (
         <div className="container mx-auto p-6">
-            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
-                <div>
-                    <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Productos Financieros</h1>
-                    <p className="text-slate-500 font-bold">Gestión del catálogo de créditos - Fic Sullana</p>
-                </div>
-                <Link 
-                    to="/superadmin/agregar-producto" 
-                    className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95"
-                >
-                    + Nuevo Producto
-                </Link>
-            </div>
+
+            
+            <PageHeader
+                title="Gestión de Productos"
+                subtitle="Gestión del catálogo de productos - Fic Sullana"
+                icon={CubeIcon}
+                buttonText="+ Nuevo Producto"
+                buttonLink="/superadmin/agregar-producto"
+            />
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
 

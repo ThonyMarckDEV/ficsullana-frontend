@@ -4,6 +4,8 @@ import { createProducto } from 'services/productoService';
 import ProductoForm from '../components/ProductoForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler'; 
+import { CubeIcon } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const AgregarProducto = () => {
   const navigate = useNavigate();
@@ -43,15 +45,14 @@ const AgregarProducto = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6 border-b-2 border-fic-red pb-4">
-        <h1 className="text-3xl font-black text-fic-dark">Nuevo Producto Financiero</h1>
-        <button 
-            onClick={() => navigate('/superadmin/listar-productos')} 
-            className="font-bold text-slate-500 hover:text-fic-red transition-colors"
-        >
-            ← Volver
-        </button>
-      </div>
+      
+      <PageHeader 
+        title="Nuevo Producto"
+        subtitle="Configuración de nuevo producto financiero"
+        icon={CubeIcon}
+        buttonText="← Volver al listado"
+        buttonLink="/superadmin/listar-productos"
+      />
 
       <AlertMessage 
         type={alert?.type} 

@@ -10,8 +10,10 @@ import {
     PencilSquareIcon, 
     BuildingStorefrontIcon, 
     EyeIcon, 
-    UserCircleIcon
+    UserCircleIcon,
+    BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const ListarSedes = () => {
     // --- ESTADOS ---
@@ -188,18 +190,14 @@ const ListarSedes = () => {
 
     return (
         <div className="container mx-auto p-6">
-            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
-                <div>
-                    <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Gestión de Sedes</h1>
-                    <p className="text-slate-500 font-bold">Panel de control administrativo - Fic Sullana</p>
-                </div>
-                <Link 
-                    to="/superadmin/agregar-sede" 
-                    className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95"
-                >
-                    + Nueva Sede
-                </Link>
-            </div>
+
+            <PageHeader 
+                title="Gestión de Sedes"
+                subtitle="Panel de control administrativo - Fic Sullana"
+                icon={BuildingOfficeIcon}
+                buttonText="+ Nueva Sede"
+                buttonLink="/superadmin/agregar-sede"
+            />
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
 

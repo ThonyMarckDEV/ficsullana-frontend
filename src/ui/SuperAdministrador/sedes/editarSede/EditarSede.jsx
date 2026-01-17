@@ -6,6 +6,8 @@ import AdminForm from '../components/AdminForm';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import PageHeader from 'components/Shared/Headers/PageHeader';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
 const EditarSede = () => {
   const { id } = useParams();
@@ -91,9 +93,14 @@ const EditarSede = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-black text-fic-dark mb-6 border-b-2 border-fic-red pb-4">
-        Editar Sede: <span className="text-slate-500">{formData.sede.nombre}</span>
-      </h1>
+
+      <PageHeader 
+        title="Editar Sede"
+        subtitle={`Actualizando: ${formData.sede.nombre}`}
+        icon={PencilSquareIcon}
+        buttonText="← Volver al listado"
+        buttonLink="/superadmin/listar-sedes"
+      />
       
       <AlertMessage 
         type={alert?.type} 

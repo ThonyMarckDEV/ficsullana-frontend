@@ -5,6 +5,8 @@ import ProductoForm from '../components/ProductoForm';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import { CubeIcon } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const EditarProducto = () => {
   const { id } = useParams();
@@ -59,9 +61,14 @@ const EditarProducto = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-black text-fic-dark mb-6 border-b-2 border-fic-red pb-4">
-        Editar Producto: <span className="text-slate-500">{formData?.nombre}</span>
-      </h1>
+
+        <PageHeader 
+          title="Datos del Producto"
+          subtitle={`Actualizando: ${formData.nombre}`}
+          icon={CubeIcon}
+          buttonText="← Volver al listado"
+          buttonLink="/superadmin/listar-productos"
+        />
       
       <AlertMessage 
         type={alert?.type} 
