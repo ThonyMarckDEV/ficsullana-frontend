@@ -14,7 +14,8 @@ import ModalCrearProspecto from '../components/Modals/ModalCrearProspecto';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import { UserPlusIcon } from '@heroicons/react/24/outline';
+import { ClipboardDocumentCheckIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const NuevaAdmision = () => {
     const navigate = useNavigate();
@@ -165,11 +166,13 @@ const NuevaAdmision = () => {
     return (
         <div className="container mx-auto p-4 lg:p-6">
 
-            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
-                <div>
-                    <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Nueva Admisión</h1>
-                </div>
-            </div>
+            <PageHeader 
+                title="Nueva Admisión"
+                subtitle="Evaluación de historial financiero y capacidad crediticia"
+                icon={ClipboardDocumentCheckIcon}
+                buttonText="← Listado de Admisiones"
+                buttonLink="/asesor/listar-admisiones"
+            />
 
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 

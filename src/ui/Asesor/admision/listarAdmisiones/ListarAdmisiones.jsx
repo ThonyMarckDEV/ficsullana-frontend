@@ -10,8 +10,10 @@ import {
     EyeIcon, 
     UserIcon,
     BanknotesIcon,
-    ExclamationTriangleIcon
+    ExclamationTriangleIcon,
+    ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 // --- MAPA DE ESTADOS (TRADUCCIÓN DE NÚMERO A TEXTO/COLOR) ---
 const ESTADOS = {
@@ -218,18 +220,14 @@ const ListarAdmisiones = () => {
 
     return (
         <div className="container mx-auto p-6">
-            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
-                <div>
-                    <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Admisiones</h1>
-                    <p className="text-slate-500 font-bold">Evaluación crediticia de clientes y prospectos</p>
-                </div>
-                <Link 
-                    to="/asesor/nueva-admision" 
-                    className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95"
-                >
-                    + Nueva Admisión
-                </Link>
-            </div>
+
+            <PageHeader 
+                title="Admisiones"
+                subtitle="Evaluación crediticia de clientes y prospectos"
+                icon={ClipboardDocumentCheckIcon}
+                buttonText="+ Nueva Admisión"
+                buttonLink="/asesor/nueva-admision"
+            />
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
 
