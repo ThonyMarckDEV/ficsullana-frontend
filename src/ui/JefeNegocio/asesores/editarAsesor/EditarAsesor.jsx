@@ -79,6 +79,7 @@ const EditarAsesor = () => {
         buttonText="← Volver al listado"
         buttonLink="/jefe_negocio/listar-asesores"
       />
+      
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
       <form onSubmit={handleSubmit} className="space-y-6">

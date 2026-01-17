@@ -8,6 +8,7 @@ import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/o
 
 // 1. IMPORTAR LA UTILIDAD
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const initialFormData = {
   datos_cliente: {
@@ -81,23 +82,15 @@ const AgregarCliente = () => {
   return (
     <div className="container mx-auto p-6 min-h-screen">
       
-      {/* HEADER DE PÁGINA */}
-      <div className="flex justify-between items-center mb-8 border-b-4 border-fic-red pb-4">
-        <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-50 rounded-lg text-fic-red">
-                <UserPlusIcon className="w-8 h-8" />
-            </div>
-            <div>
-                <h1 className="text-3xl font-black text-fic-dark tracking-tight uppercase">Registro de Cliente</h1>
-                <p className="text-slate-500 font-bold text-sm">Nuevo socio comercial</p>
-            </div>
-        </div>
-        <button onClick={() => navigate('/asesor/listar-clientes')} className="font-bold text-slate-500 hover:text-fic-red transition-colors">
-            ← Cancelar
-        </button>
-      </div>
+      <PageHeader 
+        title="Registro de Cliente"
+        subtitle="Nuevo socio comercial"
+        icon={UserPlusIcon}
+        buttonText="← Volver al listado"
+        buttonLink="/asesor/listar-clientes"
+      />
 
-      {/* 3. ALERTA (Ya tenía la propiedad details, así que está perfecto) */}
+      {/* ALERTA  */}
       <AlertMessage 
         type={alert?.type} 
         message={alert?.message} 

@@ -6,6 +6,8 @@ import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import InfoModal from 'components/Shared/Modals/InfoModal';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { PencilSquareIcon, EyeIcon, BriefcaseIcon, IdentificationIcon, PhoneIcon } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
+import { UsersIcon } from 'lucide-react';
 
 const ListarJefesNegocio = () => {
     const [loading, setLoading] = useState(true);
@@ -108,10 +110,15 @@ const ListarJefesNegocio = () => {
 
     return (
         <div className="container mx-auto p-6">
-            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
-                <div><h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Jefes de Negocio</h1><p className="text-slate-500 font-bold">Gestión de Encargados</p></div>
-                <Link to="/admin/agregar-jefe-negocio" className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95">+ Nuevo Jefe</Link>
-            </div>
+  
+            <PageHeader 
+                title="Jefes de Negocio"
+                subtitle="Personal de negocio"
+                buttonText="+ Nuevo Jefe"
+                buttonLink="/admin/agregar-jefe-negocio"
+                icon={UsersIcon}
+            />
+
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
             <div className="rounded-xl overflow-hidden">
                 <Table columns={columns} data={jefes} loading={loading} pagination={{ currentPage: pagination.page, totalPages: pagination.totalPages, onPageChange: (p) => fetchJefes(p, search) }} onSearch={setSearch} searchPlaceholder="Buscar Jefe..." />

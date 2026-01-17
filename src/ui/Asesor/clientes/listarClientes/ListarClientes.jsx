@@ -15,6 +15,7 @@ import {
     IdentificationIcon,
     PhoneIcon
 } from '@heroicons/react/24/outline';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const ListarCliente = () => {
     // --- ESTADOS ---
@@ -203,20 +204,14 @@ const ListarCliente = () => {
 
     return (
         <div className="container mx-auto p-6">
-            
-            {/* HEADER */}
-            <div className="flex justify-between items-end mb-8 border-b-4 border-fic-red pb-4">
-                <div>
-                    <h1 className="text-4xl font-black text-fic-dark tracking-tighter uppercase">Gestión de Clientes</h1>
-                    <p className="text-slate-500 font-bold">Base de datos de socios - Fic Sullana</p>
-                </div>
-                <Link 
-                    to="/asesor/agregar-cliente" 
-                    className="bg-fic-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all font-black shadow-lg uppercase tracking-widest active:scale-95"
-                >
-                    + Nuevo Cliente
-                </Link>
-            </div>
+
+            <PageHeader 
+                title="Gestión de Clientes"
+                subtitle="Base de datos de socios - Fic Sullana"
+                buttonText="+ Nuevo Cliente"
+                buttonLink="/asesor/agregar-cliente"
+                icon={UsersIcon}
+            />
 
             <AlertMessage
                 type={alert?.type}

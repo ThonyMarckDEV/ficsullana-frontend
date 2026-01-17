@@ -7,6 +7,7 @@ import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 import DatosForm from 'components/Shared/Formularios/DatosForm';
 import CuentaForm from 'components/Shared/Formularios/CuentaForm';
+import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const initialFormData = {
   datos_empleado: { 
@@ -59,16 +60,14 @@ const AgregarJefeNegocio = () => {
 
   return (
     <div className="container mx-auto p-6 min-h-screen">
-      <div className="flex justify-between items-center mb-8 border-b-4 border-fic-red pb-4">
-        <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-50 rounded-lg text-fic-red"><UserPlusIcon className="w-8 h-8" /></div>
-            <div>
-                <h1 className="text-3xl font-black text-fic-dark uppercase">Nuevo Jefe de Negocio</h1>
-                <p className="text-slate-500 font-bold text-sm">Registro de personal administrativo</p>
-            </div>
-        </div>
-        <button onClick={() => navigate('/admin/listar-jefes-negocio')} className="font-bold text-slate-500 hover:text-fic-red">← Cancelar</button>
-      </div>
+
+      <PageHeader 
+        title="Nuevo Jefe de Negocio"
+        subtitle="Registro de personal administrativo"
+        icon={UserPlusIcon}
+        buttonText="← Volver al listado"
+        buttonLink="/admin/listar-jefes-negocio"
+      />
 
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
       

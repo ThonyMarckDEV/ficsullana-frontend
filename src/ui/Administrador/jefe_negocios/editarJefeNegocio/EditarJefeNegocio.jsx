@@ -7,6 +7,8 @@ import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 import DatosForm from 'components/Shared/Formularios/DatosForm';
 import CuentaForm from 'components/Shared/Formularios/CuentaForm';
+import PageHeader from 'components/Shared/Headers/PageHeader';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
 const cleanNulls = (obj) => {
   if (!obj) return {};
@@ -69,9 +71,15 @@ const EditarJefeNegocio = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-black text-slate-800 mb-6 uppercase tracking-tighter">
-        Editando Jefe: <span className="text-fic-red">{formData.datos_empleado.nombre} {formData.datos_empleado.apellidoPaterno}</span>
-      </h1>
+
+      <PageHeader 
+        title="Editar Jefe de Negocio"
+        subtitle={`Editando Jefe: ${formData.datos_empleado.nombre || ''} ${formData.datos_empleado.apellidoPaterno  || ''} ${formData.datos_empleado.apellidoMaterno  || ''}`}
+        icon={PencilSquareIcon}
+        buttonText="← Volver al listado"
+        buttonLink="/admin/listar-jefes-negocio"
+      />
+
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -8,6 +8,8 @@ import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 import ClienteForm from '../components/formularios/ClienteForm';
 import ContactosForm from '../components/formularios/ContactosForm';
+import PageHeader from 'components/Shared/Headers/PageHeader';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
 const initialFormData = {
   datos_cliente: {
@@ -106,11 +108,16 @@ const EditarCliente = () => {
 
   return (
     <div className="container mx-auto p-6 ">
-      <h1 className="text-3xl font-bold text-slate-800 mb-4">
-        Editando Cliente: <span className="text-fic-red">{formData?.datos_cliente?.nombre} {formData?.datos_cliente?.apellidoPaterno}</span>
-      </h1>
-      
-      {/* ALERTA (Mantiene 'details' para mostrar lista de errores) */}
+
+       <PageHeader 
+        title="Editar Cliente"
+        subtitle={`Editando Cliente: ${formData.datos_cliente.nombre || ''} ${formData.datos_cliente.apellidoPaterno  || ''} ${formData.datos_cliente.apellidoMaterno  || ''}`}
+        icon={PencilSquareIcon}
+        buttonText="← Volver al listado"
+        buttonLink="/asesor/listar-clientes"
+      />
+
+      {/* ALERTA */}
       <AlertMessage 
         type={alert?.type} 
         message={alert?.message} 
