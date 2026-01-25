@@ -67,7 +67,7 @@ const EditarSede = () => {
             type: 'success', 
             message: response.message || 'Sede actualizada correctamente.' 
         });
-        setTimeout(() => navigate('/superadmin/listar-sedes'), 1500);
+        setTimeout(() => navigate('/listar-sedes'), 1500);
 
       } catch (err) {
         setAlert(handleApiError(err, 'Error al actualizar la sede'));
@@ -99,7 +99,7 @@ const EditarSede = () => {
         subtitle={`Actualizando: ${formData.sede.nombre}`}
         icon={PencilSquareIcon}
         buttonText="← Volver al listado"
-        buttonLink="/superadmin/listar-sedes"
+        buttonLink="/listar-sedes"
       />
       
       <AlertMessage 
@@ -131,7 +131,7 @@ const EditarSede = () => {
         <div className="md:col-span-2 flex justify-end gap-4 mt-4">
           <button 
             type="button" 
-            onClick={() => navigate('/superadmin/listar-sedes')} 
+            onClick={() => navigate('/listar-sedes')} 
             className="px-6 py-3 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition-colors"
           >
             Cancelar

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import jwtUtils from 'utilities/Token/jwtUtils';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import LoginForm from './components/LoginForm';
 import ForgotPasswordForm from './components/ForgotPasswordForm';
@@ -21,43 +20,28 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const result = await authService.login(username, password, rememberMe);
-      const { access_token, refresh_token} = result;
+        const result = await authService.login(username, password, rememberMe);
+        const { access_token, refresh_token } = result;
 
-      const accessTokenExpiration = '; path=/; Secure; SameSite=Strict';
-      const refreshTokenExpiration = rememberMe
-        ? `; expires=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}; path=/; Secure; SameSite=Strict`
-        : '; path=/; Secure; SameSite=Strict';
+        // Configuración de Cookies
+        const accessTokenExpiration = '; path=/; Secure; SameSite=Strict';
+        const refreshTokenExpiration = rememberMe
+            ? `; expires=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}; path=/; Secure; SameSite=Strict`
+            : '; path=/; Secure; SameSite=Strict';
 
-      document.cookie = `access_token=${access_token}${accessTokenExpiration}`;
-      document.cookie = `refresh_token=${refresh_token}${refreshTokenExpiration}`;
+        document.cookie = `access_token=${access_token}${accessTokenExpiration}`;
+        document.cookie = `refresh_token=${refresh_token}${refreshTokenExpiration}`;
 
-      const rol = jwtUtils.getUserRole(access_token);
-
-      toast.success(`¡Bienvenido de nuevo!`);
-      
-      const rutas = {
-          superadmin: '/superadmin',
-          admin: '/admin',
-          cliente: '/cliente',
-          asesor: '/asesor',
-          cajero: '/asesor',
-          operaciones: '/operaciones',
-          contador: '/contador',
-          jefe_negocio: '/jefe_negocio'
-      };
-
-      if (rutas[rol]) {
-          setTimeout(() => navigate(rutas[rol]), 1500);
-      } else {
-          toast.error(`Rol no reconocido: ${rol}`);
-      }
+        toast.success(`¡Bienvenido de nuevo!`);
+        
+        // REDIRECCIÓN UNIFICADA: Todos van al dashboard principal
+        setTimeout(() => navigate('/home'), 1000);
 
     } catch (error) {
-      const msg = error.response?.data?.message || 'Error al iniciar sesión';
-      toast.error(msg);
+        const msg = error.response?.data?.message || 'Error al iniciar sesión';
+        toast.error(msg);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 

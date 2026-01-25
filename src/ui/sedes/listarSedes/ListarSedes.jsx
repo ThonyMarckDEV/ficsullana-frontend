@@ -196,7 +196,7 @@ const ListarSedes = () => {
                 subtitle="Panel de control administrativo - Fic Sullana"
                 icon={BuildingOfficeIcon}
                 buttonText="+ Nueva Sede"
-                buttonLink="/superadmin/agregar-sede"
+                buttonLink="/agregar-sede"
             />
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />

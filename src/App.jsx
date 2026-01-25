@@ -1,5 +1,5 @@
 //import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet} from 'react-router-dom';
 import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -21,215 +21,139 @@ import Login from 'ui/auth/Login/Login';
 //UI HOME
 import Home from 'ui/home/Home';
 
-//UIS SUPERADMIN
+
 //Modulos Sedes
-import AgregarSede from 'ui/SuperAdministrador/sedes/agregarSede/AgregarSede';
-import ListarSedes from 'ui/SuperAdministrador/sedes/listarSedes/ListarSedes';
-import EditarSede from 'ui/SuperAdministrador/sedes/editarSede/EditarSede';
+import AgregarSede from 'ui/sedes/agregarSede/AgregarSede';
+import ListarSedes from 'ui/sedes/listarSedes/ListarSedes';
+import EditarSede from 'ui/sedes/editarSede/EditarSede';
+
 //Modulos Productos
-import AgregarProducto from 'ui/SuperAdministrador/productos/agregarProducto/AgregarProducto';
-import ListarProductos from 'ui/SuperAdministrador/productos/listarProductos/ListarProductos';
-import EditarProducto from 'ui/SuperAdministrador/productos/editarProductos/EditarProducto';
+import AgregarProducto from 'ui/productos/agregarProducto/AgregarProducto';
+import ListarProductos from 'ui/productos/listarProductos/ListarProductos';
+import EditarProducto from 'ui/productos/editarProductos/EditarProducto';
 
-
-
-// UIS ADMIN
 //Modulos Jefe Negocio
-import AgregarJefeNegocio from 'ui/Administrador/jefe_negocios/agregarJefeNegocio/AgregarJefeNegocio';
-import ListarJefesNegocio from 'ui/Administrador/jefe_negocios/listarJefesNegocio/ListarJefesNegocio';
-import EditarJefeNegocio  from 'ui/Administrador/jefe_negocios/editarJefeNegocio/EditarJefeNegocio';
+import AgregarJefeNegocio from 'ui/jefe_negocios/agregarJefeNegocio/AgregarJefeNegocio';
+import ListarJefesNegocio from 'ui/jefe_negocios/listarJefesNegocio/ListarJefesNegocio';
+import EditarJefeNegocio  from 'ui/jefe_negocios/editarJefeNegocio/EditarJefeNegocio';
 
-
-
-
-//UIS JEFE NEGOCIO
 //Modulos Asesores
-import AgregarAsesor from 'ui/JefeNegocio/asesores/agregarAsesor/AgregarAsesor';
-import ListarAsesores from 'ui/JefeNegocio/asesores/listarAsesores/ListarAsesores';
-import EditarAsesor from 'ui/JefeNegocio/asesores/editarAsesor/EditarAsesor';
+import AgregarAsesor from 'ui/asesores/agregarAsesor/AgregarAsesor';
+import ListarAsesores from 'ui/asesores/listarAsesores/ListarAsesores';
+import EditarAsesor from 'ui/asesores/editarAsesor/EditarAsesor';
 
-
-
-
-//UIS ASESOR
 //Modulos Clientes
-import AgregarCliente from 'ui/Asesor/clientes/agregarCliente/AgregarCliente';
-import ListarClientes from 'ui/Asesor/clientes/listarClientes/ListarClientes';
-import EditarCliente from 'ui/Asesor/clientes/editarCliente/EditarCliente';
+import AgregarCliente from 'ui/clientes/agregarCliente/AgregarCliente';
+import ListarClientes from 'ui/clientes/listarClientes/ListarClientes';
+import EditarCliente from 'ui/clientes/editarCliente/EditarCliente';
+
 //Modulos Admisiones
-import NuevaAdmision from 'ui/Asesor/admision/nuevaAdmision/NuevaAdmision';
-import ListarAdmisiones from 'ui/Asesor/admision/listarAdmisiones/ListarAdmisiones';
-import EditarAdmision from 'ui/Asesor/admision/editarAdmision/EditarAdmision';
-
-
-
-
-// UIS USUARIO
-
+import NuevaAdmision from 'ui/admision/nuevaAdmision/NuevaAdmision';
+import ListarAdmisiones from 'ui/admision/listarAdmisiones/ListarAdmisiones';
+import EditarAdmision from 'ui/admision/editarAdmision/EditarAdmision';
 
 // Utilities
-import ProtectedRouteHome from 'utilities/ProtectedRoutes/ProtectedRouteHome';
-import ProtectedRouteCliente from 'utilities/ProtectedRoutes/ProtectedRouteCliente';
-import ProtectedRouteAdmin from 'utilities/ProtectedRoutes/ProtectedRouteAdmin';
-import ProtectedRouteSuperAdmin from 'utilities/ProtectedRoutes/ProtectedRouteSuperAdmin';
-import ProtectedRouteAsesor from 'utilities/ProtectedRoutes/ProtectedRouteAsesor';
-import ProtectedRouteJefeNegocio from 'utilities/ProtectedRoutes/ProtectedRouteJefeNegocio';
+import ProtectedRouteLogin from 'utilities/ProtectedRoutes/ProtectedRouteLogin';
+import ProtectedRoute from 'utilities/ProtectedRoutes/ProtectedRoute';
 
 
 
 function AppContent() {
+
+  const FullLayout = ({ children }) => (
+    <SedeLayout>
+      <SidebarLayout>{children || <Outlet />}</SidebarLayout>
+    </SedeLayout>
+  );
+
   return (
     <Routes>
-      {/* Rutas públicas */}
-      <Route
-        path="/"
-        element={<ProtectedRouteHome element={<Login />} />}
-      />
+      {/* --- RUTAS PÚBLICAS --- */}
+      <Route path="/" element={<ProtectedRouteLogin element={<Login />} />} />
 
+      {/* --- DASHBOARD --- */}
+      <Route path="/home" element={<ProtectedRoute element={<FullLayout><Home /></FullLayout>} />} />
 
-      {/* RUTAS SUPERADMIN */}
-      <Route
-        path="/superadmin"
-        element={
-          <ProtectedRouteSuperAdmin element={
-           <SedeLayout>
-              <SidebarLayout />
-           </SedeLayout>
-          } />
-        }
-      >
-        {/* Ruta Home (cuando solo pones /superadmin) */}
-        <Route index element={<Home />} />
-
-        {/* RUTAS SEDES */}
-          {/* Ruta Agregar Sede */}
-          <Route path="agregar-sede" element={<AgregarSede />} />
-          {/* Ruta Listar Sede */}
-          <Route path="listar-sedes" element={<ListarSedes />} />
-          {/* Ruta Editar Sede */}
-          <Route path="editar-sede/:id" element={<EditarSede />} />
-
-        {/* RUTAS PRODUCTOS */}
-          {/* Ruta Agregar Producto */}
-          <Route path="agregar-producto" element={<AgregarProducto />} />
-          {/* Ruta Listar Productos */}
-          <Route path="listar-productos" element={<ListarProductos />} />
-          {/* Ruta Editar Producto */}
-          <Route path="editar-producto/:id" element={<EditarProducto />} />
-
+      {/* --- MÓDULO: SEDES --- */}
+      <Route path="/sedes" element={<FullLayout />}>
+        <Route path="agregar" element={
+          <ProtectedRoute requiredPermission="sedes.crear" element={<AgregarSede />} />
+        } />
+        <Route path="listar" element={
+          <ProtectedRoute requiredPermission="sedes.listar" element={<ListarSedes />} />
+        } />
+        <Route path="editar/:id" element={
+          <ProtectedRoute requiredPermission="sedes.actualizar" element={<EditarSede />} />
+        } />
       </Route>
 
-      {/* RUTAS ADMIN */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRouteAdmin element={
-            <SedeLayout>
-              <SidebarLayout />
-            </SedeLayout>
-          } />
-        }
-      >
-        {/* Ruta Home (cuando solo pones /admin) */}
-        <Route index element={<Home />} />
-
-        {/* RUTAS JEFE NEGOCIO */}
-          {/* Ruta Agregar Jefe Negocio */}
-          <Route path="agregar-jefe-negocio" element={<AgregarJefeNegocio />} />
-          {/* Ruta Listar Jefe Negocio */}
-          <Route path="listar-jefes-negocio" element={<ListarJefesNegocio />} />
-          {/* Ruta Editar Jefe Negocio */}
-          <Route path="editar-jefe-negocio/:id" element={<EditarJefeNegocio />} />
-
+      {/* --- MÓDULO: PRODUCTOS --- */}
+      <Route path="/productos" element={<FullLayout />}>
+        <Route path="agregar" element={
+          <ProtectedRoute requiredPermission="productos.crear" element={<AgregarProducto />} />
+        } />
+        <Route path="listar" element={
+          <ProtectedRoute requiredPermission="productos.listar" element={<ListarProductos />} />
+        } />
+        <Route path="editar/:id" element={
+          <ProtectedRoute requiredPermission="productos.actualizar" element={<EditarProducto />} />
+        } />
       </Route>
 
-
-    {/* RUTAS JEFE NEGOCIO */}
-      <Route
-        path="/jefe_negocio"
-        element={
-          <ProtectedRouteJefeNegocio element={
-            <SedeLayout>
-              <SidebarLayout />
-            </SedeLayout>
-          } />
-        }
-      >
-        {/* Ruta Home (cuando solo pones /jefe_negocio) */}
-        <Route index element={<Home />} />
-
-        {/* RUTAS ASESOR */}
-          {/* Ruta Agregar Asesor */}
-          <Route path="agregar-asesor" element={<AgregarAsesor />} />
-          {/* Ruta Listar Asesor */}
-          <Route path="listar-asesores" element={<ListarAsesores />} />
-          {/* Ruta Editar Asesor */}
-          <Route path="editar-asesor/:id" element={<EditarAsesor />} />
-
+      {/* --- MÓDULO: PERSONAL (Jefes y Asesores) --- */}
+      <Route path="/personal" element={<FullLayout />}>
+        <Route path="agregar-jefe-negocio" element={
+          <ProtectedRoute requiredPermission="jefenegocios.crear" element={<AgregarJefeNegocio />} />
+        } />
+        <Route path="listar-jefes-negocio" element={
+          <ProtectedRoute requiredPermission="jefenegocios.listar" element={<ListarJefesNegocio />} />
+        } />
+        <Route path="editar-jefe-negocio" element={
+          <ProtectedRoute requiredPermission="jefenegocios.editar" element={<EditarJefeNegocio />} />
+        } />
+        <Route path="agregar-asesor" element={
+          <ProtectedRoute requiredPermission="asesores.crear" element={<AgregarAsesor />} />
+        } />
+        <Route path="listar-asesores" element={
+          <ProtectedRoute requiredPermission="asesores.listar" element={<ListarAsesores />} />
+        } />
+        <Route path="editar-asesor" element={
+          <ProtectedRoute requiredPermission="asesores.editar" element={<EditarAsesor />} />
+        } />
       </Route>
 
-
-      {/* RUTAS ASESOR */}
-      <Route
-        path="/asesor"
-        element={
-          <ProtectedRouteAsesor element={
-            <SedeLayout>
-              <SidebarLayout />
-            </SedeLayout>
-          } />
-        }
-      >
-        {/* Ruta Home (cuando solo pones /asesor) */}
-        <Route index element={<Home />} />
-
-        {/* RUTAS CLIENTE */}
-          {/* Ruta Agregar Cliente */}
-          <Route path="agregar-cliente" element={<AgregarCliente />} />
-          {/* Ruta Listar Cliente */}
-          <Route path="listar-clientes" element={<ListarClientes />} />
-          {/* Ruta Editar Cliente */}
-          <Route path="editar-cliente/:id" element={<EditarCliente />} />
-
-        {/* RUTAS ADMISIONES */}
-          {/* Ruta Nueva Admision */}
-          <Route path="nueva-admision" element={<NuevaAdmision />} />
-          {/* Ruta Listar Admisiones */}
-          <Route path="listar-admisiones" element={<ListarAdmisiones />} />
-          {/* Ruta Editar Admision */}
-          <Route path="editar-admision/:id" element={<EditarAdmision />} />
-
-
-
+      {/* --- MÓDULO: CLIENTES --- */}
+      <Route path="/clientes" element={<FullLayout />}>
+        <Route path="agregar" element={
+          <ProtectedRoute requiredPermission="clientes.crear" element={<AgregarCliente />} />
+        } />
+        <Route path="listar" element={
+          <ProtectedRoute requiredPermission="clientes.listar" element={<ListarClientes />} />
+        } />
+        <Route path="editar/:id" element={
+          <ProtectedRoute requiredPermission="clientes.actualizar" element={<EditarCliente />} />
+        } />
       </Route>
 
-
-
-      {/* RUTAS CLIENTE */}
-      <Route
-        path="/cliente"
-        element={
-          <ProtectedRouteCliente element={<SidebarLayout />} />
-        }
-      >
-        {/* Ruta Home (cuando solo pones /cliente) */}
-        <Route index element={<Home />} />
-
-        {/* Aquí agregas más módulos */}
-
+      {/* --- MÓDULO: ADMISIONES Y PROSPECTOS --- */}
+      <Route path="/gestion" element={<FullLayout />}>
+        <Route path="nueva-admision" element={
+          <ProtectedRoute requiredPermission="admisiones.crear" element={<NuevaAdmision />} />
+        } />
+        <Route path="listar-admisiones" element={
+          <ProtectedRoute requiredPermission="admisiones.listar" element={<ListarAdmisiones />} />
+        } />
+        <Route path="editar-admision" element={
+          <ProtectedRoute requiredPermission="admisiones.editar" element={<EditarAdmision />} />
+        } />
       </Route>
 
-
-
-
-
-      {/* Ruta de error */}
-      <Route path="/*" element={<ErrorPage404 />} />
+      {/* --- ERRORES --- */}
       <Route path="/401" element={<ErrorPage401 />} />
+      <Route path="/*" element={<ErrorPage404 />} />
     </Routes>
   );
 }
-
 
 function App() {
   return (

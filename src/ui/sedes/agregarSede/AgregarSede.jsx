@@ -56,7 +56,7 @@ const AgregarSede = () => {
         subtitle="Configuración de nueva unidad de negocio"
         icon={BuildingOffice2Icon}
         buttonText="← Volver al listado"
-        buttonLink="/superadmin/listar-sedes"
+        buttonLink="/listar-sedes"
       />
 
       <AlertMessage 
