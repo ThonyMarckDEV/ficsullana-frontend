@@ -84,7 +84,7 @@ const AgregarCliente = () => {
         subtitle="Nuevo socio comercial"
         icon={UserPlusIcon}
         buttonText="← Volver al listado"
-        buttonLink="/listar-clientes"
+        buttonLink="/clientes/listar"
       />
 
       {/* ALERTA  */}

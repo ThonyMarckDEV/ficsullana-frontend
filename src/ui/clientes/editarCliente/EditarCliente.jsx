@@ -83,7 +83,7 @@ const EditarCliente = () => {
     try {
         await updateCliente(id, formData);
         setAlert({ type: 'success', message: 'Cliente actualizado con éxito' });
-        setTimeout(() => navigate('/listar-clientes'), 2000);
+        setTimeout(() => navigate('/clientes/listar'), 2000);
     } catch (err) {
         setAlert(handleApiError(err, 'Error al actualizar el cliente'));
     } finally {
@@ -144,7 +144,7 @@ const EditarCliente = () => {
         <div className="flex justify-end mt-8 gap-4">
           <button 
             type="button" 
-            onClick={() => navigate('/listar-clientes')} 
+            onClick={() => navigate('/clientes/listar')} 
             className="px-6 py-2 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 font-bold"
           >
             Cancelar

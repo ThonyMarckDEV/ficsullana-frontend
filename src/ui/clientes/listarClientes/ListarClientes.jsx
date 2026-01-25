@@ -151,7 +151,7 @@ const ListarCliente = () => {
 
                     {/* BOTÓN EDITAR */}
                     <Link 
-                        to={`/editar-cliente/${row.id}`} 
+                        to={`/clientes/editar/${row.id}`} 
                         className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
                     >
                         <PencilSquareIcon className="w-5 h-5" /> Editar
@@ -209,7 +209,7 @@ const ListarCliente = () => {
                 title="Gestión de Clientes"
                 subtitle="Base de datos de socios - Fic Sullana"
                 buttonText="+ Nuevo Cliente"
-                buttonLink="/agregar-cliente"
+                buttonLink="/clientes/agregar"
                 icon={UsersIcon}
             />
 

@@ -107,7 +107,7 @@ const ListarProductos = () => {
 
                     {/* BOTÓN EDITAR */}
                     <Link 
-                        to={`/editar-producto/${row.id}`} 
+                        to={`/productos/editar/${row.id}`} 
                         className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
                     >
                         <PencilSquareIcon className="w-5 h-5" /> Editar
@@ -147,7 +147,7 @@ const ListarProductos = () => {
                 subtitle="Gestión del catálogo de productos - Fic Sullana"
                 icon={CubeIcon}
                 buttonText="+ Nuevo Producto"
-                buttonLink="/agregar-producto"
+                buttonLink="/productos/agregar"
             />
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />

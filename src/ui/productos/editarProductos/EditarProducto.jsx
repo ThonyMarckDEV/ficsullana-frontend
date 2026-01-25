@@ -48,7 +48,7 @@ const EditarProducto = () => {
             type: 'success', 
             message: response.message || 'Producto actualizado correctamente.' 
         });
-        setTimeout(() => navigate('/listar-productos'), 1500);
+        setTimeout(() => navigate('/productos/listar'), 1500);
 
       } catch (err) {
         setAlert(handleApiError(err, 'Error al actualizar el producto'));
@@ -67,7 +67,7 @@ const EditarProducto = () => {
           subtitle={`Actualizando: ${formData.nombre}`}
           icon={CubeIcon}
           buttonText="← Volver al listado"
-          buttonLink="/listar-productos"
+          buttonLink="/productos/listar"
         />
       
       <AlertMessage 
@@ -87,7 +87,7 @@ const EditarProducto = () => {
             <div className="flex justify-end gap-4 mt-6">
                 <button 
                     type="button" 
-                    onClick={() => navigate('/listar-productos')} 
+                    onClick={() => navigate('/productos/listar')} 
                     className="px-6 py-3 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition-colors"
                 >
                     Cancelar

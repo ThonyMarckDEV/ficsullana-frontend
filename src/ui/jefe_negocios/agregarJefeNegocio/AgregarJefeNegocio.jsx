@@ -66,7 +66,7 @@ const AgregarJefeNegocio = () => {
         subtitle="Registro de personal administrativo"
         icon={UserPlusIcon}
         buttonText="← Volver al listado"
-        buttonLink="/listar-jefes-negocio"
+        buttonLink="/personal/listar-jefes-negocio"
       />
 
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
