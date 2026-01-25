@@ -102,7 +102,7 @@ const ListarJefesNegocio = () => {
             render: (row) => (
                 <div className="flex items-center gap-4">
                     <button onClick={() => handleView(row.id)} className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark text-xs uppercase"><EyeIcon className="w-5 h-5"/> Ver</button>
-                    <Link to={`/admin/editar-jefe-negocio/${row.id}`} className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 text-xs uppercase"><PencilSquareIcon className="w-5 h-5"/> Editar</Link>
+                    <Link to={`/editar-jefe-negocio/${row.id}`} className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 text-xs uppercase"><PencilSquareIcon className="w-5 h-5"/> Editar</Link>
                 </div>
             )
         }
@@ -115,7 +115,7 @@ const ListarJefesNegocio = () => {
                 title="Jefes de Negocio"
                 subtitle="Personal de negocio"
                 buttonText="+ Nuevo Jefe"
-                buttonLink="/admin/agregar-jefe-negocio"
+                buttonLink="/agregar-jefe-negocio"
                 icon={UsersIcon}
             />
 

@@ -34,7 +34,7 @@ const AgregarProducto = () => {
         message: response.message || 'Producto registrado exitosamente.'
       });
       
-      setTimeout(() => navigate('/superadmin/listar-productos'), 2000);
+      setTimeout(() => navigate('/listar-productos'), 2000);
 
     } catch (error) {
       setAlert(handleApiError(error, 'Error al registrar el producto'));
@@ -51,7 +51,7 @@ const AgregarProducto = () => {
         subtitle="Configuración de nuevo producto financiero"
         icon={CubeIcon}
         buttonText="← Volver al listado"
-        buttonLink="/superadmin/listar-productos"
+        buttonLink="/listar-productos"
       />
 
       <AlertMessage 

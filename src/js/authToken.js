@@ -14,7 +14,7 @@ async function verificarYRenovarToken() {
   }
 
   if (refreshPromise) {
-    console.log('[Token] Esperando a la validación en curso...');
+    //console.log('[Token] Esperando a la validación en curso...');
     return refreshPromise;
   }
 
@@ -33,14 +33,14 @@ async function verificarYRenovarToken() {
       }
 
       if (newAccessToken) {
-        console.log('[Token] Access token renovado.');
+       // console.log('[Token] Access token renovado.');
         jwtUtils.setAccessTokenInCookie(newAccessToken);
         return newAccessToken;
       }
 
       return access_token;
     } catch (error) {
-      console.error('[Token] Error en validación:', error.response?.data?.message);
+      //console.error('[Token] Error en validación:', error.response?.data?.message);
 
       if (error.response?.status === 401 || error.response?.status === 400) {
         logout();

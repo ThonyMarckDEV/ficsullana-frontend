@@ -65,6 +65,14 @@ const menuConfig = [
             { name: 'Listar Admisiones', link: '/gestion/listar-admisiones', permission: 'admisiones.listar' },
         ]
     },
+    {
+        section: 'Roles',
+        icon: ClipboardDocumentListIcon,
+        subs: [
+            { name: 'Nuevo Rol', link: '/roles/agregar', permission: 'roles.crear' },
+            { name: 'Listar Roles', link: '/roles/listar', permission: 'roles.listar' },
+        ]
+    },
 ];
 
 const Sidebar = () => {
@@ -83,13 +91,7 @@ const Sidebar = () => {
             try {
                 const response = await authService.verifySession();
                 
-                // --- CORRECCIÓN AQUÍ ---
-                // Axios devuelve la data en response.data. Si usas fetch puro puede ser response directo.
-                // Esta línea detecta dónde está la información real.
                 const serverData = response.data || response; 
-
-                // Verificamos en consola qué está llegando realmente (F12)
-                console.log("Datos del servidor:", serverData);
 
                 // Ahora sí accedemos a serverData.rol, no response.rol
                 const rolName = serverData.rol?.nombre || '';

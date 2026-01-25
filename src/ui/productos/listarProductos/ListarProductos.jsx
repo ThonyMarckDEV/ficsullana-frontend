@@ -107,7 +107,7 @@ const ListarProductos = () => {
 
                     {/* BOTÓN EDITAR */}
                     <Link 
-                        to={`/superadmin/editar-producto/${row.id}`} 
+                        to={`/editar-producto/${row.id}`} 
                         className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
                     >
                         <PencilSquareIcon className="w-5 h-5" /> Editar
@@ -147,7 +147,7 @@ const ListarProductos = () => {
                 subtitle="Gestión del catálogo de productos - Fic Sullana"
                 icon={CubeIcon}
                 buttonText="+ Nuevo Producto"
-                buttonLink="/superadmin/agregar-producto"
+                buttonLink="/agregar-producto"
             />
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />

@@ -186,7 +186,7 @@ const ListarAdmisiones = () => {
                     {/* Solo editable si es PENDIENTE (0) u OBSERVADO (2) */}
                     {(row.estado === 0 || row.estado === 2) ? (
                         <Link 
-                            to={`/asesor/editar-admision/${row.id}`} 
+                            to={`/editar-admision/${row.id}`} 
                             className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
                         >
                             <PencilSquareIcon className="w-5 h-5" /> Editar
@@ -226,7 +226,7 @@ const ListarAdmisiones = () => {
                 subtitle="Evaluación crediticia de clientes y prospectos"
                 icon={ClipboardDocumentCheckIcon}
                 buttonText="+ Nueva Admisión"
-                buttonLink="/asesor/nueva-admision"
+                buttonLink="/nueva-admision"
             />
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />

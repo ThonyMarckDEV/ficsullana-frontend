@@ -52,6 +52,14 @@ import NuevaAdmision from 'ui/admision/nuevaAdmision/NuevaAdmision';
 import ListarAdmisiones from 'ui/admision/listarAdmisiones/ListarAdmisiones';
 import EditarAdmision from 'ui/admision/editarAdmision/EditarAdmision';
 
+//Modulos Roles
+import NuevoRol from 'ui/roles/agregarRol/AgregarRol';
+import ListarRoles from 'ui/roles/listarRoles/ListarRoles';
+import EditarRol from 'ui/roles/editarRoles/EditarRol';
+
+
+
+
 // Utilities
 import ProtectedRouteLogin from 'utilities/ProtectedRoutes/ProtectedRouteLogin';
 import ProtectedRoute from 'utilities/ProtectedRoutes/ProtectedRoute';
@@ -83,7 +91,7 @@ function AppContent() {
           <ProtectedRoute requiredPermission="sedes.listar" element={<ListarSedes />} />
         } />
         <Route path="editar/:id" element={
-          <ProtectedRoute requiredPermission="sedes.actualizar" element={<EditarSede />} />
+          <ProtectedRoute requiredPermission="sedes.editar" element={<EditarSede />} />
         } />
       </Route>
 
@@ -96,7 +104,7 @@ function AppContent() {
           <ProtectedRoute requiredPermission="productos.listar" element={<ListarProductos />} />
         } />
         <Route path="editar/:id" element={
-          <ProtectedRoute requiredPermission="productos.actualizar" element={<EditarProducto />} />
+          <ProtectedRoute requiredPermission="productos.editar" element={<EditarProducto />} />
         } />
       </Route>
 
@@ -108,7 +116,7 @@ function AppContent() {
         <Route path="listar-jefes-negocio" element={
           <ProtectedRoute requiredPermission="jefenegocios.listar" element={<ListarJefesNegocio />} />
         } />
-        <Route path="editar-jefe-negocio" element={
+        <Route path="editar-jefe-negocio/:id" element={
           <ProtectedRoute requiredPermission="jefenegocios.editar" element={<EditarJefeNegocio />} />
         } />
         <Route path="agregar-asesor" element={
@@ -117,7 +125,7 @@ function AppContent() {
         <Route path="listar-asesores" element={
           <ProtectedRoute requiredPermission="asesores.listar" element={<ListarAsesores />} />
         } />
-        <Route path="editar-asesor" element={
+        <Route path="editar-asesor/:id" element={
           <ProtectedRoute requiredPermission="asesores.editar" element={<EditarAsesor />} />
         } />
       </Route>
@@ -131,11 +139,11 @@ function AppContent() {
           <ProtectedRoute requiredPermission="clientes.listar" element={<ListarClientes />} />
         } />
         <Route path="editar/:id" element={
-          <ProtectedRoute requiredPermission="clientes.actualizar" element={<EditarCliente />} />
+          <ProtectedRoute requiredPermission="clientes.editar" element={<EditarCliente />} />
         } />
       </Route>
 
-      {/* --- MÓDULO: ADMISIONES Y PROSPECTOS --- */}
+      {/* --- MÓDULO: ADMISIONES --- */}
       <Route path="/gestion" element={<FullLayout />}>
         <Route path="nueva-admision" element={
           <ProtectedRoute requiredPermission="admisiones.crear" element={<NuevaAdmision />} />
@@ -147,6 +155,21 @@ function AppContent() {
           <ProtectedRoute requiredPermission="admisiones.editar" element={<EditarAdmision />} />
         } />
       </Route>
+
+    {/* --- MÓDULO: ROLES --- */}
+      <Route path="/roles" element={<FullLayout />}>
+        <Route path="agregar" element={
+          <ProtectedRoute requiredPermission="roles.crear" element={<NuevoRol />} />
+        } />
+        <Route path="listar" element={
+          <ProtectedRoute requiredPermission="roles.listar" element={<ListarRoles />} />
+        } />
+        <Route path="editar/:id" element={
+          <ProtectedRoute requiredPermission="roles.editar" element={<EditarRol />} />
+        } />
+      </Route>
+
+
 
       {/* --- ERRORES --- */}
       <Route path="/401" element={<ErrorPage401 />} />

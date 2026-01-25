@@ -60,9 +60,6 @@ const AgregarCliente = () => {
       
       setFormData(initialFormData);
       setCurrentStep(1);
-      
-      // Opcional: Redirigir
-      // setTimeout(() => navigate('/admin/listar-clientes'), 2000);
 
     } catch (error) {
       setAlert(handleApiError(error, 'Error al registrar el cliente'));
@@ -87,7 +84,7 @@ const AgregarCliente = () => {
         subtitle="Nuevo socio comercial"
         icon={UserPlusIcon}
         buttonText="← Volver al listado"
-        buttonLink="/asesor/listar-clientes"
+        buttonLink="/listar-clientes"
       />
 
       {/* ALERTA  */}

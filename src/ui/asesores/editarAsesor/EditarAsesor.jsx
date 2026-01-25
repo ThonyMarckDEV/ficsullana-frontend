@@ -59,7 +59,7 @@ const EditarAsesor = () => {
     try {
       await updateAsesor(id, formData);
       setAlert({ type: 'success', message: 'Asesor actualizado correctamente' });
-      setTimeout(() => navigate('/jefe_negocio/listar-asesores'), 1500);
+      setTimeout(() => navigate('/personal/listar-asesores'), 1500);
     } catch (err) {
        setAlert(handleApiError(err, 'Error al actualizar el asesor'));
     } finally {
@@ -77,7 +77,7 @@ const EditarAsesor = () => {
         subtitle={`Editando a: ${formData.datos_empleado.nombre} ${formData.datos_empleado.apellidoPaterno}`}
         icon={PencilSquareIcon}
         buttonText="← Volver al listado"
-        buttonLink="/jefe_negocio/listar-asesores"
+        buttonLink="/personal/listar-asesores"
       />
       
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />

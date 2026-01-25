@@ -59,7 +59,7 @@ const EditarJefeNegocio = () => {
     try {
       await updateJefeNegocio(id, formData);
       setAlert({ type: 'success', message: 'Jefe de Negocio actualizado correctamente' });
-      setTimeout(() => navigate('/admin/listar-jefes-negocio'), 1500);
+      setTimeout(() => navigate('/listar-jefes-negocio'), 1500);
     } catch (err) {
        setAlert(handleApiError(err, 'Error al actualizar'));
     } finally {
@@ -77,7 +77,7 @@ const EditarJefeNegocio = () => {
         subtitle={`Editando Jefe: ${formData.datos_empleado.nombre || ''} ${formData.datos_empleado.apellidoPaterno  || ''} ${formData.datos_empleado.apellidoMaterno  || ''}`}
         icon={PencilSquareIcon}
         buttonText="← Volver al listado"
-        buttonLink="/admin/listar-jefes-negocio"
+        buttonLink="/listar-jefes-negocio"
       />
 
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
@@ -90,7 +90,7 @@ const EditarJefeNegocio = () => {
             <CuentaForm data={formData.jefe_negocio} handleChange={(e) => handleChange(e, 'jefe_negocio')} isEdit={true} />
         </div>
         <div className="flex justify-end gap-4 mt-8">
-          <button type="button" onClick={() => navigate('/admin/listar-jefes-negocio')} className="px-6 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-bold transition-colors">Cancelar</button>
+          <button type="button" onClick={() => navigate('/listar-jefes-negocio')} className="px-6 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-bold transition-colors">Cancelar</button>
           <button type="submit" disabled={loading} className="px-8 py-2 bg-fic-red text-white rounded-lg hover:bg-red-700 font-black uppercase shadow-lg transition-all">{loading ? 'Guardando...' : 'Guardar Cambios'}</button>
         </div>
       </form>

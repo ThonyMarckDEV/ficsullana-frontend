@@ -83,7 +83,7 @@ const EditarCliente = () => {
     try {
         await updateCliente(id, formData);
         setAlert({ type: 'success', message: 'Cliente actualizado con éxito' });
-        setTimeout(() => navigate('/asesor/listar-clientes'), 2000);
+        setTimeout(() => navigate('/listar-clientes'), 2000);
     } catch (err) {
         setAlert(handleApiError(err, 'Error al actualizar el cliente'));
     } finally {
@@ -114,7 +114,7 @@ const EditarCliente = () => {
         subtitle={`Editando Cliente: ${formData.datos_cliente.nombre || ''} ${formData.datos_cliente.apellidoPaterno  || ''} ${formData.datos_cliente.apellidoMaterno  || ''}`}
         icon={PencilSquareIcon}
         buttonText="← Volver al listado"
-        buttonLink="/asesor/listar-clientes"
+        buttonLink="/listar-clientes"
       />
 
       {/* ALERTA */}
@@ -144,7 +144,7 @@ const EditarCliente = () => {
         <div className="flex justify-end mt-8 gap-4">
           <button 
             type="button" 
-            onClick={() => navigate('/asesor/listar-clientes')} 
+            onClick={() => navigate('/listar-clientes')} 
             className="px-6 py-2 text-slate-700 bg-slate-200 rounded-md hover:bg-slate-300 font-bold"
           >
             Cancelar

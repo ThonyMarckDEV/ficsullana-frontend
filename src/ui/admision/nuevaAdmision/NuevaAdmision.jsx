@@ -144,7 +144,7 @@ const NuevaAdmision = () => {
         try {
             const response = await createAdmision(payload);
             setAlert({ type: 'success', message: response.message || 'Evaluación registrada exitosamente.' });
-            setTimeout(() => navigate('/asesor/listar-admisiones'), 2000);
+            setTimeout(() => navigate('/listar-admisiones'), 2000);
         } catch (error) {
             setAlert(handleApiError(error, 'Error al registrar la admisión'));
         } finally {
@@ -171,7 +171,7 @@ const NuevaAdmision = () => {
                 subtitle="Evaluación de historial financiero y capacidad crediticia"
                 icon={ClipboardDocumentCheckIcon}
                 buttonText="← Listado de Admisiones"
-                buttonLink="/asesor/listar-admisiones"
+                buttonLink="/listar-admisiones"
             />
 
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
@@ -301,7 +301,7 @@ const NuevaAdmision = () => {
                         <div className="mt-8 pt-4 border-t border-slate-100 flex justify-end gap-4">
                             <button 
                                 type="button" 
-                                onClick={() => navigate('/asesor/listar-admisiones')} 
+                                onClick={() => navigate('/listar-admisiones')} 
                                 className="px-6 py-2 text-slate-600 font-bold bg-slate-100 rounded hover:bg-slate-200 transition-colors"
                             >
                                 Cancelar

@@ -47,7 +47,6 @@ const AgregarAsesor = () => {
       setAlert({ type: 'success', message: response.message || 'Asesor registrado correctamente.' });
       setFormData(initialFormData);
       setCurrentStep(1);
-      // setTimeout(() => navigate('/admin/listar-asesores'), 1500); 
     } catch (error) {
       setAlert(handleApiError(error, 'Error al registrar el asesor'));
     } finally {
@@ -71,7 +70,7 @@ const AgregarAsesor = () => {
         subtitle="Registro de personal operativo"
         icon={UserPlusIcon}
         buttonText="← Volver al listado"
-        buttonLink="/jefe_negocio/listar-asesores"
+        buttonLink="/personal/listar-asesores"
       />
 
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
