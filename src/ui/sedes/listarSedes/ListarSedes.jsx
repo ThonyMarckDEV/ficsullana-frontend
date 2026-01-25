@@ -10,7 +10,6 @@ import {
     PencilSquareIcon, 
     BuildingStorefrontIcon, 
     EyeIcon, 
-    UserCircleIcon,
     BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
@@ -33,33 +32,26 @@ const ListarSedes = () => {
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-    // --- FUNCIÓN PARA VER DETALLE (MAPPING DE DATOS) ---
+    // --- FUNCIÓN PARA VER DETALLE ---
     const handleViewSede = async (id) => {
         setIsInfoOpen(true);
         setInfoLoading(true);
         try {
             const response = await showSede(id);
-            const { sede, admin } = response.data;
+            // Solo extraemos la sede, ya no hay admin vinculado directamente en la respuesta plana
+            const { sede } = response.data; 
             
             // Transformamos la data para el InfoModal
             const seccionesFormateadas = [
                 {
-                    title: "1. Datos del Local",
+                    title: "Datos del Local",
                     icon: BuildingStorefrontIcon,
                     items: [
                         { label: "Nombre de Sede", value: sede.nombre, fullWidth: true },
-                        { label: "Código SUNAT", value: sede.codigo_sunat },
+                        { label: "Código SUNAT", value: sede.codigo_sunat || 'No registrado' },
                         { label: "Dirección", value: sede.direccion, fullWidth: true },
                         { label: "Estado Actual", value: sede.estado === 1 ? 'ACTIVO' : 'INACTIVO' },
-                    ]
-                },
-                {
-                    title: "2. Administrador Encargado",
-                    icon: UserCircleIcon,
-                    items: [
-                        { label: "Nombre Completo", value: admin?.datos_empleado ? `${admin.datos_empleado.nombre} ${admin.datos_empleado.apellidoPaterno}` : 'Sin asignar', fullWidth: true },
-                        { label: "DNI", value: admin?.datos_empleado?.dni },
-                        { label: "Usuario de Acceso", value: admin?.username },
+                        { label: "Fecha Creación", value: new Date(sede.created_at).toLocaleDateString() },
                     ]
                 }
             ];
@@ -142,7 +134,7 @@ const ListarSedes = () => {
 
                     {/* BOTÓN EDITAR */}
                     <Link 
-                        to={`/superadmin/editar-sede/${row.id}`} 
+                        to={`/sedes/editar/${row.id}`} 
                         className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
                     >
                         <PencilSquareIcon className="w-5 h-5" /> Editar
@@ -196,12 +188,12 @@ const ListarSedes = () => {
                 subtitle="Panel de control administrativo - Fic Sullana"
                 icon={BuildingOfficeIcon}
                 buttonText="+ Nueva Sede"
-                buttonLink="/agregar-sede"
+                buttonLink="/sedes/agregar"
             />
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
 
-            {/* MODAL DE INFORMACIÓN REUTILIZABLE */}
+            {/* MODAL DE INFORMACIÓN */}
             <InfoModal 
                 isOpen={isInfoOpen}
                 onClose={() => setIsInfoOpen(false)}
