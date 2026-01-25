@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { KeyIcon } from 'lucide-react';
 
 const CuentaForm = ({ data, handleChange, isEdit = false }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,7 +13,7 @@ const CuentaForm = ({ data, handleChange, isEdit = false }) => {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center gap-2 mb-6 border-b-2 border-fic-yellow pb-2">
-        <keyIcon className="w-6 h-6 text-fic-yellow" />
+        <KeyIcon className="w-6 h-6 text-fic-yellow" />
         <h2 className="text-xl font-black text-fic-dark">Cuenta de Sistema</h2>
       </div>
 

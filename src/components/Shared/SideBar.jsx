@@ -37,6 +37,14 @@ const menuConfig = [
         ]
     },
     {
+        section: 'Administradores',
+        icon: UsersIcon,
+        subs: [
+            { name: 'Agregar Administrador', link: '/personal/agregar-administrador', permission: 'administradores.crear' },
+            { name: 'Listar Administradores', link: '/personal/listar-administradores', permission: 'administradores.listar' },
+        ]
+    },
+    {
         section: 'Jefes de Negocio',
         icon: UsersIcon,
         subs: [

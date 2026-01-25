@@ -32,6 +32,11 @@ import AgregarProducto from 'ui/productos/agregarProducto/AgregarProducto';
 import ListarProductos from 'ui/productos/listarProductos/ListarProductos';
 import EditarProducto from 'ui/productos/editarProductos/EditarProducto';
 
+//Modulos Administradores
+import AgregarAdministrador from 'ui/administradores/agregarAdministrador/AgregarAdministrador';
+import ListarAdministradores from 'ui/administradores/listarAdministradores/ListarAdministradores';
+import EditarAdministrador  from 'ui/administradores/editarAdministrador/EditarAdministrador';
+
 //Modulos Jefe Negocio
 import AgregarJefeNegocio from 'ui/jefe_negocios/agregarJefeNegocio/AgregarJefeNegocio';
 import ListarJefesNegocio from 'ui/jefe_negocios/listarJefesNegocio/ListarJefesNegocio';
@@ -108,8 +113,19 @@ function AppContent() {
         } />
       </Route>
 
-      {/* --- MÓDULO: PERSONAL (Jefes y Asesores) --- */}
+      {/* --- MÓDULO: PERSONAL  --- */}
       <Route path="/personal" element={<FullLayout />}>
+
+        <Route path="agregar-administrador" element={
+          <ProtectedRoute requiredPermission="administradores.crear" element={<AgregarAdministrador/>} />
+        } />
+        <Route path="listar-administradores" element={
+          <ProtectedRoute requiredPermission="administradores.listar" element={<ListarAdministradores />} />
+        } />
+        <Route path="editar-administrador/:id" element={
+          <ProtectedRoute requiredPermission="administradores.editar" element={<EditarAdministrador />} />
+        } />
+
         <Route path="agregar-jefe-negocio" element={
           <ProtectedRoute requiredPermission="jefenegocios.crear" element={<AgregarJefeNegocio />} />
         } />
@@ -119,6 +135,7 @@ function AppContent() {
         <Route path="editar-jefe-negocio/:id" element={
           <ProtectedRoute requiredPermission="jefenegocios.editar" element={<EditarJefeNegocio />} />
         } />
+
         <Route path="agregar-asesor" element={
           <ProtectedRoute requiredPermission="asesores.crear" element={<AgregarAsesor />} />
         } />
@@ -128,6 +145,9 @@ function AppContent() {
         <Route path="editar-asesor/:id" element={
           <ProtectedRoute requiredPermission="asesores.editar" element={<EditarAsesor />} />
         } />
+
+
+
       </Route>
 
       {/* --- MÓDULO: CLIENTES --- */}
