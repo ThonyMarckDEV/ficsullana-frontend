@@ -15,6 +15,9 @@ import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { Building2, House, ListChecksIcon } from 'lucide-react';
 import authService from 'services/authService';
 
+// --- IMPORTACIÓN DEL SKELETON ---
+import SidebarSkeleton from './Skeletons/SidebarSkeleton';
+
 const menuConfig = [
     { section: 'Home', icon: House, link: '/home' },
     {
@@ -139,7 +142,7 @@ const Sidebar = () => {
 
     }, [userAuth, loading]);
 
-    // ... Resto de tu código de UI (isExpanded, isSectionActive, render...) se queda igual
+    // ... Resto de lógica UI ...
     const isExpanded = isOpen || isHovered;
 
     const isSectionActive = useCallback((item) => {
@@ -171,7 +174,8 @@ const Sidebar = () => {
         md:translate-x-0 ${isHovered ? 'md:w-64' : 'md:w-20'}
     `;
 
-    if (loading) return <div className="fixed left-0 top-0 h-screen bg-fic-red md:w-20 z-40"></div>;
+    // --- AQUÍ APLICAMOS EL SKELETON ---
+    if (loading) return <SidebarSkeleton />;
 
     return (
         <>
