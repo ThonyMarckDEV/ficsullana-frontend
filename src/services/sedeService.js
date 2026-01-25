@@ -19,6 +19,14 @@ export const getSedes = async (page = 1, search = '') => {
   return handleResponse(response);
 };
 
+export const getSedesCombobox = async (page = 1, search = '') => {
+  const term = encodeURIComponent(search);
+  const url = `${API_BASE_URL}/api/sedes/index-combobox?page=${page}&search=${term}`;
+  const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+  return handleResponse(response);
+};
+
+
 export const showSede = async (id) => {
   const url = `${API_BASE_URL}/api/sedes/show/${id}`;
   const response = await fetchWithAuth(url, { method: 'GET' });

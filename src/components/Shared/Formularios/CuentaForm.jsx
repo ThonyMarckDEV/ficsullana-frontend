@@ -35,7 +35,7 @@ const CuentaForm = ({ data, handleChange, isEdit = false }) => {
           {/* Password */}
           <div className="relative">
             <label className={labelClass}>
-                {isEdit ? "Nueva Contraseña (Opcional)" : "Contraseña"}
+                {isEdit ? "Nueva Contraseña" : "Contraseña"}
             </label>
             <input 
               type={showPassword ? "text" : "password"} 

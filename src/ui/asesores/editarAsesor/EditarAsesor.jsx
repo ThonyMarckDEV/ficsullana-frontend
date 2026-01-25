@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { showAsesor, updateAsesor } from 'services/asesorService'; 
+
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
-import DatosForm from 'components/Shared/Formularios/DatosForm';
+import DatosAsesorForm from 'components/Shared/Formularios/DatosForm';
 import CuentaForm from 'components/Shared/Formularios/CuentaForm';
 import PageHeader from 'components/Shared/Headers/PageHeader';
-import { PencilSquareIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 
 const cleanNulls = (obj) => {
   if (!obj) return {};
@@ -26,6 +27,7 @@ const EditarAsesor = () => {
       asesor: { username: '', password: '', password_confirmation: '', sede_id: '' }
   });
 
+  const [initialSedeName, setInitialSedeName] = useState('');
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
 
@@ -33,13 +35,22 @@ const EditarAsesor = () => {
     const fetchData = async () => {
       try {
         const response = await showAsesor(id);
-        const { datos_empleado, username, sede_id } = response.data; 
+        
+        const { datos_empleado, username, sede_id, sede } = response.data; 
+        
         setFormData({
             datos_empleado: cleanNulls(datos_empleado),
             asesor: { username: username || '', sede_id: sede_id || '', password: '', password_confirmation: '' }
         });
+
+        // Configuramos el nombre inicial para el buscador
+        if (sede && sede.nombre) {
+            setInitialSedeName(sede.nombre);
+        }
+
       } catch (err) {
         setAlert({ type: 'error', message: 'No se pudo cargar la información del asesor.' });
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -50,6 +61,14 @@ const EditarAsesor = () => {
   const handleChange = (e, section) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [section]: { ...prev[section], [name]: value } }));
+  };
+
+  // Manejador simplificado: Recibe directamente el ID (no un evento)
+  const handleSedeChange = (newSedeId) => {
+      setFormData(prev => ({
+          ...prev,
+          asesor: { ...prev.asesor, sede_id: newSedeId }
+      }));
   };
 
   const handleSubmit = async (e) => {
@@ -82,16 +101,59 @@ const EditarAsesor = () => {
       
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 border-t-4 border-fic-yellow">
-            <DatosForm data={formData.datos_empleado} handleChange={(e) => handleChange(e, 'datos_empleado')} />
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 border-t-4 border-slate-400 max-w-2xl">
-            <CuentaForm data={formData.asesor} handleChange={(e) => handleChange(e, 'asesor')} isEdit={true} />
-        </div>
-        <div className="flex justify-end gap-4 mt-8">
-          <button type="button" onClick={() => navigate('/admin/listar-asesores')} className="px-6 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-bold transition-colors">Cancelar</button>
-          <button type="submit" disabled={loading} className="px-8 py-2 bg-fic-red text-white rounded-lg hover:bg-red-700 font-black uppercase shadow-lg transition-all">{loading ? 'Guardando...' : 'Guardar Cambios'}</button>
+      <form onSubmit={handleSubmit}>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* IZQUIERDA: DATOS + SEDE */}
+            <div className="lg:col-span-2 space-y-6">
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 border-t-4 border-fic-yellow h-full">
+                    <DatosAsesorForm 
+                        data={formData.datos_empleado} 
+                        handleChange={(e) => handleChange(e, 'datos_empleado')}
+                        isEdit={true}
+                        
+                        // Pasamos datos para el combobox
+                        currentSedeId={formData.asesor.sede_id}
+                        initialSedeName={initialSedeName}
+                        onSedeChange={handleSedeChange}
+                    />
+                </div>
+            </div>
+
+            {/* DERECHA: CUENTA */}
+            <div className="lg:col-span-1">
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 border-t-4 border-slate-400 sticky top-6">
+                    <div className="flex items-center gap-2 mb-6 border-b pb-2">
+                        <UserCircleIcon className="w-6 h-6 text-slate-500" />
+                        <h2 className="text-xl font-black text-slate-700">Acceso al Sistema</h2>
+                    </div>
+                    
+                    <CuentaForm 
+                        data={formData.asesor} 
+                        handleChange={(e) => handleChange(e, 'asesor')} 
+                        isEdit={true} 
+                    />
+
+                    <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">
+                        <button 
+                            type="submit" 
+                            disabled={loading} 
+                            className="w-full py-3 bg-fic-red text-white rounded-lg hover:bg-red-700 font-black uppercase shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {loading ? 'Guardando...' : 'Guardar Cambios'}
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={() => navigate('/personal/listar-asesores')} 
+                            className="w-full py-3 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-bold transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
       </form>
     </div>

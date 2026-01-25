@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getRoles, toggleRolEstado, showRol } from 'services/rolService';
+import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import InfoModal from 'components/Shared/Modals/InfoModal';
@@ -14,6 +15,7 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const ListarRoles = () => {
+    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [roles, setRoles] = useState([]);
@@ -27,6 +29,8 @@ const ListarRoles = () => {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [roleToToggle, setRoleToToggle] = useState(null);
+    
+    // Estados para Modal de Información
     const [isInfoOpen, setIsInfoOpen] = useState(false);
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
@@ -36,38 +40,28 @@ const ListarRoles = () => {
         setLoading(true);
         try {
             const response = await getRoles(page, search);
-            
             const responseData = response.data || response; 
 
-            // Validamos si es paginado o array simple
             let rolesArray = [];
-            
             if (Array.isArray(responseData)) {
-                // Caso: Array directo
                 rolesArray = responseData;
             } else if (responseData.data && Array.isArray(responseData.data)) {
-                // Caso: Objeto paginado estándar de Laravel
                 rolesArray = responseData.data;
-                
                 setPaginationInfo({
                     currentPage: responseData.current_page || 1,
                     totalPages: responseData.last_page || 1,
                     totalItems: responseData.total || 0,
                 });
-            } else {
-                console.warn("⚠️ Formato de respuesta inesperado:", responseData);
             }
             setRoles(rolesArray);
 
         } catch (err) {
-            console.error("❌ Error fetchRoles:", err);
             setAlert({ type: 'error', message: 'Error al cargar los roles.' });
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // Cargar al inicio y cuando cambie la búsqueda (con debounce idealmente, pero directo por ahora)
     useEffect(() => { 
         fetchRoles(1, searchTerm); 
     }, [fetchRoles, searchTerm]);
@@ -75,7 +69,9 @@ const ListarRoles = () => {
     // --- MANEJO DE VISTAS (MODAL) ---
     const handleViewRol = async (id) => {
         setIsInfoOpen(true);
-        setInfoLoading(true);
+        setInfoLoading(true); // Activa el Skeleton
+        setModalData({ title: 'Cargando...', sections: [] }); // Limpia data previa
+
         try {
             const response = await showRol(id);
             const rol = response.data || response;
@@ -110,7 +106,7 @@ const ListarRoles = () => {
             setAlert({ type: 'error', message: 'No se pudo cargar el detalle.' });
             setIsInfoOpen(false);
         } finally {
-            setInfoLoading(false);
+            setInfoLoading(false); // Desactiva el Skeleton
         }
     };
 
@@ -199,6 +195,8 @@ const ListarRoles = () => {
         }
     };
 
+    if (loading && roles.length === 0) return <LoadingScreen />;
+
     return (
         <div className="container mx-auto p-6">
             <PageHeader 
@@ -211,13 +209,14 @@ const ListarRoles = () => {
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
 
+            {/* MODAL DE INFORMACIÓN CON LOADER */}
             <InfoModal 
                 isOpen={isInfoOpen}
                 onClose={() => setIsInfoOpen(false)}
                 title={modalData.title}
                 subtitle={modalData.subtitle}
                 sections={modalData.sections}
-                loading={infoLoading}
+                loading={infoLoading} // <--- Pasamos el estado de carga
             />
 
             {roleToToggle && (

@@ -30,6 +30,18 @@ export const getClientes = async (page = 1) => {
   return handleResponse(response);
 };
 
+export const getClientesCombobox = async (page = 1) => {
+  const url = `${API_BASE_URL}/api/clientes/index-combobox?page=${page}`;
+
+  const response = await fetchWithAuth(url, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json'
+    },
+  });
+
+  return handleResponse(response);
+};
 
 export const showCliente = async (id) => {
   const url = `${API_BASE_URL}/api/clientes/show/${id}`;

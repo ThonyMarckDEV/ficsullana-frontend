@@ -11,6 +11,13 @@ export const getProspectos = async (page = 1, search = '') => {
   return handleResponse(response);
 };
 
+export const getProspectosCombobox = async (page = 1, search = '') => {
+  const term = encodeURIComponent(search);
+  const url = `${BASE_URL}/index-combobox?page=${page}&search=${term}`;
+  const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+  return handleResponse(response);
+};
+
 export const createProspecto = async (data) => {
   const url = `${BASE_URL}/store`;
   const response = await fetchWithAuth(url, {

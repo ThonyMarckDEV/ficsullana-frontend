@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getClientes } from 'services/clienteService'; 
+import { getClientesCombobox } from 'services/clienteService'; 
 import { MagnifyingGlassIcon, UserIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
@@ -29,7 +29,7 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     const fetchClientes = async (searchTerm = '') => {
         setLoading(true);
         try {
-            const response = await getClientes(1, searchTerm); 
+            const response = await getClientesCombobox(1, searchTerm); 
             setSuggestions(response.data || []);
             setShowSuggestions(true);
         } catch (error) {

@@ -1,20 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getProspectosCombobox } from 'services/prospectoService';
-import { MagnifyingGlassIcon, UserPlusIcon, CheckCircleIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { getSedesCombobox } from 'services/sedeService'; 
+import { MagnifyingGlassIcon, BuildingOfficeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
-const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenModal }) => {
+const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     const [inputValue, setInputValue] = useState(initialName);
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [loading, setLoading] = useState(false);
-    
+
     const wrapperRef = useRef(null);
 
+    // Sincronizar valor inicial o limpiar si se deselecciona
     useEffect(() => {
         if (!selectedId) setInputValue('');
         else if (initialName) setInputValue(initialName);
     }, [selectedId, initialName]);
 
+    // Cerrar al hacer clic fuera del componente
     useEffect(() => {
         function handleClickOutside(event) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -25,14 +27,19 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [wrapperRef]);
 
-    const fetchProspectos = async (searchTerm = '') => {
+    const fetchSedes = async (searchTerm = '') => {
         setLoading(true);
         try {
-            const response = await getProspectosCombobox(1, searchTerm);
-            setSuggestions(response.data || []);
+            // Llamamos al endpoint específico para combobox
+            const response = await getSedesCombobox(1, searchTerm); 
+            
+            // Ajustamos según si viene paginado (response.data) o lista simple (response)
+            const data = response.data || response;
+            setSuggestions(Array.isArray(data) ? data : []);
+            
             setShowSuggestions(true);
         } catch (error) {
-            console.error("Error buscando prospectos", error);
+            console.error("Error buscando sedes", error);
             setSuggestions([]);
         } finally {
             setLoading(false);
@@ -42,27 +49,33 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            fetchProspectos(inputValue);
+            fetchSedes(inputValue);
         }
     };
 
+    // Al hacer click en el input, busca (útil para ver todas las sedes vaciando el input)
     const handleInputClick = () => {
         if (!showSuggestions) {
-            fetchProspectos(inputValue);
+            fetchSedes(inputValue);
         }
     };
 
-    const handleSelect = (prospecto) => {
-        const nombreCompleto = `${prospecto.nombres} ${prospecto.apellido_paterno} ${prospecto.apellido_materno}`;
-        setInputValue(nombreCompleto);
+    const handleSelect = (sede) => {
+        setInputValue(sede.nombre);
         setShowSuggestions(false);
-        onSelect({ id: prospecto.id, nombre: nombreCompleto, dni: prospecto.dni });
+        
+        // Devolvemos el objeto seleccionado al padre
+        onSelect({ 
+            id: sede.id, 
+            nombre: sede.nombre,
+            direccion: sede.direccion
+        });
     };
 
     return (
         <div className="relative" ref={wrapperRef}>
             <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">
-                Buscar Prospecto
+                Buscar Sede
             </label>
             
             <div className="relative flex items-center">
@@ -71,11 +84,12 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                     value={inputValue}
                     onChange={(e) => {
                         setInputValue(e.target.value);
-                        if (selectedId) onSelect(null);
+                        // Si el usuario escribe algo nuevo, reseteamos la selección anterior
+                        if (selectedId) onSelect(null); 
                     }}
                     onKeyDown={handleKeyDown}
                     onClick={handleInputClick}
-                    placeholder="Buscar Prospecto..."
+                    placeholder="Buscar Sede..."
                     className={`w-full border rounded-md shadow-sm py-2 pl-3 pr-10 outline-none text-sm transition-colors ${
                         selectedId 
                             ? 'border-green-500 bg-green-50 text-green-800 font-bold' 
@@ -86,7 +100,7 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
 
                 <button
                     type="button"
-                    onClick={() => fetchProspectos(inputValue)}
+                    onClick={() => fetchSedes(inputValue)}
                     disabled={loading}
                     className="absolute right-2 text-gray-400 hover:text-fic-red p-1"
                 >
@@ -99,62 +113,44 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                     )}
                 </button>
 
-                {/* DROPDOWN CON LÓGICA DE NUEVO */}
+                {/* DROPDOWN DE SUGERENCIAS */}
                 {showSuggestions && (
                     <ul className="absolute z-50 top-full left-0 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl animate-fade-in-down">
                         {suggestions.length > 0 ? (
-                            suggestions.map((pros) => (
+                            suggestions.map((sede) => (
                                 <li
-                                    key={pros.id}
-                                    onClick={() => handleSelect(pros)}
+                                    key={sede.id}
+                                    onClick={() => handleSelect(sede)}
                                     className="px-4 py-3 hover:bg-slate-50 cursor-pointer text-sm border-b border-gray-100 last:border-none flex items-center gap-3 group"
                                 >
-                                    <div className="bg-orange-50 p-2 rounded-full group-hover:bg-white transition-all">
-                                        <UserPlusIcon className="w-4 h-4 text-orange-500" />
+                                    <div className="bg-slate-100 p-2 rounded-full group-hover:bg-white group-hover:shadow-sm transition-all">
+                                        <BuildingOfficeIcon className="w-4 h-4 text-slate-500" />
                                     </div>
                                     <div>
                                         <p className="font-bold text-slate-700 uppercase text-xs">
-                                            {pros.nombres} {pros.apellido_paterno}
+                                            {sede.nombre}
                                         </p>
-                                        <p className="text-[10px] text-slate-400 font-mono">
-                                            DNI: {pros.dni}
-                                        </p>
+                                        {sede.direccion && (
+                                            <p className="text-[10px] text-slate-400 font-mono truncate max-w-[200px]">
+                                                {sede.direccion}
+                                            </p>
+                                        )}
                                     </div>
                                 </li>
                             ))
                         ) : (
-                            <li className="p-3 bg-slate-50 text-center">
-                                <p className="text-xs text-slate-500 mb-2 italic">No se encontraron resultados.</p>
-                                <button 
-                                    type="button"
-                                    onClick={() => {
-                                        setShowSuggestions(false);
-                                        onOpenModal();
-                                    }}
-                                    className="bg-green-600 text-white text-xs px-4 py-2 rounded-md font-bold shadow hover:bg-green-700 w-full flex items-center justify-center gap-2"
-                                >
-                                    <PlusIcon className="w-3 h-3" /> Registrar Nuevo Prospecto
-                                </button>
+                            <li className="px-4 py-3 text-slate-500 text-xs italic text-center">
+                                No se encontraron sedes.
                             </li>
                         )}
                     </ul>
                 )}
             </div>
-            
-            {/* Si no ha seleccionado nada, botón de ayuda rápida */}
-            {!selectedId && !inputValue && (
-                <div className="mt-2 text-right">
-                    <button 
-                        type="button" 
-                        onClick={onOpenModal} 
-                        className="text-[10px] text-fic-red font-bold hover:underline flex items-center justify-end gap-1 w-full"
-                    >
-                        <PlusIcon className="w-3 h-3"/> ¿No existe? Registrar Nuevo
-                    </button>
-                </div>
+            {selectedId && (
+                <p className="text-[10px] text-green-600 mt-1 font-bold animate-pulse">✓ Sede seleccionada correctamente</p>
             )}
         </div>
     );
 };
 
-export default ProspectoSearchSelect;
+export default SedeSearchSelect;
