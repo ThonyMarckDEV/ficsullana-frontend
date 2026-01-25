@@ -46,9 +46,7 @@ const ListarAdmisiones = () => {
             const response = await showAdmision(id);
             const data = response.data;
             const solicitante = data.cliente ? data.cliente.datos : data.prospecto;
-            const nombreSolicitante = data.cliente 
-                ? `${solicitante.nombre} ${solicitante.apellidoPaterno}`
-                : `${solicitante.nombres} ${solicitante.apellido_paterno}`;
+            const nombreSolicitante = data.cliente ? `${solicitante.nombre || ''} ${solicitante.apellidoPaterno || ''} ${solicitante.apellidoMaterno || ''}`.trim() : 'Sin nombre';
 
             const estadoInfo = ESTADOS[data.estado] || { label: 'DESCONOCIDO' };
 
@@ -116,9 +114,7 @@ const ListarAdmisiones = () => {
             header: 'Solicitante',
             render: (row) => {
                 const persona = row.cliente ? row.cliente.datos : row.prospecto;
-                const nombre = row.cliente 
-                    ? `${persona.nombre} ${persona.apellidoPaterno}` 
-                    : `${persona.nombres} ${persona.apellido_paterno}`;
+               const nombre = row.cliente ? `${row.cliente.nombre || ''} ${row.cliente.apellidoPaterno || ''} ${row.cliente.apellidoMaterno || ''}`.trim() : 'Sin nombre';
                 
                 return (
                     <div className="flex items-center gap-3">

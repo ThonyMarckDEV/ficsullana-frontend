@@ -65,7 +65,7 @@ const ListarJefesNegocio = () => {
                         title: 'Datos Personales', 
                         icon: IdentificationIcon,
                         items: [
-                            { label: 'Nombre Completo', value: `${datos.nombre} ${datos.apellidoPaterno} ${datos.apellidoMaterno}`, fullWidth: true },
+                            { label: 'Nombre Completo', value: `${datos.nombre || ''} ${datos.apellidoPaterno || ''} ${datos.apellidoMaterno || ''}`, fullWidth: true },
                             { label: 'DNI', value: datos.dni },
                             { label: 'Estado Civil', value: datos.estadoCivil },
                             { label: 'Sexo', value: datos.sexo },
@@ -122,7 +122,7 @@ const ListarJefesNegocio = () => {
                     </div>
                     <div>
                         <span className="font-black text-slate-700 block uppercase tracking-tight">
-                            {row.datos_empleado?.nombre} {row.datos_empleado?.apellidoPaterno}
+                            {row.datos_empleado?.nombre || ''} {row.datos_empleado?.apellidoPaterno || ''} {row.datos_empleado?.apellidoMaterno || ''}
                         </span>
                         <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
                             Sede: {row.sede?.nombre || 'N/A'}

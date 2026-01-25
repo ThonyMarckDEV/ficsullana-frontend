@@ -73,7 +73,7 @@ const ListarAsesores = () => {
                         title: 'Datos Personales', 
                         icon: IdentificationIcon,
                         items: [
-                            { label: 'Nombre Completo', value: `${datos.nombre} ${datos.apellidoPaterno} ${datos.apellidoMaterno}`, fullWidth: true },
+                            { label: 'Nombre Completo', value: `${datos.nombre || ''} ${datos.apellidoPaterno || ''} ${datos.apellidoMaterno || ''}`, fullWidth: true },
                             { label: 'DNI', value: datos.dni },
                             { label: 'Fecha Nacimiento', value: datos.fechaNacimiento ? new Date(datos.fechaNacimiento).toLocaleDateString() : '-' },
                             { label: 'Sexo', value: datos.sexo },
@@ -131,7 +131,7 @@ const ListarAsesores = () => {
                     </div>
                     <div>
                         <span className="font-black text-slate-700 block uppercase tracking-tight">
-                            {row.datos_empleado?.nombre} {row.datos_empleado?.apellidoPaterno}
+                            {row.datos_empleado?.nombre || ''} {row.datos_empleado?.apellidoPaterno || ''} {row.datos_empleado?.apellidoMaterno || ''}
                         </span>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
                             <BriefcaseIcon className="w-3 h-3"/>
