@@ -46,11 +46,7 @@ const ListarAdministradores = () => {
                     {
                         title: 'Datos Personales',
                         items: [
-<<<<<<< HEAD
                             { label: 'Nombre', value: `${data.datos_empleado.nombre || ''} ${data.datos_empleado.apellidoPaterno || ''} ${data.datos_empleado.apellidoMaterno || ''}`, fullWidth: true },
-=======
-                            { label: 'Nombre', value: `${data.datos_empleado.nombre || ''} ${data.datos_empleado.apellidoPaterno|| ''} ${data.datos_empleado.apellidoMaterno|| ''}  `, fullWidth: true },
->>>>>>> 4d5f77296c4e8624aee5f13af4da843845bbe0e5
                             { label: 'DNI', value: data.datos_empleado.dni },
                             { label: 'Sede', value: data.sede?.nombre || 'General' }
                         ]
