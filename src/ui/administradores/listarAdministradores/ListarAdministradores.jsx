@@ -124,7 +124,7 @@ const ListarAdministradores = () => {
         <div className="container mx-auto p-6">
             <PageHeader title="Administradores" icon={ShieldCheckIcon} buttonText="+ Nuevo Admin" buttonLink="/personal/agregar-administrador" />
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
-            <Table columns={columns} data={admins} pagination={{ currentPage: pagination.page, totalPages: pagination.totalPages, onPageChange: fetchAdmins }} onSearch={setSearch} />
+            <Table columns={columns} data={admins} loading={loading} pagination={{ currentPage: pagination.page, totalPages: pagination.totalPages, onPageChange: fetchAdmins }} onSearch={setSearch} />
             <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} title={modalData.title} subtitle={modalData.subtitle} sections={modalData.sections} loading={infoLoading} />
             {toggleData && <ConfirmModal message="¿Cambiar estado?" onConfirm={handleToggle} onCancel={() => setToggleData(null)} />}
         </div>

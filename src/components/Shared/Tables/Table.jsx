@@ -28,15 +28,34 @@ const Table = ({
                 </div>
             )}
 
-            {/* --- CONTENEDOR DE LA TABLA (CARD) --- */}
-            <div className={`bg-white shadow-xl rounded-xl border border-slate-100 transition-opacity duration-300 flex flex-col ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                
-                {/* Contenedor de Scroll Horizontal */}
-                <div className="overflow-x-auto w-full block max-w-full touch-pan-x scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-                    
-                    {/* Contenedor interno para alineación perfecta */}
+            {/* --- VISTA PARA MÓVILES (CARDS) --- */}
+            <div className={`grid grid-cols-1 gap-4 md:hidden ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
+                {data.length > 0 ? (
+                    data.map((row, rowIndex) => (
+                        <div key={row.id || rowIndex} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                            {columns.map((col, colIndex) => (
+                                <div key={colIndex} className="flex flex-col border-b border-slate-50 last:border-0 pb-2 last:pb-0">
+                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                        {col.header}
+                                    </span>
+                                    <div className="text-sm font-bold text-slate-700">
+                                        {col.render ? col.render(row) : row[col.accessor]}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ))
+                ) : (
+                    <div className="bg-white p-8 rounded-xl border border-dashed border-slate-300 text-center text-slate-400">
+                        No hay datos disponibles.
+                    </div>
+                )}
+            </div>
+
+            {/* --- VISTA PARA ESCRITORIO (TABLA TRADICIONAL) --- */}
+            <div className={`hidden md:flex bg-white shadow-xl rounded-xl border border-slate-100 transition-opacity duration-300 flex-col ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                <div className="overflow-x-auto w-full block max-w-full touch-pan-x scrollbar-thin scrollbar-thumb-slate-300">
                     <div className="inline-block min-w-full align-middle">
-                        
                         <table className="min-w-full divide-y divide-slate-100">
                             <thead>
                                 <tr className="bg-fic-dark text-white text-left uppercase text-xs tracking-widest">
@@ -53,9 +72,7 @@ const Table = ({
                                         <tr key={row.id || rowIndex} className="hover:bg-red-50/30 transition-colors group">
                                             {columns.map((col, colIndex) => (
                                                 <td key={`${rowIndex}-${colIndex}`} className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                                                    {col.render
-                                                        ? col.render(row)
-                                                        : <span className="block">{row[col.accessor]}</span>}
+                                                    {col.render ? col.render(row) : <span className="block">{row[col.accessor]}</span>}
                                                 </td>
                                             ))}
                                         </tr>
@@ -63,12 +80,7 @@ const Table = ({
                                 ) : (
                                     <tr>
                                         <td colSpan={columns.length} className="text-center py-12">
-                                            <div className="flex flex-col items-center justify-center text-slate-400">
-                                                <svg className="w-12 h-12 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                                </svg>
-                                                <p className="font-bold">No se encontraron datos.</p>
-                                            </div>
+                                            <p className="font-bold text-slate-400">No se encontraron datos.</p>
                                         </td>
                                     </tr>
                                 )}

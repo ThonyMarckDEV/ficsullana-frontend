@@ -40,22 +40,33 @@ const ListarRoles = () => {
         setLoading(true);
         try {
             const response = await getRoles(page, search);
-            const responseData = response.data || response; 
-
-            let rolesArray = [];
-            if (Array.isArray(responseData)) {
-                rolesArray = responseData;
-            } else if (responseData.data && Array.isArray(responseData.data)) {
-                rolesArray = responseData.data;
+            
+            // VERIFICACIÓN 1: ¿Es una respuesta paginada de Laravel?
+            // Buscamos si existen las propiedades clave 'current_page' y 'data' (array)
+            if (response.current_page && Array.isArray(response.data)) {
+                
+                // 1. Guardamos los datos (filas)
+                setRoles(response.data);
+                
+                // 2. Guardamos la paginación CORRECTAMENTE
                 setPaginationInfo({
-                    currentPage: responseData.current_page || 1,
-                    totalPages: responseData.last_page || 1,
-                    totalItems: responseData.total || 0,
+                    currentPage: response.current_page,
+                    totalPages: response.last_page,
+                    totalItems: response.total
                 });
+
+            } 
+            // VERIFICACIÓN 2: ¿Es una respuesta envuelta en 'data' pero sin paginación?
+            else if (response.data && Array.isArray(response.data)) {
+                setRoles(response.data);
+            } 
+            // VERIFICACIÓN 3: ¿Es un array directo?
+            else if (Array.isArray(response)) {
+                setRoles(response);
             }
-            setRoles(rolesArray);
 
         } catch (err) {
+            console.error(err);
             setAlert({ type: 'error', message: 'Error al cargar los roles.' });
         } finally {
             setLoading(false);

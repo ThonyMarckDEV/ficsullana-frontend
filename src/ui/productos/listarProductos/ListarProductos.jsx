@@ -134,6 +134,7 @@ const ListarProductos = () => {
         }
     }, []);
 
+
     useEffect(() => { fetchProductos(1, searchTerm); }, [fetchProductos, searchTerm]);
 
     if (loading && productos.length === 0) return <LoadingScreen />;

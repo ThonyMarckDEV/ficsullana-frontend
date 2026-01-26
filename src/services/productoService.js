@@ -13,8 +13,7 @@ export const createProducto = async (data) => {
 };
 
 export const getProductos = async (page = 1, search = '') => {
-  const term = encodeURIComponent(search);
-  const url = `${API_BASE_URL}/api/productos/index?page=${page}&search=${term}`;
+  const url = `${API_BASE_URL}/api/productos/index?page=${page}&search=${search}`;
   const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
   return handleResponse(response);
 };
