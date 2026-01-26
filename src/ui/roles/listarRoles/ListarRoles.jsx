@@ -162,19 +162,27 @@ const ListarRoles = () => {
         {
             header: 'Acciones',
             render: (row) => (
-                <div className="flex items-center gap-3">
-                    <button onClick={() => handleViewRol(row.id)} className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors" title="Ver Detalle">
-                        <EyeIcon className="w-5 h-5" />
-                    </button>
-                    {row.nombre !== 'superadmin' ? (
-                        <Link to={`/roles/editar/${row.id}`} className="p-2 text-fic-red hover:bg-red-50 rounded-full transition-colors" title="Editar">
-                            <PencilSquareIcon className="w-5 h-5" />
-                        </Link>
-                    ) : (
-                        <div className="p-2 text-slate-300 cursor-not-allowed">
-                            <PencilSquareIcon className="w-5 h-5" />
+
+                <div className="flex items-center gap-4">
+                        {/* BOTÓN VER */}
+                        <button
+                        onClick={() => handleViewRol(row.id)}
+                        className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
+                        title="Ver Detalles"
+                    >
+                        <div className="p-1 rounded-full group-hover:bg-slate-200 transition-colors">
+                            <EyeIcon className="w-5 h-5" />
                         </div>
-                    )}
+                        Ver
+                    </button>
+
+                    {/* BOTÓN EDITAR */}
+                    <Link 
+                        to={`/roles/editar/${row.id}`} 
+                        className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
+                    >
+                        <PencilSquareIcon className="w-5 h-5" /> Editar
+                    </Link>
                 </div>
             )
         }

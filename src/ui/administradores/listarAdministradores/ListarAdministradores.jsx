@@ -46,7 +46,11 @@ const ListarAdministradores = () => {
                     {
                         title: 'Datos Personales',
                         items: [
+<<<<<<< HEAD
                             { label: 'Nombre', value: `${data.datos_empleado.nombre || ''} ${data.datos_empleado.apellidoPaterno || ''} ${data.datos_empleado.apellidoMaterno || ''}`, fullWidth: true },
+=======
+                            { label: 'Nombre', value: `${data.datos_empleado.nombre || ''} ${data.datos_empleado.apellidoPaterno|| ''} ${data.datos_empleado.apellidoMaterno|| ''}  `, fullWidth: true },
+>>>>>>> 4d5f77296c4e8624aee5f13af4da843845bbe0e5
                             { label: 'DNI', value: data.datos_empleado.dni },
                             { label: 'Sede', value: data.sede?.nombre || 'General' }
                         ]
@@ -93,9 +97,26 @@ const ListarAdministradores = () => {
         {
             header: 'Acciones',
             render: (row) => (
-                <div className="flex gap-3">
-                    <button onClick={() => handleView(row.id)} className="text-slate-400 hover:text-fic-dark"><EyeIcon className="w-5 h-5"/></button>
-                    <Link to={`/personal/editar-administrador/${row.id}`} className="text-fic-red"><PencilSquareIcon className="w-5 h-5"/></Link>
+                 <div className="flex items-center gap-4">
+                        {/* BOTÓN VER */}
+                        <button
+                        onClick={() => handleView(row.id)}
+                        className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
+                        title="Ver Detalles"
+                    >
+                        <div className="p-1 rounded-full group-hover:bg-slate-200 transition-colors">
+                            <EyeIcon className="w-5 h-5" />
+                        </div>
+                        Ver
+                    </button>
+
+                    {/* BOTÓN EDITAR */}
+                    <Link 
+                        to={`/personal/editar-administrador/${row.id}`} 
+                        className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
+                    >
+                        <PencilSquareIcon className="w-5 h-5" /> Editar
+                    </Link>
                 </div>
             )
         }
