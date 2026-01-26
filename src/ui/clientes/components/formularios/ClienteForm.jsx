@@ -29,7 +29,7 @@ const ClienteForm = ({ data, handleChange }) => {
                 <input 
                   id="dni" name="dni" type="text" value={data.dni} 
                   onChange={handleChange} onInput={onlyNumbers}
-                  placeholder="8 o 9dígitos" className={inputClass} 
+                  placeholder="8 o 9 dígitos" className={inputClass} 
                   minLength="8" maxLength="9" required 
                 />
             </div>
