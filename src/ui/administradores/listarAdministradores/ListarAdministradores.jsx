@@ -46,7 +46,7 @@ const ListarAdministradores = () => {
                     {
                         title: 'Datos Personales',
                         items: [
-                            { label: 'Nombre', value: `${data.datos_empleado.nombre} ${data.datos_empleado.apellidoPaterno}`, fullWidth: true },
+                            { label: 'Nombre', value: `${data.datos_empleado.nombre || ''} ${data.datos_empleado.apellidoPaterno|| ''} ${data.datos_empleado.apellidoMaterno|| ''}  `, fullWidth: true },
                             { label: 'DNI', value: data.datos_empleado.dni },
                             { label: 'Sede', value: data.sede?.nombre || 'General' }
                         ]
@@ -72,7 +72,7 @@ const ListarAdministradores = () => {
                 <div className="flex items-center gap-3">
                     <UserCircleIcon className="w-10 h-10 text-slate-400"/>
                     <div>
-                        <span className="font-black text-slate-700 block uppercase">{row.datos_empleado.nombre} {row.datos_empleado.apellidoPaterno}</span>
+                        <span className="font-black text-slate-700 block uppercase">{row.datos_empleado.nombre || ''} {row.datos_empleado.apellidoPaterno || ''} {row.datos_empleado.apellidoMaterno || ''}</span>
                         <span className="text-[10px] text-indigo-600 font-bold">@{row.username}</span>
                     </div>
                 </div>
@@ -93,9 +93,26 @@ const ListarAdministradores = () => {
         {
             header: 'Acciones',
             render: (row) => (
-                <div className="flex gap-3">
-                    <button onClick={() => handleView(row.id)} className="text-slate-400 hover:text-fic-dark"><EyeIcon className="w-5 h-5"/></button>
-                    <Link to={`/personal/editar-administrador/${row.id}`} className="text-fic-red"><PencilSquareIcon className="w-5 h-5"/></Link>
+                 <div className="flex items-center gap-4">
+                        {/* BOTÓN VER */}
+                        <button
+                        onClick={() => handleView(row.id)}
+                        className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
+                        title="Ver Detalles"
+                    >
+                        <div className="p-1 rounded-full group-hover:bg-slate-200 transition-colors">
+                            <EyeIcon className="w-5 h-5" />
+                        </div>
+                        Ver
+                    </button>
+
+                    {/* BOTÓN EDITAR */}
+                    <Link 
+                        to={`/personal/editar-administrador/${row.id}`} 
+                        className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
+                    >
+                        <PencilSquareIcon className="w-5 h-5" /> Editar
+                    </Link>
                 </div>
             )
         }
