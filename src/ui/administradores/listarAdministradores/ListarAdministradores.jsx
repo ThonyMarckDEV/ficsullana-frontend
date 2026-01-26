@@ -7,6 +7,7 @@ import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { PencilSquareIcon, EyeIcon, UserCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import LoadingScreen from 'components/Shared/LoadingScreen';
+import AlertMessage from 'components/Shared/Errors/AlertMessage';
 
 const ListarAdministradores = () => {
     const [loading, setLoading] = useState(true);
@@ -17,6 +18,7 @@ const ListarAdministradores = () => {
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', sections: [] });
     const [toggleData, setToggleData] = useState(null);
+    const [alert, setAlert] = useState(null);
 
     const fetchAdmins = useCallback(async (page = 1, searchTerm = '') => {
         setLoading(true);
@@ -58,6 +60,7 @@ const ListarAdministradores = () => {
         try {
             await toggleAdminEstado(toggleData.id);
             setToggleData(null);
+            setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
             fetchAdmins(pagination.page, search);
         } catch (e) { alert("Error al cambiar estado"); }
     };
@@ -103,6 +106,7 @@ const ListarAdministradores = () => {
     return (
         <div className="container mx-auto p-6">
             <PageHeader title="Administradores" icon={ShieldCheckIcon} buttonText="+ Nuevo Admin" buttonLink="/personal/agregar-administrador" />
+            <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
             <Table columns={columns} data={admins} pagination={{ currentPage: pagination.page, totalPages: pagination.totalPages, onPageChange: fetchAdmins }} onSearch={setSearch} />
             <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} title={modalData.title} subtitle={modalData.subtitle} sections={modalData.sections} loading={infoLoading} />
             {toggleData && <ConfirmModal message="¿Cambiar estado?" onConfirm={handleToggle} onCancel={() => setToggleData(null)} />}
