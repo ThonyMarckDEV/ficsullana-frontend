@@ -25,11 +25,6 @@ export const getAccessTokenFromCookie = () => {
   return getCookie(access_token);
 };
 
-// Función para obtener el token JWT de refresco de la cookie
-export const getRefreshTokenFromCookie = () => {
-  const refresh_token = 'refresh_token';
-  return getCookie(refresh_token);
-};
 
 // Función para guardar el Access Token en cookie
 export const setAccessTokenInCookie = (token) => {
@@ -45,7 +40,6 @@ export const setAccessTokenInCookie = (token) => {
 // Función para eliminar tokens (Logout)
 export const removeTokensFromCookie = () => {
   document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-  document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 };
 
 // ==========================================
@@ -71,7 +65,18 @@ export const getEmail = (token) => jwtDecode(token)?.email ?? null;
 
 export const getUserID = (token) => jwtDecode(token)?.sub ?? null;
 
-export const getNombreSede = (token) => jwtDecode(token)?.sede ?? null;
+export const getTrialDays = (token) => jwtDecode(token)?.trial_days ?? null;
+
+export const getNombreSede = (token) => jwtDecode(token)?.nombre_sede ?? null;
+
+export const isConfigurado = (token) => {
+    try {
+        const decoded = jwtDecode(token);
+        return decoded?.configurado === 1;
+    } catch (error) {
+        return false;
+    }
+};
 
 export const getCreatedAt = (token) => {
   try {
@@ -138,9 +143,10 @@ const jwtUtils = {
   getEmail,
   getCreatedAt,
   getAccessTokenFromCookie,
-  getRefreshTokenFromCookie,
   setAccessTokenInCookie,
   getUserID,
+  isConfigurado,
+  getTrialDays,
   getNombreSede
 };
 
