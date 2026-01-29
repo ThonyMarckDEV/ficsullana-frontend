@@ -4,9 +4,9 @@ import jwtUtils from 'utilities/Token/jwtUtils';
 
 const ProtectedRouteLogin = ({ element }) => {
   // Solo verificamos si el token existe
-  const refresh_token = jwtUtils.getRefreshTokenFromCookie();
+  const access_token = jwtUtils.getAccessTokenFromCookie();
   
-  if (refresh_token) {
+  if (access_token) {
     // Si hay token, lo mandamos al home de una
     return <Navigate to="/home" replace />;
   }
