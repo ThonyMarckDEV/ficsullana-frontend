@@ -26,7 +26,6 @@ const Sidebar = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const location = useLocation();
 
-    // Extraemos permisos y roles del contexto
     const userPermisos = user?.rol?.permisos || [];
 
     const allowedMenu = useMemo(() => {
@@ -53,19 +52,18 @@ const Sidebar = () => {
             {
                 section: 'Personal',
                 icon: UserCog,
-                // Usamos los roles del contexto (ya cargados)
                 subs: (roles || []).map(rol => ({
                     name: rol.nombre.replace(/_/g, ' ').toUpperCase(),
                     link: `/personal/listar/${rol.id}`,
-                    permission: 'usuarios.listar'
+                    permission: `usuarios.listar.${rol.nombre}`
                 }))
             },
             {
                 section: 'Clientes',
                 icon: IdentificationIcon,
                 subs: [
-                    { name: 'Agregar Cliente', link: '/clientes/agregar', permission: 'usuarios.crear' },
-                    { name: 'Listar Clientes', link: '/clientes/listar', permission: 'usuarios.listar' },
+                    { name: 'Agregar Cliente', link: '/clientes/agregar', permission: 'clientes.crear' },
+                    { name: 'Listar Clientes', link: '/clientes/listar', permission: 'clientes.listar' },
                 ]
             },
             {
@@ -94,6 +92,7 @@ const Sidebar = () => {
                 if (visibleSubs.length > 0) return { ...item, subs: visibleSubs };
                 return null;
             }
+            // Si el item no tiene subs (es enlace directo), verificamos su permiso (si tiene)
             if (!item.permission || userPermisos.includes(item.permission)) return item;
             return null;
         }).filter(Boolean);

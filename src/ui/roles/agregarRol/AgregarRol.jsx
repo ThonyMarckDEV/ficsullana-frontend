@@ -7,8 +7,14 @@ import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 
+// Importar el contexto
+import { useAuth } from 'context/AuthContext';
+
 const AgregarRol = () => {
   const navigate = useNavigate();
+  
+  // Extraer refreshSession
+  const { refreshSession } = useAuth(); 
   
   const [formData, setFormData] = useState({
     nombre: '',
@@ -66,6 +72,10 @@ const AgregarRol = () => {
 
       const response = await createRol(payload);
       
+      // ACTUALIZAR EL CONTEXTO GLOBAL
+      // Esto recarga la lista de roles en el Sidebar inmediatamente
+      await refreshSession();
+
       setAlert({
         type: 'success',
         message: response.message || 'Rol registrado exitosamente.'

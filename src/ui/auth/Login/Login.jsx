@@ -6,6 +6,7 @@ import LoginForm from './components/LoginForm';
 import ForgotPasswordForm from './components/ForgotPasswordForm';
 import authService from 'services/authService';
 import logoImg from 'assets/img/Logo_FICSULLANA.png';
+import { useAuth } from 'context/AuthContext';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -14,7 +15,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
   const navigate = useNavigate();
+  const { refreshSession } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,15 +28,18 @@ const Login = () => {
 
         // Configuración de Cookies
         const accessTokenExpiration = '; path=/; Secure; SameSite=Strict';
-
         document.cookie = `access_token=${access_token}${accessTokenExpiration}`;
+
+        // ACTUALIZAR EL ESTADO GLOBAL ANTES DE NAVEGAR
+        await refreshSession(); 
 
         toast.success(`¡Bienvenido de nuevo!`);
         
-        // REDIRECCIÓN UNIFICADA: Todos van al dashboard principal
-        setTimeout(() => navigate('/home'), 1000);
+        // Navegamos inmediatamente (ya tenemos los datos cargados en el contexto)
+        navigate('/home');
 
     } catch (error) {
+        console.error(error);
         const msg = error.response?.data?.message || 'Error al iniciar sesión';
         toast.error(msg);
     } finally {

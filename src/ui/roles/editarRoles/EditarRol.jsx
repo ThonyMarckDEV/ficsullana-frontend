@@ -7,11 +7,15 @@ import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
+import { useAuth } from 'context/AuthContext';
 
 const EditarRol = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   
+  // 2. Extraer refreshSession
+  const { refreshSession } = useAuth();
+
   const [formData, setFormData] = useState(null);
   const [permisosDisponibles, setPermisosDisponibles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +24,6 @@ const EditarRol = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Carga paralela: Permisos disponibles + Datos del Rol
         const [permisosRes, rolRes] = await Promise.all([
             getPermisosDisponibles(),
             showRol(id)
@@ -30,7 +33,6 @@ const EditarRol = () => {
         
         const rolData = rolRes.data || rolRes;
         
-        // Extraemos los IDs de los permisos que ya tiene el rol
         const permisosIds = rolData.permisos ? rolData.permisos.map(p => p.id) : [];
 
         setFormData({
@@ -67,10 +69,6 @@ const EditarRol = () => {
 
   const handleSubmit = async (e) => {
       e.preventDefault();
-      // if (formData.permisos.length === 0) {
-      //   setAlert({ type: 'info', message: 'El rol debe tener al menos un permiso.' });
-      //   return;
-      // }
 
       setLoading(true);
       setAlert(null);
@@ -82,6 +80,10 @@ const EditarRol = () => {
         };
 
         await updateRol(id, payload);
+        
+        // ACTUALIZAR EL CONTEXTO GLOBAL
+        // Actualiza permisos y nombres de roles en toda la app
+        await refreshSession(); 
         
         setAlert({ type: 'success', message: 'Rol actualizado correctamente.' });
         setTimeout(() => navigate('/roles/listar'), 1500);
