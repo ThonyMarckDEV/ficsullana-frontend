@@ -9,11 +9,27 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     const [loading, setLoading] = useState(false);
 
     const wrapperRef = useRef(null);
+    // Flag para saber si el cambio de ID fue provocado por el usuario manualmente
+    const isManualSelection = useRef(false);
 
-    // Sincronizar valor inicial o limpiar si se deselecciona
     useEffect(() => {
-        if (!selectedId) setInputValue('');
-        else if (initialName) setInputValue(initialName);
+        // Si no hay ID seleccionado (ej. limpieza de formulario), limpiar input
+        if (!selectedId) {
+            setInputValue('');
+            return;
+        }
+
+        // Si la actualización fue causada por una selección manual (clic del usuario),
+        // NO sobrescribimos el valor con el initialName antiguo.
+        if (isManualSelection.current) {
+            isManualSelection.current = false; // Reseteamos la bandera
+            return;
+        }
+
+        //  Carga inicial de datos desde el padre (o fetch asíncrono)
+        if (initialName) {
+            setInputValue(initialName);
+        }
     }, [selectedId, initialName]);
 
     // Cerrar al hacer clic fuera del componente
@@ -30,13 +46,9 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     const fetchSedes = async (searchTerm = '') => {
         setLoading(true);
         try {
-            // Llamamos al endpoint específico para combobox
             const response = await getSedesCombobox(1, searchTerm); 
-            
-            // Ajustamos según si viene paginado (response.data) o lista simple (response)
             const data = response.data || response;
             setSuggestions(Array.isArray(data) ? data : []);
-            
             setShowSuggestions(true);
         } catch (error) {
             console.error("Error buscando sedes", error);
@@ -53,7 +65,6 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
         }
     };
 
-    // Al hacer click en el input, busca (útil para ver todas las sedes vaciando el input)
     const handleInputClick = () => {
         if (!showSuggestions) {
             fetchSedes(inputValue);
@@ -61,10 +72,11 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     };
 
     const handleSelect = (sede) => {
+        isManualSelection.current = true;
+        
         setInputValue(sede.nombre);
         setShowSuggestions(false);
         
-        // Devolvemos el objeto seleccionado al padre
         onSelect({ 
             id: sede.id, 
             nombre: sede.nombre,
@@ -84,7 +96,6 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                     value={inputValue}
                     onChange={(e) => {
                         setInputValue(e.target.value);
-                        // Si el usuario escribe algo nuevo, reseteamos la selección anterior
                         if (selectedId) onSelect(null); 
                     }}
                     onKeyDown={handleKeyDown}
