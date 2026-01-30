@@ -4,8 +4,8 @@ import { showCliente, updateCliente } from 'services/clienteService';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import ClienteForm from '../components/formularios/ClienteForm';
-import ContactosForm from '../components/formularios/ContactosForm';
+import ClienteForm from 'components/Shared/Formularios/Cliente/ClienteForm';
+import ContactosForm from 'components/Shared/Formularios/Cliente/ContactosForm';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
@@ -53,7 +53,12 @@ const EditarCliente = () => {
     e.preventDefault();
     setLoading(true);
     try {
-        await updateCliente(id, formData);
+        const payload = {
+            ...formData,
+            rol_id: 8
+        };
+
+        await updateCliente(id, payload);
         setAlert({ type: 'success', message: 'Cliente actualizado correctamente.' });
         setTimeout(() => navigate('/clientes/listar'), 1500);
     } catch (err) {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ClienteForm from '../components/formularios/ClienteForm';
-import ContactosForm from '../components/formularios/ContactosForm';
+import ClienteForm from 'components/Shared/Formularios/Cliente/ClienteForm';
+import ContactosForm from 'components/Shared/Formularios/Cliente/ContactosForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { createCliente } from 'services/clienteService';
 import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/outline';
@@ -48,8 +48,14 @@ const AgregarCliente = () => {
     if (e) e.preventDefault();
     setLoading(true);
     setAlert(null); 
+    
     try {
-      const response = await createCliente(formData);
+      const payload = {
+          ...formData,
+          rol_id: 8 
+      };
+
+      const response = await createCliente(payload);
       setAlert({ type: 'success', message: response.message || 'Cliente registrado exitosamente.' });
       setFormData(initialFormData);
       setTimeout(() => navigate('/clientes/listar'), 2000);
