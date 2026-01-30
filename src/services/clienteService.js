@@ -17,8 +17,15 @@ export const createCliente = async (clienteData) => {
   return handleResponse(response);
 };
 
-export const getClientes = async (page = 1) => {
-  const url = `${API_BASE_URL}/api/clientes/index?page=${page}`;
+export const getClientes = async (page = 1, filters = {}) => {
+  
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '',
+    estado: filters.estado || ''
+  });
+
+  const url = `${API_BASE_URL}/api/clientes/index?${params.toString()}`;
 
   const response = await fetchWithAuth(url, {
     method: 'GET',

@@ -13,9 +13,21 @@ export const createAsesor = async (data) => {
   return handleResponse(response);
 };
 
-export const getAsesores = async (page = 1, search = '') => {
-  const url = `${API_BASE_URL}/api/asesores/index?page=${page}&search=${search}`;
-  const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+export const getAsesores = async (page = 1, filters = {}) => {
+  
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '',
+    estado: filters.estado || ''
+  });
+
+  const url = `${API_BASE_URL}/api/asesores/index?${params.toString()}`;
+  
+  const response = await fetchWithAuth(url, { 
+      method: 'GET', 
+      headers: { 'Accept': 'application/json' } 
+  });
+  
   return handleResponse(response);
 };
 

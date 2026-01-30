@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdmisiones, showAdmision } from 'services/admisionService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -15,7 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 
-// --- MAPA DE ESTADOS (TRADUCCIÓN DE NÚMERO A TEXTO/COLOR) ---
+// --- MAPA DE ESTADOS PARA UI (BADGES) ---
 const ESTADOS = {
     0: { label: 'PENDIENTE', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
     1: { label: 'APROBADO',  color: 'bg-green-100 text-green-800 border-green-200' },
@@ -24,21 +24,87 @@ const ESTADOS = {
 };
 
 const ListarAdmisiones = () => {
-    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [admisiones, setAdmisiones] = useState([]);
     
-    // Paginación y Búsqueda
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
-    const [searchTerm, setSearchTerm] = useState('');
 
-    // --- MODAL DETALLE ---
     const [isInfoOpen, setIsInfoOpen] = useState(false);
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-    // --- VER DETALLE ---
+    const [filters, setFilters] = useState({
+        search: '',
+        estado: ''
+    });
+
+    const filtersRef = useRef(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+
+    const filterConfig = useMemo(() => [
+        {
+            name: 'search',
+            type: 'text',
+            label: 'Buscador',
+            placeholder: 'ID, DNI o Nombre...',
+            colSpan: 'md:col-span-8'
+        },
+        {
+            name: 'estado',
+            type: 'select',
+            label: 'Estado',
+            options: [
+                { value: '', label: 'Todos' },
+                { value: '0', label: 'Pendiente' },
+                { value: '1', label: 'Aprobado' },
+                { value: '2', label: 'Observado' },
+                { value: '3', label: 'Rechazado' }
+            ],
+            colSpan: 'md:col-span-4'
+        }
+    ], []);
+
+    const fetchAdmisiones = useCallback(async (page = 1) => {
+        setLoading(true);
+        try {
+            const currentFilters = filtersRef.current;
+            const response = await getAdmisiones(page, currentFilters);
+            
+            setAdmisiones(response.data || []);
+            setPaginationInfo({
+                currentPage: response.current_page,
+                totalPages: response.last_page,
+                totalItems: response.total,
+            });
+        } catch (err) {
+            setAlert({ type: 'error', message: 'Error al cargar las admisiones.' });
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { 
+        fetchAdmisiones(1); 
+    }, [fetchAdmisiones]);
+
+    const handleFilterChange = useCallback((name, value) => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleFilterSubmit = useCallback(() => {
+        fetchAdmisiones(1);
+    }, [fetchAdmisiones]);
+
+    const handleFilterClear = useCallback(() => {
+        const cleanFilters = { search: '', estado: '' };
+        setFilters(cleanFilters);
+        filtersRef.current = cleanFilters;
+        fetchAdmisiones(1);
+    }, [fetchAdmisiones]);
+
     const handleViewAdmision = async (id) => {
         setIsInfoOpen(true);
         setInfoLoading(true);
@@ -108,13 +174,12 @@ const ListarAdmisiones = () => {
         }
     };
 
-    // --- COLUMNAS ---
     const columns = useMemo(() => [
         {
             header: 'Solicitante',
             render: (row) => {
                 const persona = row.cliente ? row.cliente.datos : row.prospecto;
-               const nombre = row.cliente ? `${row.cliente.nombre || ''} ${row.cliente.apellidoPaterno || ''} ${row.cliente.apellidoMaterno || ''}`.trim() : 'Sin nombre';
+                const nombre = row.cliente ? `${row.cliente.nombre || ''} ${row.cliente.apellidoPaterno || ''} ${row.cliente.apellidoMaterno || ''}`.trim() : 'Sin nombre';
                 
                 return (
                     <div className="flex items-center gap-3">
@@ -179,7 +244,6 @@ const ListarAdmisiones = () => {
                         Ver
                     </button>
                     
-                    {/* Solo editable si es PENDIENTE (0) u OBSERVADO (2) */}
                     {(row.estado === 0 || row.estado === 2) ? (
                         <Link 
                             to={`/gestion/editar-admision/${row.id}`} 
@@ -192,25 +256,6 @@ const ListarAdmisiones = () => {
             )
         }
     ], []);
-
-    const fetchAdmisiones = useCallback(async (page, search = '') => {
-        setLoading(true);
-        try {
-            const response = await getAdmisiones(page, search);
-            setAdmisiones(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                totalPages: response.last_page,
-                totalItems: response.total,
-            });
-        } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cargar las admisiones.' });
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchAdmisiones(1, searchTerm); }, [fetchAdmisiones, searchTerm]);
 
     if (loading && admisiones.length === 0) return <LoadingScreen />;
 
@@ -241,13 +286,18 @@ const ListarAdmisiones = () => {
                     columns={columns}
                     data={admisiones}
                     loading={loading}
+                    
+                    filterConfig={filterConfig}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onFilterSubmit={handleFilterSubmit}
+                    onFilterClear={handleFilterClear}
+
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchAdmisiones(page, searchTerm)
+                        onPageChange: (page) => fetchAdmisiones(page)
                     }}
-                    onSearch={setSearchTerm}
-                    searchPlaceholder="Buscar por DNI o Nombre..."
                 />
             </div>
         </div>

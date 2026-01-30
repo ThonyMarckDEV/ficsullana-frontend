@@ -4,10 +4,21 @@ import { handleResponse } from 'utilities/Responses/handleResponse';
 
 const BASE_URL = `${API_BASE_URL}/api/admisiones`;
 
-export const getAdmisiones = async (page = 1, search = '', estado = '') => {
-  const term = encodeURIComponent(search);
-  const url = `${BASE_URL}/index?page=${page}&search=${term}&estado=${estado}`;
-  const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+export const getAdmisiones = async (page = 1, filters = {}) => {
+  
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '',
+    estado: filters.estado || ''
+  });
+
+  const url = `${API_BASE_URL}/api/admisiones/index?${params.toString()}`;
+  
+  const response = await fetchWithAuth(url, { 
+      method: 'GET', 
+      headers: { 'Accept': 'application/json' } 
+  });
+  
   return handleResponse(response);
 };
 

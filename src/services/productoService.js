@@ -12,9 +12,19 @@ export const createProducto = async (data) => {
   return handleResponse(response);
 };
 
-export const getProductos = async (page = 1, search = '') => {
-  const url = `${API_BASE_URL}/api/productos/index?page=${page}&search=${search}`;
-  const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+export const getProductos = async (page = 1, filters = {}) => {
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '',
+  });
+
+  const url = `${API_BASE_URL}/api/productos/index?${params.toString()}`;
+  
+  const response = await fetchWithAuth(url, { 
+      method: 'GET', 
+      headers: { 'Accept': 'application/json' } 
+  });
+  
   return handleResponse(response);
 };
 

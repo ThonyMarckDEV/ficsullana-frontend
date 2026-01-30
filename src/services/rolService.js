@@ -11,11 +11,21 @@ export const createRol = async (data) => {
   return handleResponse(response);
 };
 
-export const getRoles = async (page = 1, search = '') => {
-  const term = encodeURIComponent(search);
-  const response = await fetchWithAuth(`${API_BASE_URL}/api/roles/index?page=${page}&search=${term}`, { 
-      method: 'GET', headers: { 'Accept': 'application/json' } 
+export const getRoles = async (page = 1, filters = {}) => {
+  
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '', 
+    estado: filters.estado || ''  
   });
+
+  const url = `${API_BASE_URL}/api/roles/index?${params.toString()}`;
+  
+  const response = await fetchWithAuth(url, { 
+      method: 'GET', 
+      headers: { 'Accept': 'application/json' } 
+  });
+  
   return handleResponse(response);
 };
 

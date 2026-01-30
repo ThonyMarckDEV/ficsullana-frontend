@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getJefesNegocio, toggleJefeEstado, showJefeNegocio } from 'services/jefeNegocioService';
 import Table from 'components/Shared/Tables/Table';
@@ -8,30 +8,58 @@ import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { PencilSquareIcon, EyeIcon, BriefcaseIcon, IdentificationIcon, PhoneIcon } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { UsersIcon } from 'lucide-react';
-import LoadingScreen from 'components/Shared/LoadingScreen'; // <--- 1. IMPORTADO
+import LoadingScreen from 'components/Shared/LoadingScreen';
 
 const ListarJefesNegocio = () => {
-    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [jefes, setJefes] = useState([]);
     const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
     const [alert, setAlert] = useState(null);
-    const [search, setSearch] = useState('');
     
-    // Estados para Modal de Información
     const [infoOpen, setInfoOpen] = useState(false);
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', sections: [] });
     
     const [toggleData, setToggleData] = useState(null);
 
-    // --- CARGA DE DATOS ---
-    const fetchJefes = useCallback(async (page = 1, searchTerm = '') => {
+    const [filters, setFilters] = useState({
+        search: '',
+        estado: ''
+    });
+
+    const filtersRef = useRef(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+
+    const filterConfig = useMemo(() => [
+        {
+            name: 'search',
+            type: 'text',
+            label: 'Buscador',
+            placeholder: 'Nombre, DNI o Usuario...',
+            colSpan: 'md:col-span-8'
+        },
+        {
+            name: 'estado',
+            type: 'select',
+            label: 'Estado',
+            options: [
+                { value: '', label: 'Todos' },
+                { value: '1', label: 'Activos' },
+                { value: '0', label: 'Inactivos' }
+            ],
+            colSpan: 'md:col-span-4'
+        }
+    ], []);
+
+    const fetchJefes = useCallback(async (page = 1) => {
         setLoading(true);
         try {
-            const res = await getJefesNegocio(page, searchTerm);
-            // Aseguramos que data sea un array
+            const currentFilters = filtersRef.current;
+            const res = await getJefesNegocio(page, currentFilters);
             const dataList = res.data?.data || res.data || [];
+            
             setJefes(dataList);
             setPagination({ 
                 page: res.current_page || res.data?.current_page || 1, 
@@ -44,12 +72,28 @@ const ListarJefesNegocio = () => {
         }
     }, []);
 
-    useEffect(() => { fetchJefes(1, search); }, [fetchJefes, search]);
+    useEffect(() => { 
+        fetchJefes(1); 
+    }, [fetchJefes]);
 
-    // --- VER DETALLE (Con Loader) ---
+    const handleFilterChange = useCallback((name, value) => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleFilterSubmit = useCallback(() => {
+        fetchJefes(1);
+    }, [fetchJefes]);
+
+    const handleFilterClear = useCallback(() => {
+        const cleanFilters = { search: '', estado: '' };
+        setFilters(cleanFilters);
+        filtersRef.current = cleanFilters;
+        fetchJefes(1);
+    }, [fetchJefes]);
+
     const handleView = async (id) => {
         setInfoOpen(true);
-        setInfoLoading(true); // Activamos loader modal
+        setInfoLoading(true);
         setModalData({ title: 'Cargando...', sections: [] }); 
 
         try {
@@ -98,20 +142,18 @@ const ListarJefesNegocio = () => {
         }
     };
 
-    // --- CAMBIAR ESTADO ---
     const handleToggle = async () => {
         if (!toggleData) return;
         try {
-            await toggleJefeEstado(toggleData.id, toggleData.estado === 1 ? 0 : 1);
+            await toggleJefeEstado(toggleData.id);
             setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
-            fetchJefes(pagination.page, search);
+            fetchJefes(pagination.page);
             setToggleData(null);
         } catch (e) { 
             setAlert({ type: 'error', message: 'No se pudo cambiar el estado.' }); 
         }
     };
 
-    // --- COLUMNAS ---
     const columns = useMemo(() => [
         {
             header: 'Jefe de Negocio',
@@ -177,12 +219,10 @@ const ListarJefesNegocio = () => {
         }
     ], []);
 
-    // --- 2. CONDICIÓN DE CARGA INICIAL ---
     if (loading && jefes.length === 0) return <LoadingScreen />;
 
     return (
         <div className="container mx-auto p-6">
-  
             <PageHeader 
                 title="Jefes de Negocio"
                 subtitle="Gestión del personal de supervisión"
@@ -198,13 +238,18 @@ const ListarJefesNegocio = () => {
                     columns={columns} 
                     data={jefes} 
                     loading={loading} 
+                    
+                    filterConfig={filterConfig}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onFilterSubmit={handleFilterSubmit}
+                    onFilterClear={handleFilterClear}
+
                     pagination={{ 
                         currentPage: pagination.page, 
                         totalPages: pagination.totalPages, 
-                        onPageChange: (p) => fetchJefes(p, search) 
+                        onPageChange: (p) => fetchJefes(p) 
                     }} 
-                    onSearch={setSearch} 
-                    searchPlaceholder="Buscar Jefe..." 
                 />
             </div>
 

@@ -1,6 +1,4 @@
-// src/ui/Administrador/clientes/listarClientes/ListarClientes.jsx
-
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getClientes, toggleClienteEstado, showCliente } from 'services/clienteService'; 
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -18,22 +16,86 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const ListarCliente = () => {
-    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [clientes, setClientes] = useState([]);
     
-    // Paginación y Búsqueda
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
-    const [searchTerm, setSearchTerm] = useState('');
 
-    // Toggle Estado
     const [clienteToToggle, setClienteToToggle] = useState(null);
 
-    // --- ESTADOS PARA MODAL GENÉRICO ---
     const [isInfoOpen, setIsInfoOpen] = useState(false);
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
+
+    const [filters, setFilters] = useState({
+        search: '',
+        estado: ''
+    });
+
+    const filtersRef = useRef(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+
+    const filterConfig = useMemo(() => [
+        {
+            name: 'search',
+            type: 'text',
+            label: 'Buscador',
+            placeholder: 'Nombre, Apellido o DNI...',
+            colSpan: 'md:col-span-8'
+        },
+        {
+            name: 'estado',
+            type: 'select',
+            label: 'Estado',
+            options: [
+                { value: '', label: 'Todos' },
+                { value: '1', label: 'Activos' },
+                { value: '0', label: 'Inactivos' }
+            ],
+            colSpan: 'md:col-span-4'
+        }
+    ], []);
+
+    const fetchClientes = useCallback(async (page = 1) => {
+        setLoading(true);
+        try {
+            const currentFilters = filtersRef.current;
+            const data = await getClientes(page, currentFilters);
+            
+            setClientes(data.data);
+            setPaginationInfo({
+                currentPage: data.current_page,
+                totalPages: data.last_page,
+                totalItems: data.total,
+            });
+        } catch (err) {
+            setAlert({ type: 'error', message: 'No se pudieron cargar los clientes.' });
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchClientes(1);
+    }, [fetchClientes]);
+
+    const handleFilterChange = useCallback((name, value) => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleFilterSubmit = useCallback(() => {
+        fetchClientes(1);
+    }, [fetchClientes]);
+
+    const handleFilterClear = useCallback(() => {
+        const cleanFilters = { search: '', estado: '' };
+        setFilters(cleanFilters);
+        filtersRef.current = cleanFilters;
+        fetchClientes(1);
+    }, [fetchClientes]);
 
     const handleViewCliente = async (id) => {
         setIsInfoOpen(true);
@@ -59,8 +121,6 @@ const ListarCliente = () => {
                         { label: "Estado Civil", value: datos_cliente.estadoCivil },
                         { label: "Profesión", value: datos_cliente.profesion },
                         { label: "Nivel Educativo", value: datos_cliente.nivelEducativo, fullWidth: true },
-                        
-    
                         { label: "¿Reside en Perú?", value: formatBool(datos_cliente.residePeru) },
                         { label: "¿Enf. Preexistentes?", value: formatBool(datos_cliente.enfermedadesPreexistentes) },
                         { label: "¿Exp. Políticamente?", value: formatBool(datos_cliente.expuestaPoliticamente) },
@@ -77,7 +137,6 @@ const ListarCliente = () => {
                 }
             ];
 
-
             setModalData({
                 title: "Ficha de Cliente",
                 subtitle: `Visualizando a: ${datos_cliente.nombre} ${datos_cliente.apellidoPaterno}`,
@@ -92,7 +151,24 @@ const ListarCliente = () => {
         }
     };
 
-    // ---  COLUMNAS DE LA TABLA ---
+    const executeToggleEstado = async () => {
+        if (!clienteToToggle) return;
+        const { id, estado } = clienteToToggle;
+        const nuevoEstado = estado === 1 ? 0 : 1;
+        
+        setClienteToToggle(null);
+        setLoading(true);
+
+        try {
+            const response = await toggleClienteEstado(id, nuevoEstado);
+            setAlert(response);
+            await fetchClientes(paginationInfo.currentPage); 
+        } catch (err) {
+            setAlert({ type: 'error', message: 'Error al cambiar el estado.' }); 
+            setLoading(false);
+        }
+    };
+
     const columns = useMemo(() => [
         {
             header: 'Cliente',
@@ -137,7 +213,6 @@ const ListarCliente = () => {
             header: 'Acciones',
             render: (row) => (
                 <div className="flex items-center gap-4">
-                    {/* BOTÓN VER */}
                     <button
                         onClick={() => handleViewCliente(row.id)}
                         className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
@@ -149,7 +224,6 @@ const ListarCliente = () => {
                         Ver
                     </button>
 
-                    {/* BOTÓN EDITAR */}
                     <Link 
                         to={`/clientes/editar/${row.id}`} 
                         className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
@@ -160,45 +234,6 @@ const ListarCliente = () => {
             )
         }
     ], []);
-
-    const fetchClientes = useCallback(async (page, search = '') => {
-        setLoading(true);
-        try {
-            const data = await getClientes(page, search);
-            setClientes(data.data);
-            setPaginationInfo({
-                currentPage: data.current_page,
-                totalPages: data.last_page,
-                totalItems: data.total,
-            });
-        } catch (err) {
-            setAlert({ type: 'error', message: 'No se pudieron cargar los clientes.' });
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchClientes(1, searchTerm);
-    }, [fetchClientes, searchTerm]);
-
-    const executeToggleEstado = async () => {
-        if (!clienteToToggle) return;
-        const { id, estado } = clienteToToggle;
-        const nuevoEstado = estado === 1 ? 0 : 1;
-        
-        setClienteToToggle(null);
-        setLoading(true);
-
-        try {
-            const response = await toggleClienteEstado(id, nuevoEstado);
-            setAlert(response);
-            await fetchClientes(paginationInfo.currentPage, searchTerm); 
-        } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cambiar el estado.' }); 
-            setLoading(false);
-        }
-    };
 
     if (loading && clientes.length === 0) return <LoadingScreen />;
 
@@ -220,7 +255,6 @@ const ListarCliente = () => {
                 onClose={() => setAlert(null)}
             />
 
-            {/* MODAL DE INFORMACIÓN GENÉRICO */}
             <InfoModal 
                 isOpen={isInfoOpen}
                 onClose={() => setIsInfoOpen(false)}
@@ -230,7 +264,6 @@ const ListarCliente = () => {
                 loading={infoLoading}
             />
 
-            {/* MODAL DE CONFIRMACIÓN */}
             {clienteToToggle && (
                 <ConfirmModal
                     message={`¿Desea cambiar el estado de este cliente a ${clienteToToggle.estado === 1 ? 'INACTIVO' : 'ACTIVO'}?`}
@@ -239,19 +272,23 @@ const ListarCliente = () => {
                 />
             )}
 
-            {/* TABLA */}
             <div className="rounded-xl overflow-hidden">
                 <Table 
                     columns={columns}
                     data={clientes}
                     loading={loading}
+                    
+                    filterConfig={filterConfig}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onFilterSubmit={handleFilterSubmit}
+                    onFilterClear={handleFilterClear}
+
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchClientes(page, searchTerm)
+                        onPageChange: (page) => fetchClientes(page)
                     }}
-                    onSearch={setSearchTerm}
-                    searchPlaceholder="Buscar por DNI o Nombre..."
                 />
             </div>
         </div>

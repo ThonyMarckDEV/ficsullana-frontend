@@ -12,10 +12,21 @@ export const createSede = async (data) => {
   return handleResponse(response);
 };
 
-export const getSedes = async (page = 1, search = '') => {
-  const term = encodeURIComponent(search);
-  const url = `${API_BASE_URL}/api/sedes/index?page=${page}&search=${term}`;
-  const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+export const getSedes = async (page = 1, filters = {}) => {
+  
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '', 
+    estado: filters.estado || '' 
+  });
+
+  const url = `${API_BASE_URL}/api/sedes/index?${params.toString()}`;
+  
+  const response = await fetchWithAuth(url, { 
+      method: 'GET', 
+      headers: { 'Accept': 'application/json' } 
+  });
+  
   return handleResponse(response);
 };
 

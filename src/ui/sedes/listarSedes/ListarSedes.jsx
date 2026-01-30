@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getSedes, toggleSedeEstado, showSede } from 'services/sedeService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -15,33 +15,93 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const ListarSedes = () => {
-    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [sedes, setSedes] = useState([]);
-    
-    // Paginación y Búsqueda
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
-    const [searchTerm, setSearchTerm] = useState('');
-
-    // Toggle Estado
     const [sedeToToggle, setSedeToToggle] = useState(null);
-
-    // --- ESTADOS PARA MODAL DE INFORMACIÓN ---
+    
     const [isInfoOpen, setIsInfoOpen] = useState(false);
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-    // --- FUNCIÓN PARA VER DETALLE ---
+    const [filters, setFilters] = useState({
+        search: '',
+        estado: ''
+    });
+
+    const filtersRef = useRef(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+
+    const filterConfig = useMemo(() => [
+        {
+            name: 'search',
+            type: 'text',
+            label: 'Buscador',
+            placeholder: 'Nombre, Dirección o Código SUNAT...',
+            colSpan: 'md:col-span-8'
+        },
+        {
+            name: 'estado',
+            type: 'select',
+            label: 'Estado',
+            options: [
+                { value: '', label: 'Todos' },
+                { value: '1', label: 'Activos' },
+                { value: '0', label: 'Inactivos' }
+            ],
+            colSpan: 'md:col-span-4'
+        }
+    ], []);
+
+    const fetchSedes = useCallback(async (page = 1) => {
+        setLoading(true);
+        try {
+            const currentFilters = filtersRef.current;
+            const response = await getSedes(page, currentFilters);
+            
+            setSedes(response.data || []);
+            setPaginationInfo({
+                currentPage: response.current_page,
+                totalPages: response.last_page,
+                totalItems: response.total,
+            });
+        } catch (err) {
+            setAlert({ type: 'error', message: 'Error al cargar las sedes.' });
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchSedes(1);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleFilterChange = useCallback((name, value) => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleFilterSubmit = useCallback(() => {
+        fetchSedes(1);
+    }, [fetchSedes]);
+
+    const handleFilterClear = useCallback(() => {
+        const cleanFilters = { search: '', estado: '' };
+        setFilters(cleanFilters);
+        filtersRef.current = cleanFilters;
+        fetchSedes(1);
+    }, [fetchSedes]);
+
     const handleViewSede = async (id) => {
         setIsInfoOpen(true);
         setInfoLoading(true);
         try {
             const response = await showSede(id);
-            // Solo extraemos la sede, ya no hay admin vinculado directamente en la respuesta plana
             const { sede } = response.data; 
             
-            // Transformamos la data para el InfoModal
             const seccionesFormateadas = [
                 {
                     title: "Datos del Local",
@@ -70,7 +130,21 @@ const ListarSedes = () => {
         }
     };
 
-    // --- COLUMNAS ---
+    const executeToggleEstado = async () => {
+        if (!sedeToToggle || sedeToToggle.esPrincipal) return;
+        const nuevoEstado = sedeToToggle.estado === 1 ? 0 : 1;
+        setSedeToToggle(null);
+        setLoading(true);
+        try {
+            const response = await toggleSedeEstado(sedeToToggle.id, nuevoEstado);
+            setAlert(response);
+            await fetchSedes(paginationInfo.currentPage);
+        } catch (err) {
+            setAlert(err);
+            setLoading(false);
+        }
+    };
+
     const columns = useMemo(() => [
         {
             header: 'Nombre',
@@ -120,8 +194,7 @@ const ListarSedes = () => {
             header: 'Acciones',
             render: (row) => (
                 <div className="flex items-center gap-4">
-                     {/* BOTÓN VER */}
-                     <button
+                      <button
                         onClick={() => handleViewSede(row.id)}
                         className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
                         title="Ver Detalles"
@@ -132,7 +205,6 @@ const ListarSedes = () => {
                         Ver
                     </button>
 
-                    {/* BOTÓN EDITAR */}
                     <Link 
                         to={`/sedes/editar/${row.id}`} 
                         className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
@@ -144,45 +216,10 @@ const ListarSedes = () => {
         }
     ], []);
 
-    const fetchSedes = useCallback(async (page, search = '') => {
-        setLoading(true);
-        try {
-            const response = await getSedes(page, search);
-            setSedes(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                totalPages: response.last_page,
-                totalItems: response.total,
-            });
-        } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cargar las sedes.' });
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchSedes(1, searchTerm); }, [fetchSedes, searchTerm]);
-
-    const executeToggleEstado = async () => {
-        if (!sedeToToggle || sedeToToggle.esPrincipal) return;
-        const nuevoEstado = sedeToToggle.estado === 1 ? 0 : 1;
-        setSedeToToggle(null);
-        setLoading(true);
-        try {
-            const response = await toggleSedeEstado(sedeToToggle.id, nuevoEstado);
-            setAlert(response);
-            await fetchSedes(paginationInfo.currentPage, searchTerm);
-        } catch (err) {
-            setAlert(err);
-            setLoading(false);
-        }
-    };
-
     if (loading && sedes.length === 0) return <LoadingScreen />;
 
     return (
         <div className="container mx-auto p-6">
-
             <PageHeader 
                 title="Gestión de Sedes"
                 subtitle="Panel de control administrativo - Fic Sullana"
@@ -193,7 +230,6 @@ const ListarSedes = () => {
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
 
-            {/* MODAL DE INFORMACIÓN */}
             <InfoModal 
                 isOpen={isInfoOpen}
                 onClose={() => setIsInfoOpen(false)}
@@ -203,7 +239,6 @@ const ListarSedes = () => {
                 loading={infoLoading}
             />
 
-            {/* MODAL DE CONFIRMACIÓN */}
             {sedeToToggle && (
                 <ConfirmModal
                     message={`¿Deseas cambiar el estado a ${sedeToToggle.estado === 1 ? 'INACTIVO' : 'ACTIVO'}?`}
@@ -217,13 +252,18 @@ const ListarSedes = () => {
                     columns={columns}
                     data={sedes}
                     loading={loading}
+                    
+                    filterConfig={filterConfig}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onFilterSubmit={handleFilterSubmit}
+                    onFilterClear={handleFilterClear}
+
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchSedes(page, searchTerm)
+                        onPageChange: (page) => fetchSedes(page)
                     }}
-                    onSearch={setSearchTerm}
-                    searchPlaceholder="Buscar por nombre de sede..."
                 />
             </div>
         </div>

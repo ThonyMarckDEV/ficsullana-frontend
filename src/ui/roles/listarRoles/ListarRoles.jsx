@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getRoles, toggleRolEstado, showRol } from 'services/rolService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -15,58 +15,72 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const ListarRoles = () => {
-    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [roles, setRoles] = useState([]);
     
-    // Paginación
     const [paginationInfo, setPaginationInfo] = useState({ 
         currentPage: 1, 
         totalPages: 1, 
         totalItems: 0 
     });
     
-    const [searchTerm, setSearchTerm] = useState('');
     const [roleToToggle, setRoleToToggle] = useState(null);
     
-    // Estados para Modal de Información
     const [isInfoOpen, setIsInfoOpen] = useState(false);
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-    // --- FUNCIÓN DE CARGA ---
-    const fetchRoles = useCallback(async (page, search = '') => {
+    const [filters, setFilters] = useState({
+        search: '',
+        estado: ''
+    });
+
+    const filtersRef = useRef(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+
+    const filterConfig = useMemo(() => [
+        {
+            name: 'search',
+            type: 'text',
+            label: 'Buscador',
+            placeholder: 'Nombre del rol...',
+            colSpan: 'md:col-span-8'
+        },
+        {
+            name: 'estado',
+            type: 'select',
+            label: 'Estado',
+            options: [
+                { value: '', label: 'Todos' },
+                { value: '1', label: 'Activos' },
+                { value: '0', label: 'Inactivos' }
+            ],
+            colSpan: 'md:col-span-4'
+        }
+    ], []);
+
+    const fetchRoles = useCallback(async (page = 1) => {
         setLoading(true);
         try {
-            const response = await getRoles(page, search);
+            const currentFilters = filtersRef.current;
+            const response = await getRoles(page, currentFilters);
             
-            // VERIFICACIÓN 1: ¿Es una respuesta paginada de Laravel?
-            // Buscamos si existen las propiedades clave 'current_page' y 'data' (array)
             if (response.current_page && Array.isArray(response.data)) {
-                
-                // 1. Guardamos los datos (filas)
                 setRoles(response.data);
-                
-                // 2. Guardamos la paginación CORRECTAMENTE
                 setPaginationInfo({
                     currentPage: response.current_page,
                     totalPages: response.last_page,
                     totalItems: response.total
                 });
-
-            } 
-            // VERIFICACIÓN 2: ¿Es una respuesta envuelta en 'data' pero sin paginación?
-            else if (response.data && Array.isArray(response.data)) {
+            } else if (response.data && Array.isArray(response.data)) {
                 setRoles(response.data);
-            } 
-            // VERIFICACIÓN 3: ¿Es un array directo?
-            else if (Array.isArray(response)) {
+            } else if (Array.isArray(response)) {
                 setRoles(response);
             }
-
         } catch (err) {
-            console.error(err);
             setAlert({ type: 'error', message: 'Error al cargar los roles.' });
         } finally {
             setLoading(false);
@@ -74,14 +88,28 @@ const ListarRoles = () => {
     }, []);
 
     useEffect(() => { 
-        fetchRoles(1, searchTerm); 
-    }, [fetchRoles, searchTerm]);
+        fetchRoles(1); 
+    }, [fetchRoles]);
 
-    // --- MANEJO DE VISTAS (MODAL) ---
+    const handleFilterChange = useCallback((name, value) => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleFilterSubmit = useCallback(() => {
+        fetchRoles(1);
+    }, [fetchRoles]);
+
+    const handleFilterClear = useCallback(() => {
+        const cleanFilters = { search: '', estado: '' };
+        setFilters(cleanFilters);
+        filtersRef.current = cleanFilters;
+        fetchRoles(1);
+    }, [fetchRoles]);
+
     const handleViewRol = async (id) => {
         setIsInfoOpen(true);
-        setInfoLoading(true); // Activa el Skeleton
-        setModalData({ title: 'Cargando...', sections: [] }); // Limpia data previa
+        setInfoLoading(true); 
+        setModalData({ title: 'Cargando...', sections: [] });
 
         try {
             const response = await showRol(id);
@@ -117,11 +145,10 @@ const ListarRoles = () => {
             setAlert({ type: 'error', message: 'No se pudo cargar el detalle.' });
             setIsInfoOpen(false);
         } finally {
-            setInfoLoading(false); // Desactiva el Skeleton
+            setInfoLoading(false); 
         }
     };
 
-    // --- COLUMNAS ---
     const columns = useMemo(() => [
         {
             header: 'Rol',
@@ -175,7 +202,6 @@ const ListarRoles = () => {
             render: (row) => (
 
                 <div className="flex items-center gap-4">
-                        {/* BOTÓN VER */}
                         <button
                         onClick={() => handleViewRol(row.id)}
                         className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
@@ -187,7 +213,6 @@ const ListarRoles = () => {
                         Ver
                     </button>
 
-                    {/* BOTÓN EDITAR */}
                     <Link 
                         to={`/roles/editar/${row.id}`} 
                         className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
@@ -199,7 +224,6 @@ const ListarRoles = () => {
         }
     ], []);
 
-    // --- ACCIÓN DE TOGGLE ---
     const executeToggleEstado = async () => {
         if (!roleToToggle) return;
         setLoading(true);
@@ -207,7 +231,7 @@ const ListarRoles = () => {
             await toggleRolEstado(roleToToggle.id);
             setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
             setRoleToToggle(null);
-            fetchRoles(paginationInfo.currentPage, searchTerm);
+            fetchRoles(paginationInfo.currentPage);
         } catch (err) {
             setAlert({ type: 'error', message: 'Error al cambiar estado.' });
             setLoading(false);
@@ -228,14 +252,13 @@ const ListarRoles = () => {
 
             <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
 
-            {/* MODAL DE INFORMACIÓN CON LOADER */}
             <InfoModal 
                 isOpen={isInfoOpen}
                 onClose={() => setIsInfoOpen(false)}
                 title={modalData.title}
                 subtitle={modalData.subtitle}
                 sections={modalData.sections}
-                loading={infoLoading} // <--- Pasamos el estado de carga
+                loading={infoLoading} 
             />
 
             {roleToToggle && (
@@ -251,13 +274,18 @@ const ListarRoles = () => {
                     columns={columns}
                     data={roles}
                     loading={loading}
+                    
+                    filterConfig={filterConfig}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onFilterSubmit={handleFilterSubmit}
+                    onFilterClear={handleFilterClear}
+
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchRoles(page, searchTerm)
+                        onPageChange: (page) => fetchRoles(page)
                     }}
-                    onSearch={setSearchTerm}
-                    searchPlaceholder="Buscar rol..."
                 />
             </div>
         </div>

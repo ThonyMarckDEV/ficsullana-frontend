@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
+// Asegúrate de que tu servicio acepte (page, filters)
 import { getProductos, showProducto } from 'services/productoService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
@@ -15,27 +16,81 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 
 const ListarProductos = () => {
-    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [productos, setProductos] = useState([]);
-    
-    // Paginación y Búsqueda
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
-    const [searchTerm, setSearchTerm] = useState('');
 
-    // --- ESTADOS PARA MODAL DE INFORMACIÓN ---
     const [isInfoOpen, setIsInfoOpen] = useState(false);
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-    // --- VER DETALLE ---
+    const [filters, setFilters] = useState({
+        search: ''
+    });
+
+    const filtersRef = useRef(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+
+
+    const filterConfig = useMemo(() => [
+        {
+            name: 'search',
+            type: 'text',
+            label: 'Buscador',
+            placeholder: 'Nombre comercial o Rango de tasa (ej. 10-12%)...',
+            colSpan: 'md:col-span-5'
+        }
+    ], []);
+
+    const fetchProductos = useCallback(async (page = 1) => {
+        setLoading(true);
+        try {
+            const currentFilters = filtersRef.current;
+            
+            const response = await getProductos(page, currentFilters);
+            
+            setProductos(response.data || []);
+            setPaginationInfo({
+                currentPage: response.current_page,
+                totalPages: response.last_page,
+                totalItems: response.total,
+            });
+        } catch (err) {
+            setAlert({ type: 'error', message: 'Error al cargar los productos.' });
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchProductos(1);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleFilterChange = useCallback((name, value) => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleFilterSubmit = useCallback(() => {
+        fetchProductos(1);
+    }, [fetchProductos]);
+
+    const handleFilterClear = useCallback(() => {
+        const cleanFilters = { search: '' };
+        setFilters(cleanFilters);
+        filtersRef.current = cleanFilters;
+        fetchProductos(1);
+    }, [fetchProductos]);
+
     const handleViewProducto = async (id) => {
         setIsInfoOpen(true);
         setInfoLoading(true);
         try {
             const response = await showProducto(id);
-            const producto = response.data;
+            const producto = response.data.data || response.data;
             
             const seccionesFormateadas = [
                 {
@@ -117,35 +172,14 @@ const ListarProductos = () => {
         }
     ], []);
 
-    const fetchProductos = useCallback(async (page, search = '') => {
-        setLoading(true);
-        try {
-            const response = await getProductos(page, search);
-            setProductos(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                totalPages: response.last_page,
-                totalItems: response.total,
-            });
-        } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cargar los productos.' });
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-
-    useEffect(() => { fetchProductos(1, searchTerm); }, [fetchProductos, searchTerm]);
-
     if (loading && productos.length === 0) return <LoadingScreen />;
 
     return (
         <div className="container mx-auto p-6">
-
             
             <PageHeader
                 title="Gestión de Productos"
-                subtitle="Gestión del catálogo de productos - Fic Sullana"
+                subtitle="Gestión del catálogo de productos financieros"
                 icon={CubeIcon}
                 buttonText="+ Nuevo Producto"
                 buttonLink="/productos/agregar"
@@ -167,13 +201,19 @@ const ListarProductos = () => {
                     columns={columns}
                     data={productos}
                     loading={loading}
+                    
+                    // Configuración de Filtros
+                    filterConfig={filterConfig}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onFilterSubmit={handleFilterSubmit}
+                    onFilterClear={handleFilterClear}
+
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchProductos(page, searchTerm)
+                        onPageChange: (page) => fetchProductos(page)
                     }}
-                    onSearch={setSearchTerm}
-                    searchPlaceholder="Buscar producto..."
                 />
             </div>
         </div>

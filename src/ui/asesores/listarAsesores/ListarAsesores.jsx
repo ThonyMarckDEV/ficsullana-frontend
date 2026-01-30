@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getAsesores, toggleAsesorEstado, showAsesor } from 'services/asesorService';
 import Table from 'components/Shared/Tables/Table';
@@ -18,32 +18,59 @@ import { UsersIcon } from 'lucide-react';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 
 const ListarAsesores = () => {
-    // --- ESTADOS ---
     const [loading, setLoading] = useState(true);
     const [asesores, setAsesores] = useState([]);
     const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
     const [alert, setAlert] = useState(null);
-    const [search, setSearch] = useState('');
     
-    // Estados para Modal de Información (Igual que en Sedes)
     const [isInfoOpen, setIsInfoOpen] = useState(false);
     const [infoLoading, setInfoLoading] = useState(false);
     const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
     
-    // Estado para Toggle
     const [toggleData, setToggleData] = useState(null);
 
-    // --- CARGA DE DATOS ---
-    const fetchAsesores = useCallback(async (page = 1, searchTerm = '') => {
+    const [filters, setFilters] = useState({
+        search: '',
+        estado: ''
+    });
+
+    const filtersRef = useRef(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+
+    const filterConfig = useMemo(() => [
+        {
+            name: 'search',
+            type: 'text',
+            label: 'Buscador',
+            placeholder: 'Nombre, DNI o Usuario...',
+            colSpan: 'md:col-span-8'
+        },
+        {
+            name: 'estado',
+            type: 'select',
+            label: 'Estado',
+            options: [
+                { value: '', label: 'Todos' },
+                { value: '1', label: 'Activos' },
+                { value: '0', label: 'Inactivos' }
+            ],
+            colSpan: 'md:col-span-4'
+        }
+    ], []);
+
+    const fetchAsesores = useCallback(async (page = 1) => {
         setLoading(true);
         try {
-            const res = await getAsesores(page, searchTerm);
-            // Ajustar según estructura de respuesta (res.data o res directo)
+            const currentFilters = filtersRef.current;
+            const res = await getAsesores(page, currentFilters);
             const dataList = res.data?.data || res.data || [];
+            
             setAsesores(dataList);
             setPagination({ 
-                page: res.current_page || res.data?.current_page, 
-                totalPages: res.last_page || res.data?.last_page 
+                page: res.current_page || res.data?.current_page || 1, 
+                totalPages: res.last_page || res.data?.last_page || 1
             });
         } catch (err) {
             setAlert({ type: 'error', message: 'Error cargando asesores.' });
@@ -52,13 +79,29 @@ const ListarAsesores = () => {
         }
     }, []);
 
-    useEffect(() => { fetchAsesores(1, search); }, [fetchAsesores, search]);
+    useEffect(() => { 
+        fetchAsesores(1); 
+    }, [fetchAsesores]);
 
-    // --- VER DETALLE (Con Loading) ---
+    const handleFilterChange = useCallback((name, value) => {
+        setFilters(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleFilterSubmit = useCallback(() => {
+        fetchAsesores(1);
+    }, [fetchAsesores]);
+
+    const handleFilterClear = useCallback(() => {
+        const cleanFilters = { search: '', estado: '' };
+        setFilters(cleanFilters);
+        filtersRef.current = cleanFilters;
+        fetchAsesores(1);
+    }, [fetchAsesores]);
+
     const handleView = async (id) => {
         setIsInfoOpen(true);
-        setInfoLoading(true); // Activamos Skeleton
-        setModalData({ title: 'Cargando...', sections: [] }); // Limpiamos data previa
+        setInfoLoading(true);
+        setModalData({ title: 'Cargando...', sections: [] });
 
         try {
             const response = await showAsesor(id);
@@ -103,24 +146,22 @@ const ListarAsesores = () => {
             setAlert({ type: 'error', message: 'Error al cargar detalles del asesor.' });
             setIsInfoOpen(false);
         } finally {
-            setInfoLoading(false); // Desactivamos Skeleton
+            setInfoLoading(false);
         }
     };
 
-    // --- CAMBIAR ESTADO ---
     const handleToggle = async () => {
         if (!toggleData) return;
         try {
-            await toggleAsesorEstado(toggleData.id, toggleData.estado === 1 ? 0 : 1);
+            await toggleAsesorEstado(toggleData.id);
             setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
             setToggleData(null);
-            fetchAsesores(pagination.page, search);
+            fetchAsesores(pagination.page);
         } catch (e) { 
             setAlert({ type: 'error', message: 'No se pudo cambiar el estado.' }); 
         }
     };
 
-    // --- COLUMNAS ---
     const columns = useMemo(() => [
         {
             header: 'Asesor',
@@ -207,27 +248,30 @@ const ListarAsesores = () => {
                     columns={columns} 
                     data={asesores} 
                     loading={loading} 
+                    
+                    filterConfig={filterConfig}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onFilterSubmit={handleFilterSubmit}
+                    onFilterClear={handleFilterClear}
+
                     pagination={{ 
                         currentPage: pagination.page, 
                         totalPages: pagination.totalPages, 
-                        onPageChange: (p) => fetchAsesores(p, search) 
+                        onPageChange: (p) => fetchAsesores(p) 
                     }} 
-                    onSearch={setSearch} 
-                    searchPlaceholder="Buscar por nombre o DNI..." 
                 />
             </div>
 
-            {/* MODAL DE INFORMACIÓN CON LOADER */}
             <InfoModal 
                 isOpen={isInfoOpen} 
                 onClose={() => setIsInfoOpen(false)} 
                 title={modalData.title}
                 subtitle={modalData.subtitle}
                 sections={modalData.sections}
-                loading={infoLoading} // <--- AQUÍ PASAMOS EL ESTADO DE CARGA
+                loading={infoLoading}
             />
 
-            {/* MODAL DE CONFIRMACIÓN */}
             {toggleData && (
                 <ConfirmModal 
                     message={`¿Estás seguro de cambiar el estado a ${toggleData.estado === 1 ? 'INACTIVO' : 'ACTIVO'}?`} 

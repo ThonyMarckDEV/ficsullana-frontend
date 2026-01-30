@@ -13,12 +13,24 @@ export const createAdministrador = async (data) => {
   return handleResponse(response);
 };
 
-export const getAdministradores = async (page = 1, search = '') => {
-  const url = `${API_BASE_URL}/api/administradores/index?page=${page}&search=${search}`;
-  const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+export const getAdministradores = async (page = 1, filters = {}) => {
+  
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '',
+    estado: filters.estado || '',
+    sede_id: filters.sede_id || ''
+  });
+
+  const url = `${API_BASE_URL}/api/administradores/index?${params.toString()}`;
+  
+  const response = await fetchWithAuth(url, { 
+      method: 'GET', 
+      headers: { 'Accept': 'application/json' } 
+  });
+  
   return handleResponse(response);
 };
-
 export const showAdministrador = async (id) => {
   const url = `${API_BASE_URL}/api/administradores/show/${id}`;
   const response = await fetchWithAuth(url, { method: 'GET' });

@@ -11,12 +11,23 @@ export const createJefeNegocio = async (data) => {
   return handleResponse(response);
 };
 
-export const getJefesNegocio = async (page = 1, search = '') => {
-  const url = `${API_BASE_URL}/api/jefenegocios/index?page=${page}&search=${search}`;
-  const response = await fetchWithAuth(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+export const getJefesNegocio = async (page = 1, filters = {}) => {
+  
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '',
+    estado: filters.estado || '',
+  });
+
+  const url = `${API_BASE_URL}/api/jefenegocios/index?${params.toString()}`;
+  
+  const response = await fetchWithAuth(url, { 
+      method: 'GET', 
+      headers: { 'Accept': 'application/json' } 
+  });
+  
   return handleResponse(response);
 };
-
 export const showJefeNegocio = async (id) => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/jefenegocios/show/${id}`, { method: 'GET' });
   return handleResponse(response);
