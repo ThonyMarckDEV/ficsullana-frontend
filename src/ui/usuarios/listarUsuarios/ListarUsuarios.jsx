@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getUsuarios, toggleUsuarioEstado, showUsuario } from 'services/usuarioService';
 import Table from 'components/Shared/Tables/Table';
