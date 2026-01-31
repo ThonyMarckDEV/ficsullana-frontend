@@ -103,9 +103,9 @@ function AppContent() {
 
             {/* --- MÓDULO: CLIENTES --- */}
             <Route path="/clientes" element={<FullLayout />}>
-                <Route path="agregar" element={<ProtectedRoute requiredPermission="usuarios.crear" element={<AgregarCliente />} />} />
-                <Route path="listar" element={<ProtectedRoute requiredPermission="usuarios.listar" element={<ListarCliente />} /> } />
-                <Route path="editar/:id" element={<ProtectedRoute requiredPermission="usuarios.editar" element={<EditarCliente />} />} />
+                <Route path="agregar" element={<ProtectedRoute requiredPermission="usuarios.crear.cliente" element={<AgregarCliente />} />} />
+                <Route path="listar" element={<ProtectedRoute requiredPermission="usuarios.listar.cliente" element={<ListarCliente />} /> } />
+                <Route path="editar/:id" element={<ProtectedRoute requiredPermission="usuarios.editar.cliente" element={<EditarCliente />} />} />
             </Route>
 
             {/* --- MÓDULO: ADMISIONES --- */}
