@@ -24,10 +24,7 @@ const ProtectedRoute = ({ element, requiredPermission }) => {
         const permisosUsuario = rawPermisos.map(p => (typeof p === 'object' ? p.nombre : p));
 
         // Lógica Wildcard (Coincidencia exacta O prefijo con punto)
-        const hasPermission = permisosUsuario.some(permiso => 
-            permiso === requiredPermission || 
-            permiso.startsWith(`${requiredPermission}.`)
-        );
+        const hasPermission = permisosUsuario.some(permiso => permiso === requiredPermission);
 
         if (!hasPermission) {
             // --- DEBUG: AVISO EN CONSOLA ANTES DE REDIRIGIR ---
