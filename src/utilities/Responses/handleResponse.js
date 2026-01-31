@@ -2,13 +2,11 @@ export const handleResponse = async (response) => {
     const result = await response.json();
 
     if (!response.ok) {
-        // CORRECCIÓN: Buscamos en 'errors' O en 'details'
-        const error = {
-            type: 'error',
+       const error = {
             message: result.message || 'Ocurrió un error inesperado.',
             details: result.errors 
                 ? Object.values(result.errors).flat() 
-                : (result.details || undefined),
+                : (Array.isArray(result.details) ? result.details : [])
         };
         throw error;
     }
