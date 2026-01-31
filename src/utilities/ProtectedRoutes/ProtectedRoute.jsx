@@ -19,14 +19,24 @@ const ProtectedRoute = ({ element, requiredPermission }) => {
 
     // VALIDACIÓN DE PERMISOS (Instantánea)
     if (requiredPermission) {
+        // Aseguramos array y extraemos strings si vienen objetos
         const rawPermisos = user.rol?.permisos || [];
         const permisosUsuario = rawPermisos.map(p => (typeof p === 'object' ? p.nombre : p));
 
-        // .includes() solo devuelve true si el string es IDÉNTICO
-        const hasPermission = permisosUsuario.includes(requiredPermission);
+        // Lógica Wildcard (Coincidencia exacta O prefijo con punto)
+        const hasPermission = permisosUsuario.some(permiso => 
+            permiso === requiredPermission || 
+            permiso.startsWith(`${requiredPermission}.`)
+        );
 
         if (!hasPermission) {
-            console.warn(`🛑 Bloqueado: Falta el permiso exacto "${requiredPermission}"`);
+            // --- DEBUG: AVISO EN CONSOLA ANTES DE REDIRIGIR ---
+            console.groupCollapsed(`⛔ ACCESO DENEGADO: ${location.pathname}`);
+            console.warn(`❌ Permiso Requerido: "${requiredPermission}" (o derivado como "${requiredPermission}.xyz")`);
+            console.groupEnd();
+            // --------------------------------------------------
+
+            // Redirigimos INMEDIATAMENTE.
             return <Navigate to="/401" state={{ from: location }} replace />;
         }
     }
