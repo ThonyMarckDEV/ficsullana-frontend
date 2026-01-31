@@ -14,6 +14,7 @@ import {
     CubeIcon
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 const ListarProductos = () => {
     const [loading, setLoading] = useState(true);
