@@ -14,8 +14,6 @@ import logoImg from 'assets/img/Logo_FICSULLANA.png';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { Building2, House, ListChecksIcon, UserCog, UserPlus, Users } from 'lucide-react';
 import SidebarSkeleton from './Skeletons/SidebarSkeleton';
-
-// IMPORTAR EL CONTEXTO
 import { useAuth } from 'context/AuthContext';
 
 const Sidebar = () => {
