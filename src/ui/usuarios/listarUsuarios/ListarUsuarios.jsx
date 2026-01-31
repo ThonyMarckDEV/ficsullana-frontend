@@ -9,6 +9,7 @@ import LoadingScreen from 'components/Shared/LoadingScreen';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { PencilSquareIcon, EyeIcon, UserIcon, IdentificationIcon, MapPinIcon, UsersIcon } from '@heroicons/react/24/outline';
 import { useAuth } from 'context/AuthContext'; 
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 const ListarUsuarios = ({ 
     rolId: propRolId, 
