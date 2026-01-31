@@ -2,11 +2,12 @@ export const handleResponse = async (response) => {
     const result = await response.json();
 
     if (!response.ok) {
-       const error = {
+        const error = {
+            type: 'error',
             message: result.message || 'Ocurrió un error inesperado.',
             details: result.errors 
                 ? Object.values(result.errors).flat() 
-                : (Array.isArray(result.details) ? result.details : [])
+                : (result.details || undefined),
         };
         throw error;
     }

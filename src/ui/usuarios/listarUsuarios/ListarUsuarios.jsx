@@ -94,7 +94,9 @@ const ListarUsuarios = ({
             await toggleUsuarioEstado(toggleData.id, toggleData.estado === 1 ? 0 : 1);
             setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
             fetchUsuarios(pagination.page);
-        } catch (e) { setAlert({ type: 'error', message: 'Error al cambiar estado.' }); }
+        } catch (e) { 
+            setAlert(handleApiError(e, 'Error al cambiar estado.')); 
+        }
         setToggleData(null);
     };
 
