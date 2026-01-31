@@ -142,7 +142,7 @@ const ListarRoles = () => {
                 ]
             });
         } catch (err) {
-            setAlert({ type: 'error', message: 'No se pudo cargar el detalle.' });
+            setAlert(handleApiError(err, 'No se pudo cargar el detalle.'));
             setIsInfoOpen(false);
         } finally {
             setInfoLoading(false); 
@@ -233,7 +233,7 @@ const ListarRoles = () => {
             setRoleToToggle(null);
             fetchRoles(paginationInfo.currentPage);
         } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cambiar estado.' });
+            setAlert(handleApiError(err, 'Error al cambiar estado.')); 
             setLoading(false);
         }
     };

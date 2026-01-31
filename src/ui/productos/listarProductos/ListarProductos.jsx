@@ -111,7 +111,7 @@ const ListarProductos = () => {
             });
 
         } catch (err) {
-            setAlert({ type: 'error', message: 'No se pudo cargar el detalle del producto.' });
+            setAlert(handleApiError(err, 'No se pudo cargar el detalle del producto.'));
             setIsInfoOpen(false);
         } finally {
             setInfoLoading(false);

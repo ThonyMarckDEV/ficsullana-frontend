@@ -136,11 +136,11 @@ const ListarSedes = () => {
         setSedeToToggle(null);
         setLoading(true);
         try {
-            const response = await toggleSedeEstado(sedeToToggle.id, nuevoEstado);
-            setAlert(response);
+            await toggleSedeEstado(sedeToToggle.id, nuevoEstado);
+            setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
             await fetchSedes(paginationInfo.currentPage);
         } catch (err) {
-            setAlert(err);
+            setAlert(handleApiError(err, 'Error al cambiar estado.')); 
             setLoading(false);
         }
     };

@@ -14,6 +14,7 @@ import {
     PhoneIcon
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 const ListarCliente = () => {
     const [loading, setLoading] = useState(true);
@@ -144,7 +145,7 @@ const ListarCliente = () => {
             });
 
         } catch (err) {
-            setAlert({ type: 'error', message: 'No se pudo cargar la información del cliente.' });
+            setAlert(handleApiError(err, 'No se pudo cargar la información del usuario.'));
             setIsInfoOpen(false);
         } finally {
             setInfoLoading(false);
@@ -164,7 +165,7 @@ const ListarCliente = () => {
             setAlert(response);
             await fetchClientes(paginationInfo.currentPage); 
         } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cambiar el estado.' }); 
+            setAlert(handleApiError(err, 'Error al cambiar estado.')); 
             setLoading(false);
         }
     };
