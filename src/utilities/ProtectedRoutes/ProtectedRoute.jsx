@@ -1,59 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import authService from 'services/authService';
+// utilities/ProtectedRoutes/ProtectedRoute.jsx
+import React from 'react';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
+import { useAuth } from 'context/AuthContext'; 
 import LoadingScreen from 'components/Shared/LoadingScreen';
 
 const ProtectedRoute = ({ element, requiredPermission }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const location = useLocation();
+    // Consumimos el estado global.
+    const { user, loading } = useAuth();
+    const location = useLocation();
 
-  useEffect(() => {
-    const verifyUser = async () => {
-      try {
-        const response = await authService.verifySession();
-        
-        // 1. Obtención segura de datos
-        const serverData = response.data || response;
-        
-        // Obtenemos el array de permisos (Asegurando que sea un array)
-        const userPermisos = serverData.rol?.permisos || [];
+    // Loading inicial (Contexto cargando)
+    if (loading) return <LoadingScreen />;
 
-        // 2. LÓGICA DE VALIDACIÓN ESTRICTA (PARA TODOS)
-        if (requiredPermission) {
-          // Si la ruta pide permiso, verificamos si está en la lista del usuario.
-          // Esto aplica IGUAL para Superadmin, Admin, Asesor, etc.
-          const hasPermission = userPermisos.includes(requiredPermission);
-          
-          if (!hasPermission) {
-            console.warn(`Acceso denegado. Falta permiso: ${requiredPermission}`);
-          }
-          
-          setIsAuthorized(hasPermission);
-        } else {
-          // Si la ruta es pública dentro del panel (ej: Home) y no pide permiso específico
-          setIsAuthorized(true);
+    // No logueado
+    if (!user) {
+        return <Navigate to="/" state={{ from: location }} replace />;
+    }
+
+    // VALIDACIÓN DE PERMISOS (Instantánea)
+    if (requiredPermission) {
+        // Aseguramos array y extraemos strings si vienen objetos
+        const rawPermisos = user.rol?.permisos || [];
+        const permisosUsuario = rawPermisos.map(p => (typeof p === 'object' ? p.nombre : p));
+
+        // Lógica Wildcard (Coincidencia exacta O prefijo con punto)
+        const hasPermission = permisosUsuario.some(permiso => 
+            permiso === requiredPermission || 
+            permiso.startsWith(`${requiredPermission}.`)
+        );
+
+        if (!hasPermission) {
+            // --- DEBUG: AVISO EN CONSOLA ANTES DE REDIRIGIR ---
+            console.groupCollapsed(`⛔ ACCESO DENEGADO: ${location.pathname}`);
+            console.warn(`❌ Permiso Requerido: "${requiredPermission}" (o derivado como "${requiredPermission}.xyz")`);
+            console.groupEnd();
+            // --------------------------------------------------
+
+            // Redirigimos INMEDIATAMENTE.
+            return <Navigate to="/401" state={{ from: location }} replace />;
         }
+    }
 
-      } catch (error) {
-        console.error("Error de autorización o sesión inválida:", error);
-        setIsAuthorized(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    verifyUser();
-  }, [requiredPermission]);
-
-  if (isLoading) return <LoadingScreen />;
-
-  if (!isAuthorized) {
-    // Si no tiene el permiso, lo mandamos a la página de "No Autorizado"
-    return <Navigate to="/401" state={{ from: location }} replace />;
-  }
-
-  return element;
+    return element ? element : <Outlet />;
 };
 
 export default ProtectedRoute;

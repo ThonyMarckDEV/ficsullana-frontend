@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet , Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -86,10 +86,19 @@ function AppContent() {
 
             {/* --- MÓDULO: PERSONAL (DINÁMICO) --- */}
             <Route path="/personal" element={<FullLayout />}>
-               {/* RUTAS DINÁMICAS DE PERSONAL */}
-                <Route path="/personal/listar/:idRol" element={<ListarUsuarios />} />
-                <Route path="/personal/agregar/:idRol" element={<AgregarUsuario />} />
-                <Route path="/personal/editar-usuario/:id" element={<EditarUsuario backPath="/home" />} />
+               <Route index element={<Navigate to="401" replace />} /> 
+                <Route 
+                    path="listar/:idRol" 
+                    element={<ProtectedRoute requiredPermission="usuarios.listar" element={<ListarUsuarios />} />} 
+                />
+                <Route 
+                    path="agregar/:idRol" 
+                    element={<ProtectedRoute requiredPermission="usuarios.crear" element={<AgregarUsuario />} />} 
+                />
+                <Route 
+                    path="editar-usuario/:id" 
+                    element={<ProtectedRoute requiredPermission="usuarios.editar" element={<EditarUsuario backPath="/home" />} />} 
+                />
             </Route>
 
             {/* --- MÓDULO: CLIENTES --- */}

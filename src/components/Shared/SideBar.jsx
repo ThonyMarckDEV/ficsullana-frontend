@@ -12,7 +12,7 @@ import {
 import { logout } from 'js/logout';
 import logoImg from 'assets/img/Logo_FICSULLANA.png'; 
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
-import { Building2, House, ListChecksIcon, UserCog } from 'lucide-react';
+import { Building2, House, ListChecksIcon, UserCog, UserPlus, Users } from 'lucide-react';
 import SidebarSkeleton from './Skeletons/SidebarSkeleton';
 
 // IMPORTAR EL CONTEXTO
@@ -26,13 +26,48 @@ const Sidebar = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const location = useLocation();
 
-    const userPermisos = user?.rol?.permisos || [];
+    const userPermisos = useMemo(() => {
+        if (!user?.rol?.permisos) return [];
+        return user.rol.permisos.map(p => (typeof p === 'object' ? p.nombre : p));
+    }, [user]);
 
     const allowedMenu = useMemo(() => {
         if (loading) return [];
 
+        // ---------------------------------------------------------
+        // CREAR SECCIONES DINÁMICAS POR ROL
+        // ---------------------------------------------------------
+        const dynamicRoleSections = (roles || []).map(rol => {
+            const rawName = rol.nombre.replace(/_/g, ' ').toLowerCase();
+            const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+            
+            const roleSlug = rol.nombre.toLowerCase(); 
+
+            return {
+                section: displayName, 
+                icon: UserCog,   
+                subs: [
+                    { 
+                        name: 'Agregar Nuevo',
+                        link: `/personal/agregar/${rol.id}`, 
+                        permission: `usuarios.crear.${roleSlug}` 
+                    },
+                    { 
+                        name: 'Listar Todos', 
+                        link: `/personal/listar/${rol.id}`, 
+                        permission: `usuarios.listar.${roleSlug}` 
+                    }
+                ]
+            };
+        });
+
+        // ---------------------------------------------------------
+        // CONFIGURACIÓN DEL MENÚ PRINCIPAL
+        // ---------------------------------------------------------
         const config = [
             { section: 'Home', icon: House, link: '/home' },
+            
+            // Módulo Sedes
             {
                 section: 'Sedes',
                 icon: Building2,
@@ -41,6 +76,8 @@ const Sidebar = () => {
                     { name: 'Listar Sedes', link: '/sedes/listar', permission: 'sedes.listar' },
                 ]
             },
+
+            // Módulo Productos
             {
                 section: 'Productos',
                 icon: ListChecksIcon,
@@ -49,23 +86,21 @@ const Sidebar = () => {
                     { name: 'Listar Productos', link: '/productos/listar', permission: 'productos.listar' },
                 ]
             },
-            {
-                section: 'Personal',
-                icon: UserCog,
-                subs: (roles || []).map(rol => ({
-                    name: rol.nombre.replace(/_/g, ' ').toUpperCase(),
-                    link: `/personal/listar/${rol.id}`,
-                    permission: `usuarios.listar.${rol.nombre}`
-                }))
-            },
+
+            // --- AQUÍ INYECTAMOS LOS ROLES DINÁMICOS ---
+            ...dynamicRoleSections, 
+
+            // Módulo Clientes
             {
                 section: 'Clientes',
                 icon: IdentificationIcon,
                 subs: [
-                    { name: 'Agregar Cliente', link: '/clientes/agregar', permission: 'clientes.crear' },
-                    { name: 'Listar Clientes', link: '/clientes/listar', permission: 'clientes.listar' },
+                    { name: 'Agregar Cliente', link: '/clientes/agregar', permission: 'usuarios.crear.cliente' },
+                    { name: 'Listar Clientes', link: '/clientes/listar', permission: 'usuarios.listar.cliente' },
                 ]
             },
+
+            // Módulo Admisiones
             {
                 section: 'Admisiones',
                 icon: ClipboardDocumentListIcon,
@@ -74,8 +109,10 @@ const Sidebar = () => {
                     { name: 'Listar Admisiones', link: '/gestion/listar-admisiones', permission: 'admisiones.listar' },
                 ]
             },
+
+            // Módulo Configuración de Roles (Sistema)
             {
-                section: 'Roles',
+                section: 'Configuración Roles',
                 icon: UserGroupIcon,
                 subs: [
                     { name: 'Nuevo Rol', link: '/roles/agregar', permission: 'roles.crear' },
@@ -84,17 +121,33 @@ const Sidebar = () => {
             },
         ];
 
+        // ---------------------------------------------------------
+        // FILTRADO POR PERMISOS
+        // ---------------------------------------------------------
         return config.map(item => {
             if (item.subs) {
-                const visibleSubs = item.subs.filter(sub => 
-                    userPermisos.includes(sub.permission)
-                );
+                // Filtramos los sub-items según permisos
+                const visibleSubs = item.subs.filter(sub => {
+                    // Verificamos coincidencia exacta O prefijo (wildcard)
+                    return userPermisos.some(permisoUsuario => 
+                        permisoUsuario === sub.permission || 
+                        permisoUsuario.startsWith(`${sub.permission}.`)
+                    );
+                });
+                
                 if (visibleSubs.length > 0) return { ...item, subs: visibleSubs };
                 return null;
             }
-            // Si el item no tiene subs (es enlace directo), verificamos su permiso (si tiene)
-            if (!item.permission || userPermisos.includes(item.permission)) return item;
-            return null;
+            
+            // Items directos (sin subs)
+            if (!item.permission) return item; // Si no pide permiso, pasa (ej: Home)
+            
+            const hasPermission = userPermisos.some(permisoUsuario => 
+                permisoUsuario === item.permission || 
+                permisoUsuario.startsWith(`${item.permission}.`)
+            );
+            
+            return hasPermission ? item : null;
         }).filter(Boolean);
 
     }, [userPermisos, loading, roles]);
@@ -123,15 +176,16 @@ const Sidebar = () => {
                 <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 [&::-webkit-scrollbar]:hidden">
                     {allowedMenu.map((item, index) => {
                         const IconComponent = item.icon || DocumentTextIcon;
-                        const isSubOpen = openSection === item.section;
+                        const uniqueKey = `${item.section}-${index}`;
+                        const isSubOpen = openSection === uniqueKey;
                         const isActive = item.link ? location.pathname === item.link : item.subs?.some(s => location.pathname === s.link);
 
                         return (
-                            <div key={index}>
+                            <div key={uniqueKey}>
                                 {item.subs ? (
                                     <>
                                         <button
-                                            onClick={() => setOpenSection(isSubOpen ? null : item.section)}
+                                            onClick={() => setOpenSection(isSubOpen ? null : uniqueKey)}
                                             className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-white text-fic-red font-bold shadow-lg' : 'text-white hover:bg-white/10'}`}
                                         >
                                             <div className="flex items-center gap-4 overflow-hidden">
@@ -147,8 +201,10 @@ const Sidebar = () => {
                                                         <Link
                                                             to={sub.link}
                                                             onClick={() => setIsOpen(false)}
-                                                            className={`block py-2 px-3 rounded-lg text-sm transition-all ${location.pathname === sub.link ? 'text-fic-yellow font-bold bg-white/10' : 'text-gray-100 hover:text-white hover:bg-white/5'}`}
+                                                            className={`flex items-center gap-2 py-2 px-3 rounded-lg text-sm transition-all ${location.pathname === sub.link ? 'text-fic-yellow font-bold bg-white/10' : 'text-gray-100 hover:text-white hover:bg-white/5'}`}
                                                         >
+                                                            {/* Pequeños iconos para distinguir acciones si quieres */}
+                                                            {sub.name.includes('Agregar') ? <UserPlus className="h-4 w-4"/> : <Users className="h-4 w-4"/>}
                                                             {sub.name}
                                                         </Link>
                                                     </li>
