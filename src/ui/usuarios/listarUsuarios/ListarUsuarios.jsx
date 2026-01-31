@@ -7,7 +7,7 @@ import InfoModal from 'components/Shared/Modals/InfoModal';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import PageHeader from 'components/Shared/Headers/PageHeader';
-import { PencilSquareIcon, EyeIcon, UserIcon, IdentificationIcon, MapPinIcon, UsersIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, EyeIcon, UserIcon, IdentificationIcon, MapPinIcon, UsersIcon, BanknotesIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
 import { useAuth } from 'context/AuthContext'; 
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
@@ -98,6 +98,26 @@ const ListarUsuarios = ({
                                 { label: 'Email', value: email || 'N/A' },
                                 { label: 'Sede', value: sede?.nombre || 'N/A' },
                                 { label: 'Dirección', value: perfil.direccion || 'N/A', fullWidth: true },
+                                { label: 'Departamento', value: perfil.departamento },
+                                { label: 'Provincia', value: perfil.provincia },
+                                { label: 'Distrito', value: perfil.distrito },
+                            ]
+                        },
+                        { 
+                            title: 'Datos Laborales', 
+                            icon: BriefcaseIcon, 
+                            items: [
+                                { label: 'Fecha de Ingreso', value: perfil.fechaIngreso },
+                                { label: 'Área', value: perfil.area?.nombre_area || 'N/A', fullWidth: true },
+                            ]
+                        },
+                        { 
+                            title: 'Datos Bancarios', 
+                            icon: BanknotesIcon, 
+                            items: [
+                                { label: 'Cuenta Bancaria', value: perfil.cuentaBancaria },
+                                { label: 'CCI', value: perfil.cci },
+                                { label: 'Banco', value: perfil.banco, fullWidth: true },
                             ]
                         }
                     ]

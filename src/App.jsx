@@ -24,6 +24,16 @@ import AgregarSede from 'ui/sedes/agregarSede/AgregarSede';
 import ListarSedes from 'ui/sedes/listarSedes/ListarSedes';
 import EditarSede from 'ui/sedes/editarSede/EditarSede';
 
+// Modulos Areas
+import AgregarArea from 'ui/areas/agregarArea/AgregarArea';
+import ListarAreas from 'ui/areas/listarAreas/ListarAreas';
+import EditarArea from 'ui/areas/editarArea/EditarArea';
+
+// Modulos Entidades Financieras
+import AgregarEntidadFinanciera from 'ui/entidadesFinancieras/agregarEntidadFinanciera/AgregarEntidadFinanciera';
+import ListarEntidadesFinancieras from 'ui/entidadesFinancieras/listarEntidadesFinancieras/ListarEntidadesFinancieras';
+import EditarEntidadFinanciera from 'ui/entidadesFinancieras/editarEntidadFinanciera/EditarEntidadFinanciera';
+
 // Modulos Productos
 import AgregarProducto from 'ui/productos/agregarProducto/AgregarProducto';
 import ListarProductos from 'ui/productos/listarProductos/ListarProductos';
@@ -75,6 +85,20 @@ function AppContent() {
                 <Route path="agregar" element={<ProtectedRoute requiredPermission="sedes.crear" element={<AgregarSede />} />} />
                 <Route path="listar" element={<ProtectedRoute requiredPermission="sedes.listar" element={<ListarSedes />} />} />
                 <Route path="editar/:id" element={<ProtectedRoute requiredPermission="sedes.editar" element={<EditarSede />} />} />
+            </Route>
+
+            {/* --- MÓDULO: ÁREAS --- */}
+            <Route path="/areas" element={<FullLayout />}>
+                <Route path="agregar" element={<ProtectedRoute requiredPermission="areas.crear" element={<AgregarArea />} />} />
+                <Route path="listar" element={<ProtectedRoute requiredPermission="areas.listar" element={<ListarAreas />} />} />
+                <Route path="editar/:id" element={<ProtectedRoute requiredPermission="areas.editar" element={<EditarArea />} />} />
+            </Route>
+
+            {/* --- MÓDULO: ENTIDADES FINANCIERAS --- */}
+            <Route path="/entidades-financieras" element={<FullLayout />}>
+                <Route path="agregar" element={<ProtectedRoute requiredPermission="entidades_financieras.crear" element={<AgregarEntidadFinanciera />} />} />
+                <Route path="listar" element={<ProtectedRoute requiredPermission="entidades_financieras.listar" element={<ListarEntidadesFinancieras />} />} />
+                <Route path="editar/:id" element={<ProtectedRoute requiredPermission="entidades_financieras.editar" element={<EditarEntidadFinanciera />} />} />
             </Route>
 
             {/* --- MÓDULO: PRODUCTOS --- */}

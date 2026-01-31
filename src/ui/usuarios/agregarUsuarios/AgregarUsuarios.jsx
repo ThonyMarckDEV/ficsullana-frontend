@@ -25,9 +25,12 @@ const AgregarUsuario = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         rol_id: parseInt(rolId),
         datos_empleado: { 
             nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '', 
-            fechaNacimiento: '', sexo: '', estadoCivil: '', direccion: '', telefono: ''
+            fechaNacimiento: '', fechaIngreso: '', sexo: '', estadoCivil: '',
+            direccion: '', departamento: '', provincia: '', distrito: '',
+            telefono: '', area_id: '', cuentaBancaria: '', cci: '', banco: ''
         },
         username: '',  
+        email: '',
         password: '', 
         password_confirmation: ''
     });
@@ -38,6 +41,7 @@ const AgregarUsuario = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
             if (role) setDynamicRoleName(role.nombre.replace(/_/g, ' ').toUpperCase());
         }
     }, [rolId, propRolNombre, roles]);
+
 
     const STEPS = [{ id: 1, name: 'Datos Personales' }, { id: 2, name: 'Cuenta Acceso' }];
 
@@ -96,7 +100,14 @@ const AgregarUsuario = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
             <form className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-100 min-h-[400px] flex flex-col justify-between">
                 <div className="animate-fade-in">
                     {currentStep === 1 
-                        ? <DatosForm data={formData.datos_empleado} handleChange={(e) => handleChange(e, 'datos_empleado')} />
+                        ? (
+                            <DatosForm 
+                                data={formData.datos_empleado} 
+                                email={formData.email}
+                                handleRootChange={(e) => handleChange(e)}
+                                handleChange={(e) => handleChange(e, 'datos_empleado')} 
+                            />
+                        )
                         : <CuentaForm data={formData} handleChange={(e) => handleChange(e)} />
                     }
                 </div>

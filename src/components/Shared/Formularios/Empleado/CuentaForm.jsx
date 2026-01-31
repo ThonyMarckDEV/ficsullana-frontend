@@ -19,7 +19,7 @@ const CuentaForm = ({ data, handleChange, isEdit = false }) => {
 
       <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
           {/* Username */}
           <div className="md:col-span-2">
             <label className={labelClass}>Nombre de Usuario</label>

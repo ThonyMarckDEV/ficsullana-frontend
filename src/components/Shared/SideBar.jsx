@@ -7,7 +7,9 @@ import {
     DocumentTextIcon,
     UserGroupIcon,
     ClipboardDocumentListIcon,
-    IdentificationIcon
+    IdentificationIcon,
+    Squares2X2Icon,
+    BuildingLibraryIcon
 } from '@heroicons/react/24/outline'; 
 import { logout } from 'js/logout';
 import logoImg from 'assets/img/Logo_FICSULLANA.png'; 
@@ -72,6 +74,26 @@ const Sidebar = () => {
                 subs: [
                     { name: 'Agregar Sede', link: '/sedes/agregar', permission: 'sedes.crear' },
                     { name: 'Listar Sedes', link: '/sedes/listar', permission: 'sedes.listar' },
+                ]
+            },
+
+            // Módulo Áreas
+            {
+                section: 'Áreas',
+                icon: Squares2X2Icon,
+                subs: [
+                    { name: 'Agregar Área', link: '/areas/agregar', permission: 'areas.crear' },
+                    { name: 'Listar Áreas', link: '/areas/listar', permission: 'areas.listar' },
+                ]
+            },
+
+            // Módulo Entidades Financieras
+            {
+                section: 'Entidades Financieras',
+                icon: BuildingLibraryIcon,
+                subs: [
+                    { name: 'Agregar Entidad', link: '/entidades-financieras/agregar', permission: 'entidades_financieras.crear' },
+                    { name: 'Listar Entidades', link: '/entidades-financieras/listar', permission: 'entidades_financieras.listar' },
                 ]
             },
 

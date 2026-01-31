@@ -20,7 +20,9 @@ const EditarUsuario = ({ backPath }) => {
     const [formData, setFormData] = useState({
         datos_empleado: { 
             nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '', 
-            fechaNacimiento: '', sexo: '', estadoCivil: '', direccion: '', telefono: '' 
+            fechaNacimiento: '', fechaIngreso: '', sexo: '', estadoCivil: '',
+            direccion: '', departamento: '', provincia: '', distrito: '',
+            telefono: '', area_id: '', cuentaBancaria: '', cci: '', banco: ''
         },
         username: '',
         email: '',
@@ -39,8 +41,15 @@ const EditarUsuario = ({ backPath }) => {
                 
                 setRolIdRedirect(user.rol_id || user.rol?.id); 
 
+                const perfilDefaults = {
+                    nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '',
+                    fechaNacimiento: '', fechaIngreso: '', sexo: '', estadoCivil: '',
+                    direccion: '', departamento: '', provincia: '', distrito: '',
+                    telefono: '', area_id: '', cuentaBancaria: '', cci: '', banco: ''
+                };
+
                 setFormData({
-                    datos_empleado: user.perfil || {},
+                    datos_empleado: { ...perfilDefaults, ...(user.perfil || {}) },
                     username: user.username || '',
                     email: user.email || '',
                     sede_id: user.sede?.id || '',
@@ -59,6 +68,7 @@ const EditarUsuario = ({ backPath }) => {
         };
         loadData();
     }, [id]);
+
 
     const handleChange = (e, section) => {
         const { name, value } = e.target;
@@ -112,6 +122,9 @@ const EditarUsuario = ({ backPath }) => {
                         <div className="bg-white p-6 rounded-xl shadow-lg border border-t-4 border-fic-red h-full">
                             <DatosForm 
                                 data={formData.datos_empleado} 
+                                email={formData.email}
+                                usuarioId={id}
+                                handleRootChange={(e) => handleChange(e)}
                                 handleChange={(e) => handleChange(e, 'datos_empleado')}
                                 isEdit={true}
                                 currentSedeId={formData.sede_id}
@@ -151,6 +164,7 @@ const EditarUsuario = ({ backPath }) => {
                                 </button>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </form>
