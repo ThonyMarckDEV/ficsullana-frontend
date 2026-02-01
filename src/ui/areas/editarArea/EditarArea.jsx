@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { showArea, updateArea } from 'services/areaService';
-import AreaForm from '../components/AreaForm';
+import AreaForm from 'components/Shared/Formularios/Area/AreaForm';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';

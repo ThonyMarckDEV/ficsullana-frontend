@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createSede } from 'services/sedeService';
-import SedeForm from '../components/SedeForm';
+import SedeForm from 'components/Shared/Formularios/Sede/SedeForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler'; 
 import PageHeader from 'components/Shared/Headers/PageHeader';

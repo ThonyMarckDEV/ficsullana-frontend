@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createArea } from 'services/areaService';
-import AreaForm from '../components/AreaForm';
+import AreaForm from 'components/Shared/Formularios/Area/AreaForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import PageHeader from 'components/Shared/Headers/PageHeader';

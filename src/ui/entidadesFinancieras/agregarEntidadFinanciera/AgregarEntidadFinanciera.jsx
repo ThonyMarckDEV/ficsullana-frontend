@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createEntidadFinanciera } from 'services/entidadFinancieraService';
-import EntidadFinancieraForm from '../components/EntidadFinancieraForm';
+import EntidadFinancieraForm from 'components/Shared/Formularios/EntidadFinanciera/EntidadFinancieraForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import PageHeader from 'components/Shared/Headers/PageHeader';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createRol, getPermisosDisponibles } from 'services/rolService';
-import RolForm from '../components/RolForm';
+import RolForm from 'components/Shared/Formularios/Rol/RolForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler'; 
 import PageHeader from 'components/Shared/Headers/PageHeader';

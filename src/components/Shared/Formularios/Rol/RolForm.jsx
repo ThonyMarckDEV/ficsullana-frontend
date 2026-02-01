@@ -6,12 +6,25 @@ import {
     ListBulletIcon,
     TagIcon
 } from '@heroicons/react/24/outline';
+import { isTextOnly } from 'utilities/Validations/validations';
 
 const RolForm = ({ data, handleChange, permisosDisponibles, handlePermisoChange }) => {
   const baseInputClass = "w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-fic-red focus:border-fic-red outline-none transition-all text-sm bg-white";
   
   const [filtro, setFiltro] = useState('');
   const [activeTab, setActiveTab] = useState('ui'); 
+
+  // Manejador de validaciones
+  const handleInputValidation = (e) => {
+    const { name, value } = e.target;
+
+    // Validación para NOMBRE DEL ROL (Solo letras y espacios)
+    if (name === 'nombre') {
+       if (!isTextOnly(value)) return;
+    }
+
+    handleChange(e);
+  };
 
   const { permisosUI, permisosCombo } = useMemo(() => {
     const listado = filtro 
@@ -51,22 +64,25 @@ const RolForm = ({ data, handleChange, permisosDisponibles, handlePermisoChange 
                     <input 
                         name="nombre" 
                         value={data.nombre} 
-                        onChange={handleChange} 
+                        onChange={handleInputValidation}
                         className={baseInputClass} 
                         placeholder="Ej. Supervisor" 
                         required 
                     />
+                    <p className="text-[10px] text-slate-400 mt-1">Solo letras y espacios.</p>
                 </div>
                 <div>
                     <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">Descripción</label>
                     <textarea 
                         name="descripcion" 
                         value={data.descripcion} 
-                        onChange={handleChange} 
+                        onChange={handleInputValidation} 
                         className={`${baseInputClass} resize-none h-32`} 
                         placeholder="Funciones del rol..." 
                     />
                 </div>
+                
+                {/* Contador de Permisos */}
                 <div className={`p-4 rounded-xl border flex items-center justify-between transition-colors
                     ${data.permisos.length > 0 ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
                     <span className="text-sm font-bold text-slate-600">Seleccionados:</span>
@@ -102,10 +118,10 @@ const RolForm = ({ data, handleChange, permisosDisponibles, handlePermisoChange 
                 </div>
             </div>
 
-            {/* TABS: IMPORTANTE EL type="button" */}
+            {/* TABS DE PERMISOS */}
             <div className="flex bg-slate-200/50 p-1 rounded-xl w-fit">
                 <button 
-                    type="button" // <--- ESTO EVITA QUE SE ENVIE EL FORMULARIO
+                    type="button" 
                     onClick={() => setActiveTab('ui')}
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-black transition-all ${activeTab === 'ui' ? 'bg-white shadow-md text-fic-red' : 'text-slate-500 hover:bg-slate-200'}`}
                 >
@@ -113,7 +129,7 @@ const RolForm = ({ data, handleChange, permisosDisponibles, handlePermisoChange 
                     INTERFAZ (UI)
                 </button>
                 <button 
-                    type="button" // <--- ESTO EVITA QUE SE ENVIE EL FORMULARIO
+                    type="button" 
                     onClick={() => setActiveTab('combobox')}
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-black transition-all ${activeTab === 'combobox' ? 'bg-white shadow-md text-fic-red' : 'text-slate-500 hover:bg-slate-200'}`}
                 >
@@ -123,7 +139,7 @@ const RolForm = ({ data, handleChange, permisosDisponibles, handlePermisoChange 
             </div>
         </div>
 
-        {/* LISTADO DINÁMICO */}
+        {/* LISTADO DINÁMICO DE PERMISOS  */}
         <div className="bg-slate-100/50 border border-slate-200 rounded-2xl p-4 h-[550px] overflow-y-auto custom-scrollbar shadow-inner">
             {currentList.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">

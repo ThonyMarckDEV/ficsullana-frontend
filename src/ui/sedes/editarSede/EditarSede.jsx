@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { showSede, updateSede } from 'services/sedeService';
-import SedeForm from '../components/SedeForm';
+import SedeForm from 'components/Shared/Formularios/Sede/SedeForm';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';

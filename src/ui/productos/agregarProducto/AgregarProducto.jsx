@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createProducto } from 'services/productoService';
-import ProductoForm from '../components/ProductoForm';
+import ProductoForm from 'components/Shared/Formularios/Producto/ProductoForm';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler'; 
 import { CubeIcon } from '@heroicons/react/24/outline';

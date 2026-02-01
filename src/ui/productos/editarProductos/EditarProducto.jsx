@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { showProducto, updateProducto } from 'services/productoService';
-import ProductoForm from '../components/ProductoForm';
+import ProductoForm from 'components/Shared/Formularios/Producto/ProductoForm';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { showRol, updateRol, getPermisosDisponibles } from 'services/rolService';
-import RolForm from '../components/RolForm';
+import RolForm from 'components/Shared/Formularios/Rol/RolForm';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
