@@ -6,7 +6,7 @@ import { handleResponse } from 'utilities/Responses/handleResponse';
 const ROL_CLIENTE = 8;
 
 export const createCliente = async (clienteData) => {
-  const url = `${API_BASE_URL}/api/usuarios/store`;
+  const url = `${API_BASE_URL}/api/clientes/store`;
 
   const response = await fetchWithAuth(url, {
     method: 'POST',
@@ -29,7 +29,7 @@ export const getClientes = async (page = 1, filters = {}) => {
     rol_id: ROL_CLIENTE
   });
 
-  const url = `${API_BASE_URL}/api/usuarios/index?${params.toString()}`;
+  const url = `${API_BASE_URL}/api/clientes/index?${params.toString()}`;
 
   const response = await fetchWithAuth(url, {
     method: 'GET',
@@ -48,7 +48,7 @@ export const getClientesCombobox = async (page = 1, search = '') => {
     rol_id: ROL_CLIENTE,
   });
 
-  const url = `${API_BASE_URL}/api/usuarios/index?${params.toString()}`;
+  const url = `${API_BASE_URL}/api/clientes/index?${params.toString()}`;
 
   const response = await fetchWithAuth(url, {
     method: 'GET',
@@ -61,14 +61,14 @@ export const getClientesCombobox = async (page = 1, search = '') => {
 };
 
 export const showCliente = async (id) => {
-  const url = `${API_BASE_URL}/api/usuarios/show/${id}`;
+  const url = `${API_BASE_URL}/api/clientes/show/${id}`;
   const response = await fetchWithAuth(url, { method: 'GET' });
   return handleResponse(response);
 };
 
 
 export const updateCliente = async (id, clienteData) => {
-  const url = `${API_BASE_URL}/api/usuarios/update/${id}`;
+  const url = `${API_BASE_URL}/api/clientes/update/${id}`;
   const response = await fetchWithAuth(url, {
     method: 'PUT',
     headers: {
@@ -82,7 +82,7 @@ export const updateCliente = async (id, clienteData) => {
 
 
 export const toggleClienteEstado = async (id, nuevoEstado) => {
-    const url = `${API_BASE_URL}/api/usuarios/cambiar-estado/${id}`;
+    const url = `${API_BASE_URL}/api/clientes/cambiar-estado/${id}`;
     
     const response = await fetchWithAuth(url, {
         method: 'PATCH',

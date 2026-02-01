@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getUsuarios, toggleUsuarioEstado, showUsuario } from 'services/usuarioService';
+import { getEmpleados, toggleEmpleadoEstado, showEmpleado } from 'services/empleadoService';
 import Table from 'components/Shared/Tables/Table';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import InfoModal from 'components/Shared/Modals/InfoModal';
@@ -11,12 +11,12 @@ import { PencilSquareIcon, EyeIcon, UserIcon, IdentificationIcon, MapPinIcon, Us
 import { useAuth } from 'context/AuthContext'; 
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
-const ListarUsuarios = ({ 
+const ListarEmpleados = ({ 
     rolId: propRolId, 
     title: propTitle, 
     subtitle, 
     addPath, 
-    editPathBase = '/personal/editar-usuario' 
+    editPathBase = '/personal/editar' 
 }) => {
     const { idRol: urlRolId } = useParams();
     const rolId = propRolId || urlRolId;
@@ -54,7 +54,7 @@ const ListarUsuarios = ({
     const fetchUsuarios = useCallback(async (page = 1) => {
         setLoading(true);
         try {
-            const res = await getUsuarios(page, { ...filters, rol_id: rolId });
+            const res = await getEmpleados(page, { ...filters, rol_id: rolId });
             setUsuarios(res.data || []);
             setPagination({ page: res.current_page, totalPages: res.last_page });
         } catch (err) {
@@ -71,12 +71,17 @@ const ListarUsuarios = ({
     const handleView = async (id) => {
         setInfo(p => ({ ...p, open: true, loading: true }));
         try {
-            const res = await showUsuario(id);
-            const { perfil, rol_nombre, username, sede, email, usuario_cuentas_bancarias } = res.data;
-        
-            const bancoData = usuario_cuentas_bancarias && usuario_cuentas_bancarias.length > 0 
-                ? usuario_cuentas_bancarias[0] 
-                : null;
+            const res = await showEmpleado(id);
+            
+            // --- CORRECCIÓN AQUÍ: Desestructuración basada en el nuevo JSON ---
+            const { 
+                datos_empleado, 
+                empleado_datos_contacto, 
+                empleado_cuentas_bancarias,
+                rol_nombre, 
+                username, 
+                sede 
+            } = res.data;
 
             setInfo(p => ({ 
                 ...p, 
@@ -89,40 +94,41 @@ const ListarUsuarios = ({
                             title: 'Datos Personales', 
                             icon: IdentificationIcon, 
                             items: [
-                                { label: 'Nombre Completo', value: `${perfil.nombre} ${perfil.apellidoPaterno} ${perfil.apellidoMaterno || ''}`, fullWidth: true },
-                                { label: 'DNI', value: perfil.dni },
-                                { label: 'Sexo', value: perfil.sexo },
-                                { label: 'Estado Civil', value: perfil.estadoCivil },
+                                { label: 'Nombre Completo', value: `${datos_empleado.nombre} ${datos_empleado.apellidoPaterno} ${datos_empleado.apellidoMaterno || ''}`, fullWidth: true },
+                                { label: 'DNI', value: datos_empleado.dni },
+                                { label: 'Sexo', value: datos_empleado.sexo },
+                                { label: 'Estado Civil', value: datos_empleado.estadoCivil },
                             ]
                         },
                         { 
                             title: 'Contacto y Sede', 
                             icon: MapPinIcon, 
                             items: [
-                                { label: 'Teléfono', value: perfil.telefono || perfil.telefonoMovil || 'N/A' },
-                                { label: 'Email', value: email || 'N/A' },
+                                // Leemos del objeto empleado_datos_contacto
+                                { label: 'Celular', value: empleado_datos_contacto?.telefono || 'N/A' },
+                                { label: 'Email Personal', value: empleado_datos_contacto?.correo || 'N/A' },
                                 { label: 'Sede', value: sede?.nombre || 'N/A' },
-                                { label: 'Dirección', value: perfil.direccion || 'N/A', fullWidth: true },
-                                { label: 'Departamento', value: perfil.departamento },
-                                { label: 'Provincia', value: perfil.provincia },
-                                { label: 'Distrito', value: perfil.distrito },
+                                { label: 'Dirección', value: datos_empleado.direccion || 'N/A', fullWidth: true },
+                                { label: 'Ubicación', value: `${datos_empleado.distrito || ''}, ${datos_empleado.provincia || ''} - ${datos_empleado.departamento || ''}`, fullWidth: true },
                             ]
                         },
                         { 
                             title: 'Datos Laborales', 
                             icon: BriefcaseIcon, 
                             items: [
-                                { label: 'Fecha de Ingreso', value: perfil.fechaIngreso },
-                                { label: 'Área', value: perfil.area?.nombre_area || 'N/A', fullWidth: true },
+                                { label: 'Fecha de Ingreso', value: datos_empleado.fechaIngreso },
+                                // Leemos la relación 'area' dentro de datos_empleado
+                                { label: 'Área', value: datos_empleado.area?.nombre_area || 'N/A', fullWidth: true },
                             ]
                         },
                         { 
                             title: 'Datos Bancarios', 
                             icon: BanknotesIcon, 
                             items: [
-                                { label: 'Banco', value: bancoData?.entidad_financiera?.nombre || 'N/A', fullWidth: true },
-                                { label: 'Cuenta Bancaria', value: bancoData?.numero_cuenta || 'N/A' },
-                                { label: 'CCI', value: bancoData?.cci || 'N/A' },
+                                // Leemos la relación 'entidad_financiera' dentro de empleado_cuentas_bancarias
+                                { label: 'Banco', value: empleado_cuentas_bancarias?.entidad_financiera?.nombre || 'N/A', fullWidth: true },
+                                { label: 'Cuenta Bancaria', value: empleado_cuentas_bancarias?.numero_cuenta || 'N/A' },
+                                { label: 'CCI', value: empleado_cuentas_bancarias?.cci || 'N/A' },
                             ]
                         }
                     ]
@@ -142,7 +148,7 @@ const ListarUsuarios = ({
         setToggleData(null);
         
         try {
-            await toggleUsuarioEstado(targetId, targetEstado);
+            await toggleEmpleadoEstado(targetId, targetEstado);
             setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
             await fetchUsuarios(pagination.page);
         } catch (err) { 
@@ -160,7 +166,8 @@ const ListarUsuarios = ({
                     </div>
                     <div>
                         <span className="font-black text-slate-700 block uppercase text-xs">
-                            {row.datos_empleado?.nombre || row.datos_cliente?.nombre} {row.datos_empleado?.apellidoPaterno || row.datos_cliente?.apellidoPaterno}
+                            {/* El listado puede venir con 'datos_empleado' o 'perfil' según tu index, ajusta si es necesario */}
+                            {row.datos_empleado?.nombre || row.perfil?.nombre} {row.datos_empleado?.apellidoPaterno || row.perfil?.apellidoPaterno}
                         </span>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">@{row.username}</span>
                     </div>
@@ -263,4 +270,4 @@ const ListarUsuarios = ({
     );
 };
 
-export default ListarUsuarios;
+export default ListarEmpleados;

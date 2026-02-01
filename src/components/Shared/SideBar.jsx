@@ -50,12 +50,12 @@ const Sidebar = () => {
                     { 
                         name: 'Agregar Nuevo',
                         link: `/personal/agregar/${rol.id}`, 
-                        permission: `usuarios.crear.${roleSlug}` 
+                        permission: `empleados.crear.${roleSlug}` 
                     },
                     { 
                         name: 'Listar Todos', 
                         link: `/personal/listar/${rol.id}`, 
-                        permission: `usuarios.listar.${roleSlug}` 
+                        permission: `empleados.listar.${roleSlug}` 
                     }
                 ]
             };
@@ -115,8 +115,8 @@ const Sidebar = () => {
                 section: 'Clientes',
                 icon: IdentificationIcon,
                 subs: [
-                    { name: 'Agregar Cliente', link: '/clientes/agregar', permission: 'usuarios.crear.cliente' },
-                    { name: 'Listar Clientes', link: '/clientes/listar', permission: 'usuarios.listar.cliente' },
+                    { name: 'Agregar Cliente', link: '/clientes/agregar', permission: 'clientes.crear' },
+                    { name: 'Listar Clientes', link: '/clientes/listar', permission: 'clientes.listar' },
                 ]
             },
 

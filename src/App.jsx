@@ -39,10 +39,10 @@ import AgregarProducto from 'ui/productos/agregarProducto/AgregarProducto';
 import ListarProductos from 'ui/productos/listarProductos/ListarProductos';
 import EditarProducto from 'ui/productos/editarProductos/EditarProducto';
 
-// --- MÓDULO UNIFICADO DE USUARIOS ---
-import ListarUsuarios from 'ui/usuarios/listarUsuarios/ListarUsuarios';
-import AgregarUsuario from 'ui/usuarios/agregarUsuarios/AgregarUsuarios';
-import EditarUsuario from 'ui/usuarios/editarUsuarios/EditarUsuarios';
+// --- MÓDULO EMPLEADOS ---
+import ListarEmpleados from 'ui/empleados/listarEmpleados/ListarEmpleados';
+import AgregarEmpleado from 'ui/empleados/agregarEmpleados/AgregarEmpleados';
+import EditarEmpleado from 'ui/empleados/editarEmpleados/EditarEmpleados';
 
 // Modulos Clientes
 import AgregarCliente from 'ui/clientes/agregarCliente/AgregarCliente';
@@ -113,23 +113,23 @@ function AppContent() {
                <Route index element={<Navigate to="401" replace />} /> 
                 <Route 
                     path="listar/:idRol" 
-                    element={<ProtectedRoute requiredPermission="usuarios.listar" element={<ListarUsuarios />} />} 
+                    element={<ProtectedRoute requiredPermission="empleados.listar" element={<ListarEmpleados />} />} 
                 />
                 <Route 
                     path="agregar/:idRol" 
-                    element={<ProtectedRoute requiredPermission="usuarios.crear" element={<AgregarUsuario />} />} 
+                    element={<ProtectedRoute requiredPermission="empleados.crear" element={<AgregarEmpleado />} />} 
                 />
                 <Route 
-                    path="editar-usuario/:id" 
-                    element={<ProtectedRoute requiredPermission="usuarios.editar" element={<EditarUsuario backPath="/home" />} />} 
+                    path="editar/:id" 
+                    element={<ProtectedRoute requiredPermission="empleados.editar" element={<EditarEmpleado backPath="/home" />} />} 
                 />
             </Route>
 
             {/* --- MÓDULO: CLIENTES --- */}
             <Route path="/clientes" element={<FullLayout />}>
-                <Route path="agregar" element={<ProtectedRoute requiredPermission="usuarios.crear.cliente" element={<AgregarCliente />} />} />
-                <Route path="listar" element={<ProtectedRoute requiredPermission="usuarios.listar.cliente" element={<ListarCliente />} /> } />
-                <Route path="editar/:id" element={<ProtectedRoute requiredPermission="usuarios.editar.cliente" element={<EditarCliente />} />} />
+                <Route path="agregar" element={<ProtectedRoute requiredPermission="clientes.crear" element={<AgregarCliente />} />} />
+                <Route path="listar" element={<ProtectedRoute requiredPermission="clientes.listar" element={<ListarCliente />} /> } />
+                <Route path="editar/:id" element={<ProtectedRoute requiredPermission="clientes.editar" element={<EditarCliente />} />} />
             </Route>
 
             {/* --- MÓDULO: ADMISIONES --- */}
