@@ -2,14 +2,19 @@ import React, { useEffect, useRef, useState } from 'react';
 import { getEntidadesFinancieras } from 'services/entidadFinancieraService';
 import { MagnifyingGlassIcon, CheckCircleIcon, BuildingLibraryIcon } from '@heroicons/react/24/outline';
 
-const EntidadFinancieraSearchSelect = ({ onSelect, selectedId }) => {
-  const [inputValue, setInputValue] = useState('');
+const EntidadFinancieraSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
+  const [inputValue, setInputValue] = useState(initialName);
   const [suggestions, setSuggestions] = useState([]);
   const [allEntidades, setAllEntidades] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectedId) setInputValue('');
+    else if (initialName && !inputValue) setInputValue(initialName);
+  }, [selectedId, initialName]);
 
   useEffect(() => {
     const loadEntidades = async () => {
@@ -26,6 +31,7 @@ const EntidadFinancieraSearchSelect = ({ onSelect, selectedId }) => {
         }
       } catch (error) {
         setAllEntidades([]);
+        setSuggestions([]);
       } finally {
         setLoading(false);
       }
@@ -52,15 +58,28 @@ const EntidadFinancieraSearchSelect = ({ onSelect, selectedId }) => {
     setShowSuggestions(true);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      filterEntidades(inputValue);
+    }
+  };
+
+  const handleInputClick = () => {
+    if (!showSuggestions) {
+      filterEntidades(inputValue);
+    }
+  };
+
   const handleSelect = (entidad) => {
-    setInputValue(entidad.nombre);
+    setInputValue(entidad.nombre || '');
     setShowSuggestions(false);
-    onSelect(entidad); 
+    onSelect(entidad);
   };
 
   return (
     <div className="relative" ref={wrapperRef}>
-      <label className="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-tighter truncate">
+      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">
         Entidad Financiera
       </label>
 
@@ -70,47 +89,71 @@ const EntidadFinancieraSearchSelect = ({ onSelect, selectedId }) => {
           value={inputValue}
           onChange={(e) => {
             setInputValue(e.target.value);
-            filterEntidades(e.target.value);
             if (selectedId) onSelect(null);
           }}
-          onClick={() => filterEntidades(inputValue)}
+          onKeyDown={handleKeyDown}
+          onClick={handleInputClick}
           placeholder="Buscar Banco..."
-          className={`w-full px-3 h-10 border rounded outline-none transition-all text-xs font-semibold ${
+          className={`w-full border rounded-md shadow-sm py-2 pl-3 pr-10 outline-none text-sm transition-colors ${
             selectedId
-              ? 'border-green-500 bg-green-50 text-green-800'
-              : 'border-slate-300 focus:border-fic-red focus:ring-1 focus:ring-fic-red bg-white'
+              ? 'border-green-500 bg-green-50 text-green-800 font-bold'
+              : 'border-gray-300 focus:border-fic-red focus:ring-1 focus:ring-fic-red'
           }`}
+          autoComplete="off"
         />
 
-        <div className="absolute right-2 text-slate-400">
+        <button
+          type="button"
+          onClick={() => filterEntidades(inputValue)}
+          disabled={loading}
+          className="absolute right-2 text-gray-400 hover:text-fic-red p-1"
+        >
           {loading ? (
-            <div className="w-3 h-3 border-2 border-slate-300 border-t-fic-red rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-fic-red rounded-full animate-spin"></div>
           ) : selectedId ? (
-            <CheckCircleIcon className="w-4 h-4 text-green-600" />
+            <CheckCircleIcon className="w-5 h-5 text-green-600" />
           ) : (
-            <MagnifyingGlassIcon className="w-4 h-4" />
+            <MagnifyingGlassIcon className="w-5 h-5" />
           )}
-        </div>
+        </button>
 
         {showSuggestions && (
-          <ul className="absolute z-50 top-full left-0 w-full bg-white border border-slate-200 rounded-lg mt-1 max-h-48 overflow-y-auto shadow-xl">
+          <ul className="absolute z-50 top-full left-0 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl animate-fade-in-down">
             {suggestions.length > 0 ? (
               suggestions.map((entidad) => (
                 <li
                   key={entidad.id}
                   onClick={() => handleSelect(entidad)}
-                  className="px-3 py-2 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-none flex items-center gap-2"
+                  className="px-4 py-3 hover:bg-slate-50 cursor-pointer text-sm border-b border-gray-100 last:border-none flex items-center gap-3 group"
                 >
-                  <BuildingLibraryIcon className="w-3 h-3 text-slate-400" />
-                  <span className="text-xs font-bold text-slate-700 uppercase">{entidad.nombre}</span>
+                  <div className="bg-amber-50 p-2 rounded-full group-hover:bg-white group-hover:shadow-sm transition-all">
+                    <BuildingLibraryIcon className="w-4 h-4 text-amber-700" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-700 uppercase text-xs">
+                      {entidad.nombre}
+                    </p>
+                    {/* Mostramos el tipo (banco/caja) como subtítulo si existe */}
+                    {entidad.tipo && (
+                      <p className="text-[10px] text-slate-400 capitalize">
+                        {entidad.tipo}
+                      </p>
+                    )}
+                  </div>
                 </li>
               ))
             ) : (
-              <li className="px-3 py-2 text-slate-400 text-xs italic text-center">Sin resultados</li>
+              <li className="px-4 py-3 text-slate-500 text-xs italic text-center">
+                No se encontraron entidades.
+              </li>
             )}
           </ul>
         )}
       </div>
+
+      {selectedId && (
+        <p className="text-[10px] text-green-600 mt-1 font-bold animate-pulse">✓ Entidad seleccionada</p>
+      )}
     </div>
   );
 };
