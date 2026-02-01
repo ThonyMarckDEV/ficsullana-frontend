@@ -1,8 +1,8 @@
 // src/components/Shared/Modals/InfoModal.jsx
 import React from 'react';
 import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { BtnExportPdf, BtnExportExcel } from 'components/Shared/Buttons/ExportButtons';
 
-// Subcomponente para cada dato
 const InfoItem = ({ label, value, fullWidth = false }) => (
     <div className={`${fullWidth ? 'col-span-2 md:col-span-4' : 'col-span-1'}`}>
         <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5">
@@ -23,6 +23,9 @@ const InfoModal = ({
     sections = []
 }) => {
     if (!isOpen) return null;
+
+    // ID único para identificar qué div capturar
+    const EXPORT_CONTAINER_ID = "info-modal-export-content";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fic-dark/80 backdrop-blur-sm transition-opacity animate-fade-in">
@@ -45,24 +48,47 @@ const InfoModal = ({
                             )}
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full">
-                        <XMarkIcon className="w-5 h-5" />
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                        {/* --- ZONA DE BOTONES DE EXPORTACIÓN --- */}
+                        {!loading && sections.length > 0 && (
+                            <>
+                                <BtnExportExcel 
+                                    data={sections} 
+                                    fileName={`Reporte-${title}`} 
+                                />
+                                <BtnExportPdf 
+                                    elementId={EXPORT_CONTAINER_ID} 
+                                    fileName={`Reporte-${title}.pdf`} 
+                                />
+                                {/* Separador visual */}
+                                <div className="h-6 w-px bg-white/20 mx-1"></div> 
+                            </>
+                        )}
+                        
+                        <button onClick={onClose} className="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* BODY (SCROLLABLE) */}
-                <div className="p-6 overflow-y-auto custom-scrollbar space-y-8">
+                {/* Nota: El id NO va en este div con overflow, sino en el hijo directo */}
+                <div className="p-6 overflow-y-auto custom-scrollbar space-y-8 bg-white">
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fic-red"></div>
                         </div>
                     ) : (
-                        <>
+                        // --- ESTE ES EL DIV QUE CAPTURAREMOS ---
+                        // Al capturar este div interno, html2canvas tomará toda su altura real,
+                        // ignorando el scroll del padre.
+                        <div id={EXPORT_CONTAINER_ID} className="bg-white p-2"> 
                             {sections.map((section, idx) => {
                                 const Icon = section.icon || DocumentTextIcon;
                                 return (
-                                    <section key={idx}>
-                                        {/* Título de Sección con Borde Amarillo Fic */}
+                                    <section key={idx} className="mb-8 last:mb-0">
+                                        {/* Título de Sección */}
                                         <div className="flex items-center gap-2 mb-4 border-b-2 border-fic-yellow pb-2">
                                             <Icon className="w-5 h-5 text-fic-yellow" />
                                             <h4 className="text-lg font-black text-fic-dark uppercase">
@@ -84,7 +110,7 @@ const InfoModal = ({
                                     </section>
                                 );
                             })}
-                        </>
+                        </div>
                     )}
                 </div>
 
