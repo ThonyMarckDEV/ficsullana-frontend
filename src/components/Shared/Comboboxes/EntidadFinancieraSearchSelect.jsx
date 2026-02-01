@@ -82,10 +82,6 @@ const EntidadFinancieraSearchSelect = ({ onSelect, selectedId, initialName = '' 
 
   return (
     <div className="relative" ref={wrapperRef}>
-      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">
-        Entidad Financiera
-      </label>
-
       <div className="relative flex items-center">
         <input
           type="text"
