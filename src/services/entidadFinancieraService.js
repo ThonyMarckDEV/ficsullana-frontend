@@ -4,7 +4,19 @@ import { handleResponse } from 'utilities/Responses/handleResponse';
 
 const BASE_URL = `${API_BASE_URL}/api/entidades-financieras`;
 
-export const getEntidadesFinancieras = async () => {
+export const getEntidadesFinancieras = async (page = 1, filters = {}) => {
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || '',
+    tipo: filters.tipo || '',    
+    estado: filters.estado || ''  
+  });
+
+  const response = await fetchWithAuth(`${BASE_URL}/index?${params.toString()}`, { method: 'GET' });
+  return handleResponse(response);
+};
+
+export const getEntidadesFinancierasCombobox = async () => {
   const response = await fetchWithAuth(`${BASE_URL}/index`, { method: 'GET' });
   return handleResponse(response);
 };

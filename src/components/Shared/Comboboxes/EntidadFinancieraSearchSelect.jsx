@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getEntidadesFinancieras } from 'services/entidadFinancieraService';
+import { getEntidadesFinancierasCombobox } from 'services/entidadFinancieraService';
 import { MagnifyingGlassIcon, CheckCircleIcon, BuildingLibraryIcon } from '@heroicons/react/24/outline';
 
 const EntidadFinancieraSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
@@ -23,7 +23,7 @@ const EntidadFinancieraSearchSelect = ({ onSelect, selectedId, initialName = '' 
     const loadEntidades = async () => {
       setLoading(true);
       try {
-        const response = await getEntidadesFinancieras();
+        const response = await getEntidadesFinancierasCombobox();
         const data = response.data || [];
         setAllEntidades(data);
         setSuggestions(data);

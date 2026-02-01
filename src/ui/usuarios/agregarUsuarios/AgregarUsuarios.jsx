@@ -121,7 +121,7 @@ const AgregarUsuario = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
     };
 
     return (
-        <div className="container mx-auto p-6 min-h-screen">
+        <div className="container mx-auto px-4 py-8 min-h-screen">
             <PageHeader 
                 title={`Nuevo ${propRolNombre || dynamicRoleName || "Usuario"}`}
                 subtitle={`Registro de personal administrativo`}
@@ -132,25 +132,27 @@ const AgregarUsuario = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
 
             <AlertMessage {...alert} onClose={() => setAlert(null)} />
             
-            <div className="mb-10 max-w-3xl mx-auto flex items-center w-full relative">
+            {/* Steps Visuales  */}
+            <div className="mb-12 max-w-5xl mx-auto flex items-center w-full relative">
                 <div className="absolute left-0 top-1/2 w-full h-1 bg-slate-200 -z-10 rounded"></div>
                 {STEPS.map((step) => (
                     <div key={step.id} className="flex-1 flex flex-col items-center relative">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg border-4 transition-all duration-300 z-10 
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-xl border-4 transition-all duration-300 z-10 
                             ${currentStep >= step.id ? 'bg-fic-red border-white text-white shadow-lg scale-110' : 'bg-white border-slate-300 text-slate-400'}`}>
-                            {currentStep > step.id ? <CheckIcon className="w-6 h-6"/> : step.id}
+                            {currentStep > step.id ? <CheckIcon className="w-8 h-8"/> : step.id}
                         </div>
-                        <span className={`mt-2 text-[10px] font-bold uppercase tracking-wider ${currentStep >= step.id ? 'text-fic-red' : 'text-slate-400'}`}>{step.name}</span>
+                        <span className={`mt-3 text-xs font-bold uppercase tracking-wider ${currentStep >= step.id ? 'text-fic-red' : 'text-slate-400'}`}>{step.name}</span>
                     </div>
                 ))}
             </div>
 
-            <form className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-100 min-h-[400px] flex flex-col justify-between">
+            {/* FORMULARIO PRINCIPAL  */}
+            <form className="max-w-7xl mx-auto bg-white p-12 rounded-3xl shadow-2xl border border-slate-100 min-h-[600px] flex flex-col justify-between">
                 <div className="animate-fade-in">
                     {renderStep()}
                 </div>
 
-                <div className="flex justify-between mt-10 pt-6 border-t border-slate-100">
+                <div className="flex justify-between mt-12 pt-8 border-t border-slate-100">
                     <button 
                         type="button" 
                         onClick={() => setCurrentStep(prev => prev - 1)} 

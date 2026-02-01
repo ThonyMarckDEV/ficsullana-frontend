@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getEntidadesFinancieras, showEntidadFinanciera, toggleEntidadFinancieraEstado } from 'services/entidadFinancieraService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -14,39 +14,104 @@ const ListarEntidadesFinancieras = () => {
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
   const [entidades, setEntidades] = useState([]);
-  const [filters, setFilters] = useState({ search: '' });
+  const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
   const [entidadToToggle, setEntidadToToggle] = useState(null);
 
+  // Modales
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [infoLoading, setInfoLoading] = useState(false);
   const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-  const fetchEntidades = async () => {
+  // Filtros
+  const [filters, setFilters] = useState({ 
+    search: '', 
+    tipo: '', 
+    estado: '' 
+  });
+
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  // Configuración de los campos de filtrado
+  const filterConfig = useMemo(() => [
+    {
+      name: 'search',
+      type: 'text',
+      label: 'Buscador',
+      placeholder: 'Nombre de la entidad...',
+      colSpan: 'md:col-span-6'
+    },
+    {
+      name: 'tipo',
+      type: 'select',
+      label: 'Tipo',
+      options: [
+        { value: '', label: 'Todos' },
+        { value: 'banco', label: 'Banco' },
+        { value: 'caja', label: 'Caja' },
+        { value: 'financiera', label: 'Financiera' }
+      ],
+      colSpan: 'md:col-span-3'
+    },
+    {
+      name: 'estado',
+      type: 'select',
+      label: 'Estado',
+      options: [
+        { value: '', label: 'Todos' },
+        { value: '1', label: 'Activos' },
+        { value: '0', label: 'Inactivos' }
+      ],
+      colSpan: 'md:col-span-3'
+    }
+  ], []);
+
+  // Función de carga de datos 
+  const fetchEntidades = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const response = await getEntidadesFinancieras();
+      const currentFilters = filtersRef.current;
+      const response = await getEntidadesFinancieras(page, currentFilters);
+      
       setEntidades(response.data || []);
+      setPaginationInfo({
+        currentPage: response.current_page,
+        totalPages: response.last_page,
+        totalItems: response.total,
+      });
     } catch (err) {
       setAlert(handleApiError(err, 'Error al cargar entidades financieras.'));
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchEntidades();
   }, []);
 
-  const filteredEntidades = useMemo(() => {
-    const term = filters.search.trim().toLowerCase();
-    if (!term) return entidades;
-    return entidades.filter(entidad => {
-      const nombre = entidad.nombre?.toLowerCase() || '';
-      const tipo = entidad.tipo?.toLowerCase() || '';
-      return `${nombre} ${tipo}`.includes(term);
-    });
-  }, [entidades, filters.search]);
+  // Carga inicial
+  useEffect(() => {
+    fetchEntidades(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Manejadores de Filtros
+  const handleFilterChange = useCallback((name, value) => {
+    setFilters(prev => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleFilterSubmit = useCallback(() => {
+    fetchEntidades(1);
+  }, [fetchEntidades]);
+
+  const handleFilterClear = useCallback(() => {
+    const cleanFilters = { search: '', tipo: '', estado: '' };
+    setFilters(cleanFilters);
+    filtersRef.current = cleanFilters;
+    fetchEntidades(1);
+  }, [fetchEntidades]);
+
+
+  // Ver Detalle (Modal)
   const handleViewEntidad = async (id) => {
     setIsInfoOpen(true);
     setInfoLoading(true);
@@ -65,10 +130,10 @@ const ListarEntidadesFinancieras = () => {
             icon: BuildingLibraryIcon,
             items: [
               { label: 'Nombre', value: entidad.nombre, fullWidth: true },
-              { label: 'Tipo', value: entidad.tipo },
+              { label: 'Tipo', value: entidad.tipo, capitalize: true },
               { label: 'Longitudes', value: Array.isArray(entidad.longitudes_cuenta) ? entidad.longitudes_cuenta.join(', ') : '-', fullWidth: true },
               { label: 'Estado', value: entidad.estado ? 'ACTIVO' : 'INACTIVO' },
-              { label: 'Cuentas', value: entidad.cuentas_count ?? 0 },
+              { label: 'Cuentas Asociadas', value: entidad.cuentas_count ?? 0 },
             ]
           }
         ]
@@ -78,6 +143,23 @@ const ListarEntidadesFinancieras = () => {
       setIsInfoOpen(false);
     } finally {
       setInfoLoading(false);
+    }
+  };
+
+  // Cambiar Estado
+  const handleToggleEstado = async () => {
+    if (!entidadToToggle) return;
+    const nuevoEstado = entidadToToggle.estado ? 0 : 1;
+    setEntidadToToggle(null);
+    setLoading(true);
+    try {
+      await toggleEntidadFinancieraEstado(entidadToToggle.id, nuevoEstado);
+      setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
+      // Recargamos la página actual
+      await fetchEntidades(paginationInfo.currentPage);
+    } catch (err) {
+      setAlert(handleApiError(err, 'Error al cambiar estado.'));
+      setLoading(false);
     }
   };
 
@@ -144,22 +226,6 @@ const ListarEntidadesFinancieras = () => {
     }
   ], []);
 
-  const handleToggleEstado = async () => {
-    if (!entidadToToggle) return;
-    const nuevoEstado = entidadToToggle.estado ? 0 : 1;
-    setEntidadToToggle(null);
-    setLoading(true);
-    try {
-      await toggleEntidadFinancieraEstado(entidadToToggle.id, nuevoEstado);
-      setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
-      await fetchEntidades();
-    } catch (err) {
-      setAlert(handleApiError(err, 'Error al cambiar estado.'));
-      setLoading(false);
-    }
-  };
-
-
   if (loading && entidades.length === 0) return <LoadingScreen />;
 
   return (
@@ -191,18 +257,25 @@ const ListarEntidadesFinancieras = () => {
         />
       )}
 
-
       <div className="rounded-xl overflow-hidden">
         <Table
           columns={columns}
-          data={filteredEntidades}
+          data={entidades}
           loading={loading}
-          filterConfig={[
-            { name: 'search', type: 'text', label: 'Buscador', placeholder: 'Nombre o tipo...', colSpan: 'md:col-span-12' }
-          ]}
+          
+          // Configuración de Filtros
+          filterConfig={filterConfig}
           filters={filters}
-          onFilterChange={(name, value) => setFilters(prev => ({ ...prev, [name]: value }))}
-          onFilterClear={() => setFilters({ search: '' })}
+          onFilterChange={handleFilterChange}
+          onFilterSubmit={handleFilterSubmit}
+          onFilterClear={handleFilterClear}
+
+          // Configuración de Paginación
+          pagination={{
+            currentPage: paginationInfo.currentPage,
+            totalPages: paginationInfo.totalPages,
+            onPageChange: (page) => fetchEntidades(page)
+          }}
         />
       </div>
     </div>
