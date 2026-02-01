@@ -12,9 +12,23 @@ const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
   const wrapperRef = useRef(null);
 
   useEffect(() => {
-    if (!selectedId) setInputValue('');
-    else if (initialName) setInputValue(initialName);
-  }, [selectedId, initialName]);
+    if (!selectedId) {
+        setInputValue('');
+        return;
+    }
+
+    if (initialName) {
+        setInputValue(initialName);
+        return;
+    }
+
+    if (allAreas.length > 0 && selectedId) {
+        const found = allAreas.find(a => a.id === parseInt(selectedId));
+        if (found) {
+            setInputValue(found.nombre_area);
+        }
+    }
+  }, [selectedId, initialName, allAreas]); 
 
   useEffect(() => {
     const loadAreas = async () => {
