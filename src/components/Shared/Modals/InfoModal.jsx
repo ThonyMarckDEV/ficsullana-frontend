@@ -1,7 +1,7 @@
 // src/components/Shared/Modals/InfoModal.jsx
 import React from 'react';
 import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-import { BtnExportPdf, BtnExportExcel } from 'components/Shared/Buttons/ExportButtons';
+import { BtnExportPdf } from 'components/Shared/Buttons/ExportButtons';
 
 const InfoItem = ({ label, value, fullWidth = false }) => (
     <div className={`${fullWidth ? 'col-span-2 md:col-span-4' : 'col-span-1'}`}>
@@ -53,10 +53,6 @@ const InfoModal = ({
                         {/* --- ZONA DE BOTONES DE EXPORTACIÓN --- */}
                         {!loading && sections.length > 0 && (
                             <>
-                                <BtnExportExcel 
-                                    data={sections} 
-                                    fileName={`Reporte-${title}`} 
-                                />
                                 <BtnExportPdf 
                                     elementId={EXPORT_CONTAINER_ID} 
                                     fileName={`Reporte-${title}.pdf`} 

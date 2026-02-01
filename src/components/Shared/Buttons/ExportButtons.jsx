@@ -1,7 +1,7 @@
 // src/components/Shared/ExportButtons.jsx
 import React, { useState } from 'react';
-import { ArrowDownTrayIcon, PrinterIcon } from '@heroicons/react/24/outline';
-import { exportToPdf, exportToExcel } from 'utilities/Export/exportUtils';
+import { PrinterIcon } from '@heroicons/react/24/outline';
+import { exportToPdf } from 'utilities/Export/exportUtils';
 
 export const BtnExportPdf = ({ elementId, fileName, title = "PDF" }) => {
     const [loading, setLoading] = useState(false);
@@ -24,19 +24,6 @@ export const BtnExportPdf = ({ elementId, fileName, title = "PDF" }) => {
         >
             <PrinterIcon className={`w-4 h-4 ${loading ? 'animate-pulse' : ''}`} />
             {loading ? 'Generando...' : title}
-        </button>
-    );
-};
-
-export const BtnExportExcel = ({ data, fileName, title = "Excel" }) => {
-    return (
-        <button
-            onClick={() => exportToExcel(data, fileName)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-bold rounded hover:bg-green-100 transition-colors border border-green-100"
-            title="Descargar Excel"
-        >
-            <ArrowDownTrayIcon className="w-4 h-4" />
-            {title}
         </button>
     );
 };

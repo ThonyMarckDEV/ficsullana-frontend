@@ -1,7 +1,6 @@
 // src/utils/exportUtils.js
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { utils, writeFile } from 'xlsx';
 
 import logo from '../../assets/img/Logo_FICSULLANA.png'; 
 
@@ -10,7 +9,7 @@ const LOGO_URL = logo;
 const COMPANY_NAME = 'FICSULLANA'
 
 /**
- * Obtener fecha y hora formateada (Estilo Bancario)
+ * Obtener fecha y hora formateada 
  */
 const getReportDate = () => {
     const now = new Date();
@@ -22,21 +21,21 @@ const getReportDate = () => {
 };
 
 /**
- * EXPORTAR A PDF (MODO REPORTE FINANCIERO)
+ * EXPORTAR A PDF 
  */
 export const exportToPdf = async (elementId, fileName = 'Reporte_FicSullana.pdf') => {
     const originalElement = document.getElementById(elementId);
     if (!originalElement) return;
 
     try {
-        // Crear contenedor temporal (Hoja A4 virtual)
+        // Crear contenedor temporal 
         const reportContainer = document.createElement('div');
         
         Object.assign(reportContainer.style, {
             position: 'fixed',
             top: '-10000px',
             left: '0',
-            width: '900px', // Ancho fijo para mantener proporción
+            width: '900px', 
             backgroundColor: '#ffffff',
             padding: '40px 50px',
             fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
@@ -139,46 +138,4 @@ export const exportToPdf = async (elementId, fileName = 'Reporte_FicSullana.pdf'
         const temp = document.querySelector('div[style*="top: -10000px"]');
         if (temp) document.body.removeChild(temp);
     }
-};
-
-/**
- * EXPORTAR A EXCEL (TABULAR)
- */
-export const exportToExcel = (sections, fileName = 'Reporte_Data.xlsx') => {
-    if (!sections || sections.length === 0) return;
-
-    const dataRows = [];
-    sections.forEach(section => {
-        section.items.forEach(item => {
-            let val = item.value;
-            if (typeof val === 'object') val = "No registrado";
-            
-            dataRows.push({
-                "SECCIÓN": section.title.toUpperCase(),
-                "CAMPO": section.label.toUpperCase(),
-                "VALOR": val || "-"
-            });
-        });
-    });
-
-    const wb = utils.book_new();
-    const ws = utils.json_to_sheet([], { skipHeader: true });
-
-    // Encabezado Excel
-    const headerInfo = [
-        [COMPANY_NAME],
-        ["REPORTE DETALLADO"],
-        [`FECHA: ${getReportDate()}`],
-        [""],
-        ["SECCIÓN", "CAMPO", "VALOR"]
-    ];
-
-    utils.sheet_add_aoa(ws, headerInfo, { origin: "A1" });
-    utils.sheet_add_json(ws, dataRows, { origin: "A5", skipHeader: true });
-
-    ws['!cols'] = [{ wch: 25 }, { wch: 35 }, { wch: 50 }];
-
-    utils.book_append_sheet(wb, ws, "Datos");
-    const finalName = fileName.endsWith('.xlsx') ? fileName : `${fileName}.xlsx`;
-    writeFile(wb, finalName);
 };
