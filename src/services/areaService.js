@@ -4,7 +4,17 @@ import { handleResponse } from 'utilities/Responses/handleResponse';
 
 const BASE_URL = `${API_BASE_URL}/api/areas`;
 
-export const getAreas = async () => {
+export const getAreas = async (page = 1, filters = {}) => {
+  const params = new URLSearchParams({
+    page: page,
+    search: filters.search || ''
+  });
+
+  const response = await fetchWithAuth(`${BASE_URL}/index?${params.toString()}`, { method: 'GET' });
+  return handleResponse(response);
+};
+
+export const getAreasCombobox = async () => {
   const response = await fetchWithAuth(`${BASE_URL}/index`, { method: 'GET' });
   return handleResponse(response);
 };

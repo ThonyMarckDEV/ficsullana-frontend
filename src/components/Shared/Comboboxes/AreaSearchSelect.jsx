@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getAreas } from 'services/areaService';
+import { getAreasCombobox } from 'services/areaService';
 import { MagnifyingGlassIcon, CheckCircleIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 
 const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
@@ -34,7 +34,7 @@ const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     const loadAreas = async () => {
       setLoading(true);
       try {
-        const response = await getAreas();
+        const response = await getAreasCombobox();
         const data = response.data || [];
         setAllAreas(data);
         setSuggestions(data);

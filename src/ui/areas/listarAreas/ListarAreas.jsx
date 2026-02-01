@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getAreas, showArea } from 'services/areaService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -13,38 +13,78 @@ const ListarAreas = () => {
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
   const [areas, setAreas] = useState([]);
-  const [filters, setFilters] = useState({ search: '' });
+  
+  // Estado para paginación
+  const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
 
+  // Estado para filtros
+  const [filters, setFilters] = useState({ search: '' });
+  
+  // Referencia para filtros
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  // Estados del Modal
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [infoLoading, setInfoLoading] = useState(false);
   const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-  const fetchAreas = async () => {
+  // Configuración de campos de filtro
+  const filterConfig = useMemo(() => [
+    { 
+      name: 'search', 
+      type: 'text', 
+      label: 'Buscador', 
+      placeholder: 'Nombre o descripción...', 
+      colSpan: 'md:col-span-12' 
+    }
+  ], []);
+
+  // Función de carga de datos (Server-Side)
+  const fetchAreas = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const response = await getAreas();
+      const currentFilters = filtersRef.current;
+      const response = await getAreas(page, currentFilters);
+      
       setAreas(response.data || []);
+      setPaginationInfo({
+        currentPage: response.current_page,
+        totalPages: response.last_page,
+        totalItems: response.total,
+      });
     } catch (err) {
       setAlert(handleApiError(err, 'Error al cargar las áreas.'));
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchAreas();
   }, []);
 
-  const filteredAreas = useMemo(() => {
-    const term = filters.search.trim().toLowerCase();
-    if (!term) return areas;
-    return areas.filter(area => {
-      const nombre = area.nombre_area?.toLowerCase() || '';
-      const descripcion = area.descripcion?.toLowerCase() || '';
-      return `${nombre} ${descripcion}`.includes(term);
-    });
-  }, [areas, filters.search]);
+  // Carga inicial
+  useEffect(() => {
+    fetchAreas(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Manejadores de filtros
+  const handleFilterChange = useCallback((name, value) => {
+    setFilters(prev => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleFilterSubmit = useCallback(() => {
+    fetchAreas(1);
+  }, [fetchAreas]);
+
+  const handleFilterClear = useCallback(() => {
+    const cleanFilters = { search: '' };
+    setFilters(cleanFilters);
+    filtersRef.current = cleanFilters;
+    fetchAreas(1);
+  }, [fetchAreas]);
+
+  // Ver Detalle
   const handleViewArea = async (id) => {
     setIsInfoOpen(true);
     setInfoLoading(true);
@@ -151,14 +191,22 @@ const ListarAreas = () => {
       <div className="rounded-xl overflow-hidden">
         <Table
           columns={columns}
-          data={filteredAreas}
+          data={areas}
           loading={loading}
-          filterConfig={[
-            { name: 'search', type: 'text', label: 'Buscador', placeholder: 'Nombre o descripción...', colSpan: 'md:col-span-12' }
-          ]}
+          
+          // Configuración de Filtros
+          filterConfig={filterConfig}
           filters={filters}
-          onFilterChange={(name, value) => setFilters(prev => ({ ...prev, [name]: value }))}
-          onFilterClear={() => setFilters({ search: '' })}
+          onFilterChange={handleFilterChange}
+          onFilterSubmit={handleFilterSubmit}
+          onFilterClear={handleFilterClear}
+
+          // Configuración de Paginación
+          pagination={{
+            currentPage: paginationInfo.currentPage,
+            totalPages: paginationInfo.totalPages,
+            onPageChange: (page) => fetchAreas(page)
+          }}
         />
       </div>
     </div>
