@@ -12,8 +12,11 @@ const EntidadFinancieraSearchSelect = ({ onSelect, selectedId, initialName = '' 
   const wrapperRef = useRef(null);
 
   useEffect(() => {
-    if (!selectedId) setInputValue('');
-    else if (initialName && !inputValue) setInputValue(initialName);
+    if (!selectedId) {
+        setInputValue('');
+    } else if (initialName) {
+        setInputValue(initialName);
+    }
   }, [selectedId, initialName]);
 
   useEffect(() => {
