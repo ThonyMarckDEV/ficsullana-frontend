@@ -4,17 +4,18 @@ import { showUsuario, updateUsuario } from 'services/usuarioService';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import DatosForm from 'components/Shared/Formularios/Empleado/DatosForm';
-import CuentaForm from 'components/Shared/Formularios/Empleado/CuentaForm';
 import PageHeader from 'components/Shared/Headers/PageHeader';
-import { PencilSquareIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
+
+import DatosAsesorForm from 'components/Shared/Formularios/Empleado/DatosForm';
+import FormularioBancoInicial from 'components/Shared/Formularios/CuentasBancarias';
+import CuentaForm from 'components/Shared/Formularios/Empleado/CuentaForm';
 
 const EditarUsuario = ({ backPath }) => { 
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
-    
     const [rolIdRedirect, setRolIdRedirect] = useState(null);
 
     const [formData, setFormData] = useState({
@@ -22,13 +23,14 @@ const EditarUsuario = ({ backPath }) => {
             nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '', 
             fechaNacimiento: '', fechaIngreso: '', sexo: '', estadoCivil: '',
             direccion: '', departamento: '', provincia: '', distrito: '',
-            telefono: '', area_id: '', cuentaBancaria: '', cci: '', banco: ''
+            telefono: '', area_id: ''
         },
-        username: '',
-        email: '',
-        sede_id: '',
-        password: '',
-        password_confirmation: ''
+        formulario_bancario: {
+            entidad_financiera_id: '', 
+            numero_cuenta: '',
+            cci: ''
+        },
+        username: '', email: '', sede_id: '', password: '', password_confirmation: ''
     });
 
     const [initialSedeName, setInitialSedeName] = useState('');
@@ -38,18 +40,28 @@ const EditarUsuario = ({ backPath }) => {
             try {
                 const res = await showUsuario(id);
                 const user = res.data;
-                
                 setRolIdRedirect(user.rol_id || user.rol?.id); 
 
-                const perfilDefaults = {
-                    nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '',
-                    fechaNacimiento: '', fechaIngreso: '', sexo: '', estadoCivil: '',
-                    direccion: '', departamento: '', provincia: '', distrito: '',
-                    telefono: '', area_id: '', cuentaBancaria: '', cci: '', banco: ''
-                };
+                let bancosVisuales = { entidad_financiera_id: '', numero_cuenta: '', cci: '' };
+
+
+                if (user.usuario_cuentas_bancarias && user.usuario_cuentas_bancarias.length > 0) {
+                    const bancoData = user.usuario_cuentas_bancarias[0];
+                    bancosVisuales = {
+                        entidad_financiera_id: bancoData.entidad_financiera_id || bancoData.entidad_financiera?.id,
+                        numero_cuenta: bancoData.numero_cuenta, 
+                        cci: bancoData.cci
+                    };
+                }
+
+                const { cuentaBancaria, cci, banco, ...perfilLimpio } = user.perfil || {};
 
                 setFormData({
-                    datos_empleado: { ...perfilDefaults, ...(user.perfil || {}) },
+                    datos_empleado: { 
+                        nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '', 
+                        ...perfilLimpio 
+                    },
+                    formulario_bancario: bancosVisuales, 
                     username: user.username || '',
                     email: user.email || '',
                     sede_id: user.sede?.id || '',
@@ -57,11 +69,9 @@ const EditarUsuario = ({ backPath }) => {
                     password_confirmation: ''
                 });
 
-                if (user.sede) {
-                    setInitialSedeName(user.sede.nombre);
-                }
+                if (user.sede) setInitialSedeName(user.sede.nombre);
             } catch (err) {
-                setAlert({ type: 'error', message: 'No se pudo cargar la información del usuario.' });
+                setAlert({ type: 'error', message: 'Error cargando datos.' });
             } finally {
                 setLoading(false);
             }
@@ -69,34 +79,37 @@ const EditarUsuario = ({ backPath }) => {
         loadData();
     }, [id]);
 
-
     const handleChange = (e, section) => {
         const { name, value } = e.target;
-        if (section) {
-            setFormData(p => ({ ...p, [section]: { ...p[section], [name]: value } }));
-        } else {
-            setFormData(p => ({ ...p, [name]: value }));
-        }
+        if (section) setFormData(p => ({ ...p, [section]: { ...p[section], [name]: value } }));
+        else setFormData(p => ({ ...p, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setAlert(null);
+        
         try {
-            await updateUsuario(id, formData);
-            setAlert({ type: 'success', message: 'Usuario actualizado correctamente.' });
+            const payload = { ...formData, usuario_cuentas_bancarias: [] };
             
-            setTimeout(() => {
-                if (rolIdRedirect) {
-                    navigate(`/personal/listar/${rolIdRedirect}`);
-                } else {
-                    navigate('/home'); 
-                }
-            }, 1500);
+            const { entidad_financiera_id, numero_cuenta, cci } = formData.formulario_bancario;
+            
+            if (entidad_financiera_id) {
+                payload.usuario_cuentas_bancarias.push({ 
+                    entidad_financiera_id: parseInt(entidad_financiera_id), 
+                    numero_cuenta: numero_cuenta,
+                    cci: cci 
+                });
+            }
+            
+            delete payload.formulario_bancario;
 
+            await updateUsuario(id, payload);
+            setAlert({ type: 'success', message: 'Actualizado correctamente.' });
+            setTimeout(() => navigate(rolIdRedirect ? `/personal/listar/${rolIdRedirect}` : backPath || '/home'), 1500);
         } catch (err) {
-            setAlert(handleApiError(err, 'Error al actualizar usuario'));
+            setAlert(handleApiError(err, 'Error al actualizar'));
         } finally {
             setLoading(false);
         }
@@ -105,22 +118,16 @@ const EditarUsuario = ({ backPath }) => {
     if (loading) return <LoadingScreen />;
 
     return (
-        <div className="container mx-auto p-6">
-            <PageHeader 
-                title="Editar Personal" 
-                subtitle={`Actualizando perfil de: ${formData.datos_empleado.nombre} ${formData.datos_empleado.apellidoPaterno}`} 
-                icon={PencilSquareIcon} 
-                buttonText="← Volver" 
-                buttonLink={rolIdRedirect ? `/personal/listar/${rolIdRedirect}` : backPath} 
-            />
-            
+        <div className="w-full px-6 py-4">
+            <PageHeader title="Editar Personal" subtitle={`${formData.datos_empleado.nombre} ${formData.datos_empleado.apellidoPaterno}`} icon={PencilSquareIcon} buttonText="Volver" buttonLink={rolIdRedirect ? `/personal/listar/${rolIdRedirect}` : backPath} />
             <AlertMessage {...alert} onClose={() => setAlert(null)} />
 
-            <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white p-6 rounded-xl shadow-lg border border-t-4 border-fic-red h-full">
-                            <DatosForm 
+            <form onSubmit={handleSubmit} className="w-full max-w-[98%] mx-auto">
+                <div className="grid grid-cols-12 gap-6">
+                    
+                    <div className="col-span-12 lg:col-span-9 space-y-6">
+                        <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                            <DatosAsesorForm 
                                 data={formData.datos_empleado} 
                                 email={formData.email}
                                 usuarioId={id}
@@ -132,39 +139,27 @@ const EditarUsuario = ({ backPath }) => {
                                 onSedeChange={(newSedeId) => setFormData(p => ({ ...p, sede_id: newSedeId }))}
                             />
                         </div>
+                        <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                             <FormularioBancoInicial 
+                                data={formData.formulario_bancario}
+                                handleChange={(e) => handleChange(e, 'formulario_bancario')} 
+                             />
+                        </div>
                     </div>
 
-                    <div className="lg:col-span-1">
-                        <div className="bg-white p-6 rounded-xl shadow-lg border border-t-4 border-fic-yellow sticky top-6">
-                            <div className="flex items-center gap-2 mb-6 border-b pb-2">
-                                <UserCircleIcon className="w-6 h-6 text-slate-500" />
-                                <h2 className="text-xl font-black text-slate-700 uppercase tracking-tighter">Acceso</h2>
-                            </div>
-                            
-                            <CuentaForm 
-                                data={formData} 
-                                handleChange={(e) => handleChange(e)} 
-                                isEdit={true} 
-                            />
-
-                            <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">
-                                <button 
-                                    type="submit" 
-                                    disabled={loading} 
-                                    className="w-full py-3 bg-fic-red text-white rounded-lg hover:bg-red-700 font-black uppercase shadow-lg transition-all disabled:opacity-50"
-                                >
-                                    {loading ? 'Guardando...' : 'Confirmar Cambios'}
+                    <div className="col-span-12 lg:col-span-3">
+                        <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm sticky top-4">
+                            <h2 className="text-sm font-black text-slate-700 uppercase mb-4 border-b pb-2">Acceso</h2>
+                            <CuentaForm data={formData} handleChange={(e) => handleChange(e)} isEdit={true} />
+                            <div className="mt-6 flex flex-col gap-2">
+                                <button type="submit" disabled={loading} className="w-full py-2.5 bg-fic-red text-white rounded font-bold uppercase text-xs shadow hover:bg-red-700 transition-all">
+                                    {loading ? 'Guardando...' : 'Guardar Cambios'}
                                 </button>
-                                <button 
-                                    type="button" 
-                                    onClick={() => navigate(rolIdRedirect ? `/personal/listar/${rolIdRedirect}` : backPath)} 
-                                    className="w-full py-3 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-bold transition-colors"
-                                >
+                                <button type="button" onClick={() => navigate(-1)} className="w-full py-2.5 bg-slate-100 text-slate-600 rounded font-bold uppercase text-xs hover:bg-slate-200">
                                     Cancelar
                                 </button>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </form>
