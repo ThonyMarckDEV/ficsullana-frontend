@@ -15,7 +15,7 @@ export const getAreas = async (page = 1, filters = {}) => {
 };
 
 export const getAreasCombobox = async () => {
-  const response = await fetchWithAuth(`${BASE_URL}/index`, { method: 'GET' });
+  const response = await fetchWithAuth(`${BASE_URL}/index-combobox`, { method: 'GET' });
   return handleResponse(response);
 };
 

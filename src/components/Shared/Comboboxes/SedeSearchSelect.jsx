@@ -9,30 +9,24 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
     const [loading, setLoading] = useState(false);
 
     const wrapperRef = useRef(null);
-    // Flag para saber si el cambio de ID fue provocado por el usuario manualmente
     const isManualSelection = useRef(false);
 
     useEffect(() => {
-        // Si no hay ID seleccionado (ej. limpieza de formulario), limpiar input
         if (!selectedId) {
             setInputValue('');
             return;
         }
 
-        // Si la actualización fue causada por una selección manual (clic del usuario),
-        // NO sobrescribimos el valor con el initialName antiguo.
         if (isManualSelection.current) {
-            isManualSelection.current = false; // Reseteamos la bandera
+            isManualSelection.current = false;
             return;
         }
 
-        //  Carga inicial de datos desde el padre (o fetch asíncrono)
         if (initialName) {
             setInputValue(initialName);
         }
     }, [selectedId, initialName]);
 
-    // Cerrar al hacer clic fuera del componente
     useEffect(() => {
         function handleClickOutside(event) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
