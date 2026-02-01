@@ -72,7 +72,12 @@ const ListarUsuarios = ({
         setInfo(p => ({ ...p, open: true, loading: true }));
         try {
             const res = await showUsuario(id);
-            const { perfil, rol_nombre, username, sede, email } = res.data;
+            const { perfil, rol_nombre, username, sede, email, usuario_cuentas_bancarias } = res.data;
+        
+            const bancoData = usuario_cuentas_bancarias && usuario_cuentas_bancarias.length > 0 
+                ? usuario_cuentas_bancarias[0] 
+                : null;
+
             setInfo(p => ({ 
                 ...p, 
                 loading: false, 
@@ -115,9 +120,9 @@ const ListarUsuarios = ({
                             title: 'Datos Bancarios', 
                             icon: BanknotesIcon, 
                             items: [
-                                { label: 'Cuenta Bancaria', value: perfil.cuentaBancaria },
-                                { label: 'CCI', value: perfil.cci },
-                                { label: 'Banco', value: perfil.banco, fullWidth: true },
+                                { label: 'Banco', value: bancoData?.entidad_financiera?.nombre || 'N/A', fullWidth: true },
+                                { label: 'Cuenta Bancaria', value: bancoData?.numero_cuenta || 'N/A' },
+                                { label: 'CCI', value: bancoData?.cci || 'N/A' },
                             ]
                         }
                     ]
