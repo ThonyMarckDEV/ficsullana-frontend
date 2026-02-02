@@ -133,7 +133,6 @@ const ListarEntidadesFinancieras = () => {
               { label: 'Tipo', value: entidad.tipo, capitalize: true },
               { label: 'Longitudes', value: Array.isArray(entidad.longitudes_cuenta) ? entidad.longitudes_cuenta.join(', ') : '-', fullWidth: true },
               { label: 'Estado', value: entidad.estado ? 'ACTIVO' : 'INACTIVO' },
-              { label: 'Cuentas Asociadas', value: entidad.cuentas_count ?? 0 },
             ]
           }
         ]
