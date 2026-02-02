@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ClienteForm from 'components/Shared/Formularios/Cliente/ClienteForm';
-import ContactosForm from 'components/Shared/Formularios/Cliente/ContactosForm';
+import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/outline';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { createCliente } from 'services/clienteService';
-import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import PageHeader from 'components/Shared/Headers/PageHeader';
+//Formularios
+import ClienteForm from 'components/Shared/Formularios/Cliente/ClienteForm';
+import ContactosForm from 'components/Shared/Formularios/Cliente/ContactosForm';
+import CuentasBancarias from 'components/Shared/Formularios/CuentasBancarias';
 
 const initialFormData = {
   datos_cliente: {
@@ -15,12 +17,14 @@ const initialFormData = {
     nacionalidad: 'Peruana', residePeru: true, nivelEducativo: '', profesion: '',
     enfermedadesPreexistentes: false, ruc: '', expuestaPoliticamente: false,
   },
-  contactos: { telefonoMovil: '', telefonoFijo: '', correo: '' }
+  contactos: { telefonoMovil: '', telefonoFijo: '', correo: '' },
+  banco: { entidad_financiera_id: '', numero_cuenta: '', cci: '' }
 };
 
 const STEPS = [
   { id: 1, name: 'Datos Personales' },
   { id: 2, name: 'Contacto' },
+  { id: 3, name: 'Datos Bancarios' },
 ];
 
 const AgregarCliente = () => {
@@ -51,19 +55,49 @@ const AgregarCliente = () => {
     
     try {
       const payload = {
-          ...formData,
-          rol_id: 8 
+          datos_cliente: formData.datos_cliente,
+          
+          cliente_datos_contacto: {
+              telefono: formData.contactos.telefonoMovil,
+              telefonoFijo: formData.contactos.telefonoFijo,
+              correo: formData.contactos.correo
+          },
+
+          cliente_cuentas_bancarias: {
+              entidad_financiera_id: formData.banco.entidad_financiera_id,
+              numero_cuenta: formData.banco.numero_cuenta,
+              cci: formData.banco.cci
+          },
+
+          rol_id: 8
       };
+
+      if (!payload.cliente_cuentas_bancarias.entidad_financiera_id) {
+          delete payload.cliente_cuentas_bancarias;
+      }
 
       const response = await createCliente(payload);
       setAlert({ type: 'success', message: response.message || 'Cliente registrado exitosamente.' });
-      setFormData(initialFormData);
-      setTimeout(() => navigate('/clientes/listar'), 2000);
+      
+      setTimeout(() => navigate('/clientes/listar'), 1500);
+
     } catch (error) {
       setAlert(handleApiError(error, 'Error al registrar el cliente'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const renderStep = () => {
+      switch(currentStep) {
+          case 1: 
+              return <ClienteForm data={formData.datos_cliente} handleChange={(e) => handleChange(e, 'datos_cliente')} />;
+          case 2: 
+              return <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />;
+          case 3: 
+              return <CuentasBancarias data={formData.banco} handleChange={(e) => handleChange(e, 'banco')} />;
+          default: return null;
+      }
   };
 
   return (
@@ -78,6 +112,7 @@ const AgregarCliente = () => {
 
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
       
+      {/* Indicador de Pasos */}
       <div className="mb-8 max-w-4xl mx-auto">
         <div className="flex items-center w-full relative">
             <div className="absolute left-0 top-1/2 w-full h-1 bg-slate-200 -z-10 rounded"></div>
@@ -99,14 +134,11 @@ const AgregarCliente = () => {
         </div>
       </div>
 
-      {/* FORMULARIO EXTENDIDO */}
+      {/* Contenedor del Formulario */}
       <div className="max-w-[1600px] mx-auto">
         <form className="bg-white p-6 md:p-10 rounded-3xl shadow-2xl border border-slate-100">
-          <div className="min-h-[300px]">
-            {currentStep === 1 
-              ? <ClienteForm data={formData.datos_cliente} handleChange={(e) => handleChange(e, 'datos_cliente')} />
-              : <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />
-            }
+          <div className="min-h-[300px] animate-fade-in">
+            {renderStep()}
           </div>
 
           <div className="flex justify-between mt-10 pt-6 border-t border-slate-100">

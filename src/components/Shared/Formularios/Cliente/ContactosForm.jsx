@@ -23,8 +23,8 @@ const ContactosForm = ({ data, handleChange }) => {
           <div className="relative">
             <span className="absolute left-3 top-2.5 text-slate-400 font-bold text-sm">+51</span>
             <input
-                id="telefonoMovil" name="telefonoMovil" type="tel"
-                value={data.telefonoMovil} onChange={handleChange} onInput={onlyNumbers}
+                id="telefonoMovil" name="telefono" type="tel"
+                value={data.telefono} onChange={handleChange} onInput={onlyNumbers}
                 placeholder="987654321" className={`${inputClass} pl-10`}
                 minLength="9" maxLength="9" required
             />

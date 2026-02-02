@@ -87,7 +87,8 @@ const EditarEmpleado = ({ backPath }) => {
                         departamento: datos_empleado.departamento,
                         provincia: datos_empleado.provincia,
                         distrito: datos_empleado.distrito,
-                        area_id: datos_empleado.area_id
+                        area_id: datos_empleado.area_id,
+                        area: datos_empleado.area
                     },
                     empleado_datos_contacto: contactoState,
                     empleado_cuentas_bancarias: bancoState, 
@@ -131,14 +132,18 @@ const EditarEmpleado = ({ backPath }) => {
         else setFormData(p => ({ ...p, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setAlert(null);
         
         try {
+            const datosLimpios = { ...formData.datos_empleado };
+            
+            delete datosLimpios.area; 
+
             const payload = { 
-                datos_empleado: formData.datos_empleado,
+                datos_empleado: datosLimpios,
                 empleado_datos_contacto: formData.empleado_datos_contacto,
                 username: formData.username,
                 sede_id: formData.sede_id,

@@ -123,7 +123,7 @@ const DatosForm = ({
             <label className={labelClass}>Teléfono / Celular</label>
             <div className="relative">
               <PhoneIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-              <input name="telefono" value={data.telefono} onChange={handleInputValidation} placeholder="987654321" className={`${inputClass} pl-10`} maxLength={9} minLength={9} required />
+              <input name="telefono" value={data.telefono || ''} onChange={handleInputValidation} placeholder="987654321" className={`${inputClass} pl-10`} maxLength={9} minLength={9} required />
             </div>
           </div>
         </div>
@@ -172,13 +172,15 @@ const DatosForm = ({
             <input type="date" name="fechaIngreso" value={data.fechaIngreso || ''} onChange={handleChange} className={inputClass} required />
           </div>
           <div className="md:col-span-2">
+            {/* CORRECCIÓN AQUÍ: Guardamos ID y Objeto */}
             <AreaSearchSelect
               selectedId={data.area_id || ''}
               initialName={data.area?.nombre_area || ''}
               onSelect={(area) => {
-                handleChange({
-                  target: { name: 'area_id', value: area ? area.id : '' }
-                });
+                // 1. Guardamos el ID (para el backend)
+                handleChange({ target: { name: 'area_id', value: area ? area.id : '' } });
+                // 2. Guardamos el OBJETO COMPLETO (para que el nombre persista en el frontend)
+                handleChange({ target: { name: 'area', value: area } });
               }}
             />
           </div>
@@ -208,9 +210,7 @@ const DatosForm = ({
             </div>
         </div>
       ) : (
-        /* --- LÓGICA CONDICIONAL AL AGREGAR --- */
         isSuperAdmin ? (
-            // MENSAJE PARA SUPERADMIN (Global)
             <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg flex items-start gap-3 shadow-sm mt-6">
                 <div className="p-1 bg-purple-100 rounded-full flex-shrink-0">
                     <GlobeAmericasIcon className="w-5 h-5 text-purple-600" />
@@ -226,7 +226,6 @@ const DatosForm = ({
                 </div>
             </div>
         ) : (
-            // MENSAJE NORMAL (Asignación automática)
             <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg flex items-start gap-3 shadow-sm mt-6">
                 <div className="p-1 bg-amber-100 rounded-full flex-shrink-0">
                     <BuildingStorefrontIcon className="w-5 h-5 text-amber-600" />

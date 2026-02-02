@@ -11,7 +11,8 @@ import {
     UsersIcon, 
     EyeIcon,
     IdentificationIcon,
-    PhoneIcon
+    PhoneIcon,
+    CreditCardIcon
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
@@ -98,17 +99,20 @@ const ListarCliente = () => {
         fetchClientes(1);
     }, [fetchClientes]);
 
+    // --- LÓGICA DEL MODAL ADAPTADA AL JSON ---
     const handleViewCliente = async (id) => {
         setIsInfoOpen(true);
         setInfoLoading(true);
         try {
             const response = await showCliente(id);
-            const { datos_cliente, contactos } = response.data;
-            const contacto = contactos?.[0] || {};
+            // Extraemos la estructura plana que definimos en el backend
+            const { datos_cliente, cliente_datos_contacto, cliente_cuentas_bancarias } = response.data;
 
-            const formatBool = (val) => val ? 'SÍ' : 'NO';
+            const formatBool = (val) => (val === 1 || val === true) ? 'SÍ' : 'NO';
+            const valOrHyphen = (val) => val || '-';
 
-            const seccionesFormateadas = [
+            // Sección 1: Datos Personales
+            const secciones = [
                 {
                     title: "1. Datos Personales",
                     icon: IdentificationIcon,
@@ -116,7 +120,7 @@ const ListarCliente = () => {
                         { label: "Nombre Completo", value: `${datos_cliente.nombre} ${datos_cliente.apellidoPaterno} ${datos_cliente.apellidoMaterno || ''}`, fullWidth: true },
                         { label: "DNI", value: datos_cliente.dni },
                         { label: "Caducidad DNI", value: datos_cliente.fechaCaducidadDni },
-                        { label: "RUC", value: datos_cliente.ruc },
+                        { label: "RUC", value: valOrHyphen(datos_cliente.ruc) },
                         { label: "Nacionalidad", value: datos_cliente.nacionalidad },
                         { label: "Sexo", value: datos_cliente.sexo },
                         { label: "Estado Civil", value: datos_cliente.estadoCivil },
@@ -131,17 +135,38 @@ const ListarCliente = () => {
                     title: "2. Datos de Contacto",
                     icon: PhoneIcon,
                     items: [
-                        { label: "Teléfono Móvil", value: contacto.telefonoMovil },
-                        { label: "Teléfono Fijo", value: contacto.telefonoFijo },
-                        { label: "Correo Electrónico", value: contacto.correo, fullWidth: true },
+                        { label: "Teléfono Móvil", value: valOrHyphen(cliente_datos_contacto?.telefono) },
+                        { label: "Teléfono Fijo", value: valOrHyphen(cliente_datos_contacto?.telefonoFijo) },
+                        { label: "Correo Electrónico", value: valOrHyphen(cliente_datos_contacto?.correo), fullWidth: true },
                     ]
                 }
             ];
 
+            // Sección 3: Datos Bancarios (Solo si existen)
+            if (cliente_cuentas_bancarias && cliente_cuentas_bancarias.numero_cuenta) {
+                secciones.push({
+                    title: "3. Datos Bancarios",
+                    icon: CreditCardIcon,
+                    items: [
+                        { label: "Banco", value: cliente_cuentas_bancarias.entidad_financiera?.nombre || 'Desconocido' },
+                        { label: "N° Cuenta", value: cliente_cuentas_bancarias.numero_cuenta },
+                        { label: "CCI", value: cliente_cuentas_bancarias.cci, fullWidth: true },
+                    ]
+                });
+            } else {
+                 secciones.push({
+                    title: "3. Datos Bancarios",
+                    icon: CreditCardIcon,
+                    items: [
+                        { label: "Estado", value: "No tiene cuentas registradas", fullWidth: true },
+                    ]
+                });
+            }
+
             setModalData({
                 title: "Ficha de Cliente",
                 subtitle: `Visualizando a: ${datos_cliente.nombre} ${datos_cliente.apellidoPaterno}`,
-                sections: seccionesFormateadas
+                sections: secciones
             });
 
         } catch (err) {
