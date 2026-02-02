@@ -34,7 +34,6 @@ const ProtectedRoute = ({ element, requiredPermission }) => {
         if (!hasPermission) {
             console.groupCollapsed(`⛔ ACCESO DENEGADO: ${location.pathname}`);
             console.warn(`Requería: "${finalPermission}"`);
-            console.log(`Permisos actuales:`, permisosUsuario);
             console.groupEnd();
             
             return <Navigate to="/401" state={{ from: location }} replace />;
