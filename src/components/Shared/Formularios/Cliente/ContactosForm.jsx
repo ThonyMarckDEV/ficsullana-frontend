@@ -42,7 +42,7 @@ const ContactosForm = ({ data, handleChange }) => {
         </div>
 
         <div className="md:col-span-2">
-          <label htmlFor="correo" className={labelClass}>Correo Electrónico <span className="text-slate-300 normal-case font-medium">(Opcional)</span></label>
+          <label htmlFor="correo" className={labelClass}>Correo Electrónico <span className="text-slate-300 normal-case font-medium"></span></label>
           <input
             id="correo" name="correo" type="email"
             value={data.correo} onChange={handleChange}

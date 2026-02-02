@@ -19,7 +19,7 @@ const ClienteForm = ({ data, handleChange }) => {
     <div className="animate-fade-in space-y-8">
       <div>
         <div className="flex items-center gap-2 mb-4 border-b pb-2">
-            <IdentificationIcon className="w-5 h-5 text-fic-red" />
+            <IdentificationIcon className="w-5 h-5 text-fic-yellow" />
             <h2 className="text-lg font-black text-slate-800 uppercase tracking-tighter">1. Documentos e Identidad</h2>
         </div>
 

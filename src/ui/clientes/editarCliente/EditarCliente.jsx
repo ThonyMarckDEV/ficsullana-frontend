@@ -34,12 +34,18 @@ const EditarCliente = () => {
     const fetchCliente = async () => {
       try {
         const response = await showCliente(id);
-        const { datos_cliente, cliente_datos_contacto, cliente_cuentas_bancarias } = response.data;
         
+        const data = response.data.datos_cliente ? response.data : response.data.data;
+        const { datos_cliente, cliente_datos_contacto, cliente_cuentas_bancarias } = data;
+        
+        const primerBanco = Array.isArray(cliente_cuentas_bancarias) 
+            ? (cliente_cuentas_bancarias[0] || {}) 
+            : (cliente_cuentas_bancarias || {});
+
         setFormData({
           datos_cliente: cleanNulls(datos_cliente),
           contactos: cleanNulls(cliente_datos_contacto, { telefono: '', telefonoFijo: '', correo: '' }),
-          banco: cleanNulls(cliente_cuentas_bancarias, { entidad_financiera_id: '', numero_cuenta: '', cci: '' })
+          banco: cleanNulls(primerBanco, { entidad_financiera_id: '', numero_cuenta: '', cci: '' })
         });
 
       } catch (err) {
@@ -72,24 +78,26 @@ const EditarCliente = () => {
                 telefonoFijo: formData.contactos.telefonoFijo,
                 correo: formData.contactos.correo
             },
-            cliente_cuentas_bancarias: [{
+            cliente_cuentas_bancarias: {
                 entidad_financiera_id: formData.banco.entidad_financiera_id,
                 numero_cuenta: formData.banco.numero_cuenta,
                 cci: formData.banco.cci
-            }],
+            },
             rol_id: 8 
         };
 
-        if (!payload.cliente_cuentas_bancarias[0].entidad_financiera_id) {
+        if (!payload.cliente_cuentas_bancarias.entidad_financiera_id) {
              delete payload.cliente_cuentas_bancarias; 
         }
 
         await updateCliente(id, payload);
+        
         setAlert({ type: 'success', message: 'Cliente actualizado correctamente.' });
         setTimeout(() => navigate('/clientes/listar'), 1500);
 
     } catch (err) {
-        setAlert(handleApiError(err, 'Error al actualizar el cliente'));
+        const errorData = handleApiError(err, 'Error al actualizar el cliente');
+        setAlert(errorData);
     } finally {
         setLoading(false);
     }
@@ -107,17 +115,17 @@ const EditarCliente = () => {
         buttonLink="/clientes/listar"
       />
 
-      <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
+      <AlertMessage 
+        type={alert?.type} 
+        message={alert?.message} 
+        details={alert?.details} 
+        onClose={() => setAlert(null)} 
+      />
 
       <form onSubmit={handleSubmit} className="max-w-[1600px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* =========================================================
-              COLUMNA PRINCIPAL (8/12): DATOS PERSONALES Y BANCO
-             ========================================================= */}
           <div className="lg:col-span-8 space-y-6">
-            
-            {/* TARJETA 1: DATOS PERSONALES */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
                 <div className="flex items-center gap-3 mb-8 border-b pb-4">
                     <div className="w-1.5 h-8 bg-fic-red rounded-full"></div>
@@ -126,24 +134,16 @@ const EditarCliente = () => {
                 <ClienteForm data={formData.datos_cliente} handleChange={(e) => handleChange(e, 'datos_cliente')} />
             </div>
 
-            {/* TARJETA 2: DATOS BANCARIOS (Movido aquí para mejor UX Horizontal) */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
               <div className="flex items-center gap-3 mb-8 border-b pb-4">
                 <div className="w-1.5 h-8 bg-blue-500 rounded-full"></div>
                 <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Datos Bancarios</h2>
               </div>
-              {/* Al estar en col-span-8, este componente tendrá ancho completo */}
               <CuentasBancarias data={formData.banco} handleChange={(e) => handleChange(e, 'banco')} />
             </div>
-
           </div>
 
-          {/* =========================================================
-              COLUMNA LATERAL (4/12): CONTACTO Y NOTAS
-             ========================================================= */}
           <div className="lg:col-span-4 space-y-6 sticky top-6">
-            
-            {/* TARJETA CONTACTO */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
               <div className="flex items-center gap-3 mb-8 border-b pb-4">
                 <div className="w-1.5 h-8 bg-fic-yellow rounded-full"></div>
@@ -152,18 +152,15 @@ const EditarCliente = () => {
               <ContactosForm data={formData.contactos} handleChange={(e) => handleChange(e, 'contactos')} />
             </div>
 
-            {/* NOTA INFORMATIVA */}
             <div className="p-5 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                 <p className="text-[11px] font-bold text-slate-400 uppercase mb-2">Nota de seguridad</p>
                 <p className="text-xs text-slate-600 leading-relaxed">
                     Los cambios sensibles (DNI) actualizarán automáticamente las credenciales de acceso del usuario asociado.
                 </p>
             </div>
-
           </div>
         </div>
 
-        {/* BOTONES DE ACCIÓN */}
         <div className="flex justify-end mt-12 gap-4 py-8 border-t border-slate-200">
           <button 
             type="button" 
