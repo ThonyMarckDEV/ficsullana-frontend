@@ -9,6 +9,28 @@ export const AuthProvider = ({ children }) => {
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // FUNCIÓN CENTRALIZADA DE PERMISOS
+    const checkPermission = (requiredPermission, idRol = null) => {
+        if (!user) return false;
+        
+        const rawPermisos = user.rol?.permisos || [];
+        const permisosUsuario = rawPermisos.map(p => (typeof p === 'object' ? p.nombre : p));
+
+        // Caso 1: Si hay un idRol (Rutas como listar/:idRol)
+        if (idRol) {
+            const targetRol = roles.find(r => String(r.id) === String(idRol));
+            if (targetRol) {
+                const specificPermission = `${requiredPermission}.${targetRol.nombre}`;
+                return permisosUsuario.includes(specificPermission);
+            }
+        }
+
+        // Caso 2: Si no hay idRol o para rutas generales (Wildcard)
+        return permisosUsuario.some(p => 
+            p === requiredPermission || p.startsWith(`${requiredPermission}.`)
+        );
+    };
+
     const refreshSession = async () => {
         const token = jwtUtils.getAccessTokenFromCookie();
 
@@ -20,7 +42,6 @@ export const AuthProvider = ({ children }) => {
         }
 
         try {
-            // Intentamos validar el token con el backend
             const response = await authService.verifySession();
             const serverData = response.data || response;
             
@@ -30,8 +51,6 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.warn("Error validando sesión (Token inválido o Servidor caído). Limpiando...", error);
             
-            // Si falla la verificación (sea por 401 o porque el server no responde correctamente a /me),
-            // DEBEMOS borrar la cookie local para evitar bucles infinitos.
             jwtUtils.removeTokensFromCookie();
             
             setUser(null);
@@ -46,7 +65,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, roles, loading, refreshSession }}>
+        <AuthContext.Provider value={{ user, roles, loading, refreshSession , checkPermission }}>
             {children}
         </AuthContext.Provider>
     );
