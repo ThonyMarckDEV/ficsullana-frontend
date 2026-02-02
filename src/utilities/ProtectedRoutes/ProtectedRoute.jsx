@@ -16,7 +16,7 @@ const ProtectedRoute = ({ element, requiredPermission }) => {
         const hasAccess = checkPermission(requiredPermission, idRol);
 
         if (!hasAccess) {
-            console.warn(`⛔ ACCESSO DENEEGADO: ${location.pathname}`);
+            console.warn(`⛔ ACCESSO DENEGADO: ${location.pathname}`);
             return <Navigate to="/401" replace />;
         }
     }
