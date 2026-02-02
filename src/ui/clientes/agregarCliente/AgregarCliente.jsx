@@ -17,7 +17,7 @@ const initialFormData = {
     nacionalidad: 'Peruana', residePeru: true, nivelEducativo: '', profesion: '',
     enfermedadesPreexistentes: false, ruc: '', expuestaPoliticamente: false,
   },
-  contactos: { telefonoMovil: '', telefonoFijo: '', correo: '' },
+  contactos: { telefono: '', telefonoFijo: '', correo: '' },
   banco: { entidad_financiera_id: '', numero_cuenta: '', cci: '' }
 };
 
@@ -58,7 +58,7 @@ const AgregarCliente = () => {
           datos_cliente: formData.datos_cliente,
           
           cliente_datos_contacto: {
-              telefono: formData.contactos.telefonoMovil,
+              telefono: formData.contactos.telefono,
               telefonoFijo: formData.contactos.telefonoFijo,
               correo: formData.contactos.correo
           },
