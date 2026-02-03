@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  UserIcon, 
-  LockClosedIcon, 
-  ArrowRightIcon, 
-  EyeIcon, 
-  EyeSlashIcon 
-} from '@heroicons/react/24/outline';
+import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import logoImg from 'assets/img/Logo_FICSULLANA.png';
 
 const LoginForm = ({
   username,
@@ -18,95 +13,110 @@ const LoginForm = ({
   setShowForgotPassword
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  
-  const inputContainerClass = "relative group";
-  const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-fic-red transition-colors duration-200";
-  const inputClass = "w-full pl-10 pr-11 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-fic-red/20 focus:border-fic-red transition-all duration-200 font-medium sm:text-sm";
-  const eyeButtonClass = "absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-fic-red transition-colors focus:outline-none";
 
   return (
-    <form onSubmit={handleLogin} className="space-y-6">
+    <div className="w-full max-w-md mx-auto animate-fade-in-up">
       
-      {/* Campo Usuario */}
-      <div className={inputContainerClass}>
-        <label htmlFor="username" className="sr-only">Usuario</label>
-        <UserIcon className={iconClass} />
-        <input
-          type="text"
-          id="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className={inputClass}
-          placeholder="Nombre de usuario"
-          required
-          autoComplete="username"
+      {/* HEADER: Logo + Bienvenida */}
+      <div className="mb-10 text-center md:text-left">
+        <img 
+            src={logoImg} 
+            alt="Logo Fic Sullana" 
+            className="h-24 mb-8 mx-auto" 
         />
+        
+        <p className="text-xs font-bold text-red-500 uppercase tracking-[0.35em]">
+            Bienvenido
+        </p>
+        <h1 className="mt-2 text-3xl font-black text-slate-900 tracking-tight">
+            Iniciar sesión
+        </h1>
+        <p className="text-slate-500 mt-2 text-sm font-medium">
+            Ingresa tus credenciales para acceder al sistema.
+        </p>
       </div>
 
-      {/* Campo Contraseña */}
-      <div className={inputContainerClass}>
-        <label htmlFor="password" className="sr-only">Contraseña</label>
-        <LockClosedIcon className={iconClass} />
-        <input
-          type={showPassword ? "text" : "password"}
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={inputClass}
-          placeholder="Contraseña"
-          required
-          autoComplete="current-password"
-        />
-        {/* Botón del Ojito */}
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className={eyeButtonClass}
-          tabIndex="-1"
-        >
-          {showPassword ? (
-            <EyeSlashIcon className="h-5 w-5" />
-          ) : (
-            <EyeIcon className="h-5 w-5" />
-          )}
-        </button>
-      </div>
-
-      {/* Opciones Adicionales */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center">
-          <input
-            id="remember-me"
-            type="checkbox"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-            className="h-4 w-4 text-fic-red focus:ring-fic-red border-gray-300 rounded cursor-pointer transition-all"
-          />
-          <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 cursor-pointer select-none">
-            Recordarme
+      <form className="space-y-6" onSubmit={handleLogin}>
+        
+        {/* Usuario */}
+        <div>
+          <label htmlFor="username" className="block text-sm font-bold text-slate-700 ml-1">
+            Usuario
           </label>
+          <div className="mt-2 relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <UserIcon className="h-5 w-5 text-slate-400 group-focus-within:text-red-500 transition-colors" />
+            </div>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+              placeholder="Nombre de usuario"
+              required
+            />
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowForgotPassword(true)}
-          className="text-sm font-bold text-fic-red hover:text-red-700 transition-colors"
-        >
-          ¿Olvidaste tu clave?
-        </button>
-      </div>
+        {/* Contraseña */}
+        <div>
+          <label htmlFor="password" className="block text-sm font-bold text-slate-700 ml-1">
+            Contraseña
+          </label>
+          <div className="mt-2 relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <LockClosedIcon className="h-5 w-5 text-slate-400 group-focus-within:text-red-500 transition-colors" />
+            </div>
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="block w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+              placeholder="Tu contraseña"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-red-500 transition-colors focus:outline-none"
+            >
+              {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
 
-      {/* Botón de Acción */}
-      <button
-        type="submit"
-        className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-white bg-fic-red hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fic-red shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-      >
-        <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-           <ArrowRightIcon className="h-5 w-5 text-red-300 group-hover:text-white transition-colors" aria-hidden="true" />
-        </span>
-        INICIAR SESIÓN
-      </button>
-    </form>
+        {/* Opciones */}
+        <div className="flex items-center justify-between text-sm">
+          <label className="flex items-center gap-2 cursor-pointer select-none group">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer"
+            />
+            <span className="font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Recordarme</span>
+          </label>
+          
+          <button
+            type="button"
+            onClick={() => setShowForgotPassword(true)}
+            className="font-bold text-red-500 hover:text-red-700 transition-colors"
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+
+        {/* Botón */}
+        <button
+          type="submit"
+          className="w-full rounded-full bg-red-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/30 transition-all hover:bg-red-600 hover:shadow-red-600/40 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        >
+          INICIAR SESIÓN
+        </button>
+      </form>
+    </div>
   );
 };
 
