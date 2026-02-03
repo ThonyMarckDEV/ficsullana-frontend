@@ -41,7 +41,8 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         // 2. Contacto 
         empleado_datos_contacto: {
             telefono: '',
-            correo: ''
+            correo: '',
+            correos: ['']
         },
         // 3. Login
         username: '', 
@@ -70,9 +71,10 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         }
 
         if (name === 'email' || name === 'correo') {
+            const correoValue = value || '';
             setFormData(prev => ({ 
                ...prev, 
-               empleado_datos_contacto: { ...prev.empleado_datos_contacto, correo: value }
+               empleado_datos_contacto: { ...prev.empleado_datos_contacto, correo: correoValue, correos: [correoValue] }
            }));
            return;
        }
@@ -94,6 +96,16 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         
         try {
             const payload = { ...formData };
+            const correosLimpios = (payload.empleado_datos_contacto?.correos || [])
+                .map(correo => (correo || '').trim())
+                .filter(Boolean);
+
+            payload.empleado_datos_contacto = {
+                ...payload.empleado_datos_contacto,
+                correos: correosLimpios,
+                correo: correosLimpios[0] || ''
+            };
+
             const cuentasLimpias = (payload.empleado_cuentas_bancarias || [])
                 .map(cuenta => ({
                     entidad_financiera_id: cuenta.entidad_financiera_id,
@@ -132,7 +144,17 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
                 return (
                     <DatosForm 
                         data={datosCombinados}
-                        email={formData.empleado_datos_contacto.correo} 
+                        emails={formData.empleado_datos_contacto.correos}
+                        onEmailsChange={(nextEmails) =>
+                            setFormData(prev => ({
+                                ...prev,
+                                empleado_datos_contacto: {
+                                    ...prev.empleado_datos_contacto,
+                                    correos: nextEmails,
+                                    correo: nextEmails[0] || ''
+                                }
+                            }))
+                        }
                         handleRootChange={(e) => handleChange(e)}
                         handleChange={(e) => handleChange(e, 'datos_empleado')} 
                     />

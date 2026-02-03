@@ -36,7 +36,8 @@ const EditarEmpleado = ({ backPath }) => {
         // Contacto
         empleado_datos_contacto: {
             telefono: '',
-            correo: ''
+            correo: '',
+            correos: ['']
         },
         // Banco 
         empleado_cuentas_bancarias: [{ ...EMPTY_BANK_ACCOUNT }],
@@ -79,9 +80,14 @@ const EditarEmpleado = ({ backPath }) => {
                     }))
                     : [{ ...EMPTY_BANK_ACCOUNT }];
 
+                const correosIniciales = Array.isArray(empleado_datos_contacto?.correos)
+                    ? empleado_datos_contacto.correos.filter(Boolean)
+                    : (empleado_datos_contacto?.correo ? [empleado_datos_contacto.correo] : []);
+
                 const contactoState = {
                     telefono: empleado_datos_contacto?.telefono || '',
-                    correo: empleado_datos_contacto?.correo || ''
+                    correo: empleado_datos_contacto?.correo || correosIniciales[0] || '',
+                    correos: correosIniciales.length > 0 ? correosIniciales : ['']
                 };
 
                 setFormData({
@@ -132,9 +138,10 @@ const EditarEmpleado = ({ backPath }) => {
         }
 
         if (name === 'email' || name === 'correo') {
+            const correoValue = value || '';
             setFormData(prev => ({ 
                ...prev, 
-               empleado_datos_contacto: { ...prev.empleado_datos_contacto, correo: value }
+               empleado_datos_contacto: { ...prev.empleado_datos_contacto, correo: correoValue, correos: [correoValue] }
            }));
            return;
        }
@@ -159,7 +166,12 @@ const EditarEmpleado = ({ backPath }) => {
 
             const payload = { 
                 datos_empleado: datosLimpios,
-                empleado_datos_contacto: formData.empleado_datos_contacto,
+                empleado_datos_contacto: {
+                    ...formData.empleado_datos_contacto,
+                    correos: (formData.empleado_datos_contacto?.correos || [])
+                        .map(correo => (correo || '').trim())
+                        .filter(Boolean),
+                },
                 username: formData.username,
                 sede_id: formData.sede_id,
                 empleado_cuentas_bancarias: (formData.empleado_cuentas_bancarias || [])
@@ -175,6 +187,8 @@ const EditarEmpleado = ({ backPath }) => {
                 payload.password = formData.password;
                 payload.password_confirmation = formData.password_confirmation;
             }
+
+            payload.empleado_datos_contacto.correo = payload.empleado_datos_contacto.correos[0] || '';
             
             if (payload.empleado_cuentas_bancarias.length === 0) {
                 delete payload.empleado_cuentas_bancarias; 
@@ -209,7 +223,17 @@ const EditarEmpleado = ({ backPath }) => {
                         <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
                             <DatosForm 
                                 data={datosParaFormulario}
-                                email={formData.empleado_datos_contacto.correo}
+                                emails={formData.empleado_datos_contacto.correos}
+                                onEmailsChange={(nextEmails) =>
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        empleado_datos_contacto: {
+                                            ...prev.empleado_datos_contacto,
+                                            correos: nextEmails,
+                                            correo: nextEmails[0] || ''
+                                        }
+                                    }))
+                                }
                                 usuarioId={id}
                                 handleRootChange={(e) => handleChange(e)}
                                 handleChange={(e) => handleChange(e, 'datos_empleado')}

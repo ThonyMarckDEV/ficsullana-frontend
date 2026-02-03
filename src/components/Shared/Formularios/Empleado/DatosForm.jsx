@@ -6,7 +6,9 @@ import {
   BuildingStorefrontIcon,
   ArrowPathIcon,
   BriefcaseIcon,
-  GlobeAmericasIcon 
+  GlobeAmericasIcon,
+  PlusIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import SedeSearchSelect from 'components/Shared/Comboboxes/SedeSearchSelect';
 import AreaSearchSelect from 'components/Shared/Comboboxes/AreaSearchSelect';
@@ -16,6 +18,8 @@ const DatosForm = ({
     data, 
     handleChange, 
     email = '',
+    emails = [],
+    onEmailsChange,
     handleRootChange,
     isEdit = false,       
     currentSedeId = '',   
@@ -28,6 +32,7 @@ const DatosForm = ({
 
   const inputClass = "w-full px-3 py-2.5 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-fic-red focus:border-fic-red outline-none transition-all text-sm font-medium text-slate-700 placeholder:font-normal";
   const labelClass = "block text-xs font-black text-slate-500 mb-1.5 uppercase tracking-wide";
+  const emailList = Array.isArray(emails) && emails.length > 0 ? emails : (email ? [email] : ['']);
 
   const handleInputValidation = (e) => {
     const { name, value } = e.target;
@@ -38,6 +43,23 @@ const DatosForm = ({
       if (!/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]*$/.test(value)) return;
     }
     handleChange(e);
+  };
+
+  const updateEmail = (index, value) => {
+    if (!onEmailsChange) return;
+    const next = [...emailList];
+    next[index] = value;
+    onEmailsChange(next);
+  };
+
+  const addEmail = () => {
+    if (!onEmailsChange) return;
+    onEmailsChange([...emailList, '']);
+  };
+
+  const removeEmail = (index) => {
+    if (!onEmailsChange || emailList.length <= 1) return;
+    onEmailsChange(emailList.filter((_, i) => i !== index));
   };
 
   return (
@@ -107,17 +129,44 @@ const DatosForm = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <label className={labelClass}>Email</label>
-            <input 
-              type="email"
-              name="email" 
-              value={email} 
-              onChange={handleRootChange || handleChange} 
-              className={inputClass} 
-              placeholder="correo@empresa.com"
-              required 
-            />
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className={labelClass}>Emails</label>
+              {onEmailsChange && (
+                <button
+                  type="button"
+                  onClick={addEmail}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-black uppercase rounded-lg bg-fic-red text-white hover:bg-red-700 transition-colors"
+                >
+                  <PlusIcon className="w-3.5 h-3.5" />
+                  Agregar email
+                </button>
+              )}
+            </div>
+
+            {emailList.map((currentEmail, index) => (
+              <div key={`email-${index}`} className="flex gap-2">
+                <input 
+                  type="email"
+                  value={currentEmail}
+                  onChange={(e) => updateEmail(index, e.target.value)}
+                  className={inputClass} 
+                  placeholder="correo@empresa.com"
+                  required={index === 0}
+                />
+
+                {onEmailsChange && emailList.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeEmail(index)}
+                    className="inline-flex items-center justify-center px-2.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    aria-label={`Quitar email ${index + 1}`}
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
           <div>
             <label className={labelClass}>Teléfono / Celular</label>

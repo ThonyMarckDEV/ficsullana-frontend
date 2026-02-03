@@ -100,6 +100,10 @@ const ListarEmpleados = ({
                     .join(' | ')
                 : 'N/A';
 
+            const correos = Array.isArray(empleado_datos_contacto?.correos)
+                ? empleado_datos_contacto.correos.filter(Boolean)
+                : (empleado_datos_contacto?.correo ? [empleado_datos_contacto.correo] : []);
+
             setInfo(p => ({ 
                 ...p, 
                 loading: false, 
@@ -121,9 +125,8 @@ const ListarEmpleados = ({
                             title: 'Contacto y Sede', 
                             icon: MapPinIcon, 
                             items: [
-                                // Leemos del objeto empleado_datos_contacto
                                 { label: 'Celular', value: empleado_datos_contacto?.telefono || 'N/A' },
-                                { label: 'Email Personal', value: empleado_datos_contacto?.correo || 'N/A' },
+                                { label: 'Emails Personales', value: correos.length ? correos.join(' | ') : 'N/A' },
                                 { label: 'Sede', value: sede?.nombre || 'N/A' },
                                 { label: 'Dirección', value: datos_empleado.direccion || 'N/A', fullWidth: true },
                                 { label: 'Ubicación', value: `${datos_empleado.distrito || ''}, ${datos_empleado.provincia || ''} - ${datos_empleado.departamento || ''}`, fullWidth: true },
