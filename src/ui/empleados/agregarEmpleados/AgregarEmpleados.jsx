@@ -8,8 +8,14 @@ import PageHeader from 'components/Shared/Headers/PageHeader';
 import { useAuth } from 'context/AuthContext';
 
 import DatosForm from 'components/Shared/Formularios/Empleado/DatosForm';
-import FormularioBancoInicial from 'components/Shared/Formularios/CuentasBancarias';
+import CuentasBancariasMultiples from 'components/Shared/Formularios/CuentasBancariasMultiples';
 import CuentaForm from 'components/Shared/Formularios/Empleado/CuentaForm';
+
+const EMPTY_BANK_ACCOUNT = {
+    entidad_financiera_id: '',
+    numero_cuenta: '',
+    cci: ''
+};
 
 const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
     const navigate = useNavigate();
@@ -42,11 +48,7 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         password: '', 
         password_confirmation: '',
         // 4. Banco
-        empleado_cuentas_bancarias: {
-            entidad_financiera_id: '', 
-            numero_cuenta: '',
-            cci: ''
-        }
+        empleado_cuentas_bancarias: [{ ...EMPTY_BANK_ACCOUNT }]
     });
 
     useEffect(() => {
@@ -82,15 +84,28 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         }
     };
 
+    const handleCuentasBancariasChange = (cuentas) => {
+        setFormData(prev => ({ ...prev, empleado_cuentas_bancarias: cuentas }));
+    };
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         setLoading(true);
         
         try {
             const payload = { ...formData };
+            const cuentasLimpias = (payload.empleado_cuentas_bancarias || [])
+                .map(cuenta => ({
+                    entidad_financiera_id: cuenta.entidad_financiera_id,
+                    numero_cuenta: cuenta.numero_cuenta,
+                    cci: cuenta.cci || ''
+                }))
+                .filter(cuenta => cuenta.entidad_financiera_id || cuenta.numero_cuenta || cuenta.cci);
 
-            if (!payload.empleado_cuentas_bancarias.entidad_financiera_id) {
+            if (cuentasLimpias.length === 0) {
                 delete payload.empleado_cuentas_bancarias; 
+            } else {
+                payload.empleado_cuentas_bancarias = cuentasLimpias;
             }
 
             const response = await createEmpleado(payload);
@@ -124,9 +139,9 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
                 );
             case 2:
                 return (
-                    <FormularioBancoInicial
+                    <CuentasBancariasMultiples
                         data={formData.empleado_cuentas_bancarias}
-                        handleChange={(e) => handleChange(e, 'empleado_cuentas_bancarias')}
+                        onChange={handleCuentasBancariasChange}
                     />
                 );
             case 3:

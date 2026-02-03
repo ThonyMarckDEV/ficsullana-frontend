@@ -83,6 +83,23 @@ const ListarEmpleados = ({
                 sede 
             } = res.data;
 
+            const cuentas = Array.isArray(empleado_cuentas_bancarias)
+                ? empleado_cuentas_bancarias
+                : empleado_cuentas_bancarias?.entidad_financiera_id
+                    ? [empleado_cuentas_bancarias]
+                    : [];
+
+            const resumenCuentas = cuentas.length > 0
+                ? cuentas
+                    .map((cuenta, index) => {
+                        const banco = cuenta.entidad_financiera?.nombre || 'Banco';
+                        const numero = cuenta.numero_cuenta || 'Sin numero';
+                        const cci = cuenta.cci ? ` | CCI: ${cuenta.cci}` : '';
+                        return `#${index + 1} ${banco} - ${numero}${cci}`;
+                    })
+                    .join(' | ')
+                : 'N/A';
+
             setInfo(p => ({ 
                 ...p, 
                 loading: false, 
@@ -125,10 +142,8 @@ const ListarEmpleados = ({
                             title: 'Datos Bancarios', 
                             icon: BanknotesIcon, 
                             items: [
-                                // Leemos la relación 'entidad_financiera' dentro de empleado_cuentas_bancarias
-                                { label: 'Banco', value: empleado_cuentas_bancarias?.entidad_financiera?.nombre || 'N/A', fullWidth: true },
-                                { label: 'Cuenta Bancaria', value: empleado_cuentas_bancarias?.numero_cuenta || 'N/A' },
-                                { label: 'CCI', value: empleado_cuentas_bancarias?.cci || 'N/A' },
+                                { label: 'Total de Cuentas', value: cuentas.length || 0 },
+                                { label: 'Detalle', value: resumenCuentas, fullWidth: true },
                             ]
                         }
                     ]

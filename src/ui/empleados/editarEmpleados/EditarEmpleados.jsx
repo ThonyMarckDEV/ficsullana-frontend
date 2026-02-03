@@ -8,8 +8,14 @@ import PageHeader from 'components/Shared/Headers/PageHeader';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
 import DatosForm from 'components/Shared/Formularios/Empleado/DatosForm';
-import FormularioBancoInicial from 'components/Shared/Formularios/CuentasBancarias';
+import CuentasBancariasMultiples from 'components/Shared/Formularios/CuentasBancariasMultiples';
 import CuentaForm from 'components/Shared/Formularios/Empleado/CuentaForm';
+
+const EMPTY_BANK_ACCOUNT = {
+    entidad_financiera_id: '',
+    numero_cuenta: '',
+    cci: ''
+};
 
 const EditarEmpleado = ({ backPath }) => { 
     const { id } = useParams();
@@ -33,11 +39,7 @@ const EditarEmpleado = ({ backPath }) => {
             correo: ''
         },
         // Banco 
-        empleado_cuentas_bancarias: {
-            entidad_financiera_id: '', 
-            numero_cuenta: '',
-            cci: ''
-        },
+        empleado_cuentas_bancarias: [{ ...EMPTY_BANK_ACCOUNT }],
         // Login
         username: '', 
         sede_id: '', 
@@ -62,11 +64,20 @@ const EditarEmpleado = ({ backPath }) => {
 
                 setRolIdRedirect(rol_id); 
 
-                const bancoState = empleado_cuentas_bancarias ? {
-                    entidad_financiera_id: empleado_cuentas_bancarias.entidad_financiera_id,
-                    numero_cuenta: empleado_cuentas_bancarias.numero_cuenta,
-                    cci: empleado_cuentas_bancarias.cci
-                } : { entidad_financiera_id: '', numero_cuenta: '', cci: '' };
+                const cuentasArray = Array.isArray(empleado_cuentas_bancarias)
+                    ? empleado_cuentas_bancarias
+                    : empleado_cuentas_bancarias?.entidad_financiera_id
+                        ? [empleado_cuentas_bancarias]
+                        : [];
+
+                const bancoState = cuentasArray.length > 0
+                    ? cuentasArray.map((cuenta) => ({
+                        entidad_financiera_id: cuenta.entidad_financiera_id || '',
+                        numero_cuenta: cuenta.numero_cuenta || '',
+                        cci: cuenta.cci || '',
+                        entidad_financiera: cuenta.entidad_financiera || null
+                    }))
+                    : [{ ...EMPTY_BANK_ACCOUNT }];
 
                 const contactoState = {
                     telefono: empleado_datos_contacto?.telefono || '',
@@ -132,6 +143,10 @@ const EditarEmpleado = ({ backPath }) => {
         else setFormData(p => ({ ...p, [name]: value }));
     };
 
+    const handleCuentasBancariasChange = (cuentas) => {
+        setFormData(prev => ({ ...prev, empleado_cuentas_bancarias: cuentas }));
+    };
+
    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -147,7 +162,13 @@ const EditarEmpleado = ({ backPath }) => {
                 empleado_datos_contacto: formData.empleado_datos_contacto,
                 username: formData.username,
                 sede_id: formData.sede_id,
-                empleado_cuentas_bancarias: formData.empleado_cuentas_bancarias
+                empleado_cuentas_bancarias: (formData.empleado_cuentas_bancarias || [])
+                    .map(cuenta => ({
+                        entidad_financiera_id: cuenta.entidad_financiera_id,
+                        numero_cuenta: cuenta.numero_cuenta,
+                        cci: cuenta.cci || ''
+                    }))
+                    .filter(cuenta => cuenta.entidad_financiera_id || cuenta.numero_cuenta || cuenta.cci)
             };
 
             if (formData.password) {
@@ -155,7 +176,7 @@ const EditarEmpleado = ({ backPath }) => {
                 payload.password_confirmation = formData.password_confirmation;
             }
             
-            if (!payload.empleado_cuentas_bancarias.entidad_financiera_id) {
+            if (payload.empleado_cuentas_bancarias.length === 0) {
                 delete payload.empleado_cuentas_bancarias; 
             }
             
@@ -199,9 +220,9 @@ const EditarEmpleado = ({ backPath }) => {
                             />
                         </div>
                         <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                             <FormularioBancoInicial 
+                             <CuentasBancariasMultiples 
                                 data={formData.empleado_cuentas_bancarias}
-                                handleChange={(e) => handleChange(e, 'empleado_cuentas_bancarias')} 
+                                onChange={handleCuentasBancariasChange}
                              />
                         </div>
                     </div>
