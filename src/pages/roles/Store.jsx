@@ -31,8 +31,8 @@ const Store = () => {
       try {
         const response = await getPermisosDisponibles();
         setPermisosDisponibles(response.data || response); 
-      } catch (error) {
-        setAlert({ type: 'error', message: 'No se pudieron cargar los permisos del sistema.' });
+      } catch (err) {
+        setAlert(handleApiError(err , 'No se pudieron cargar los permisos del sistema.'));
       }
     };
     loadPermisos();
@@ -83,8 +83,8 @@ const Store = () => {
       
       setTimeout(() => navigate('/roles/listar'), 2000);
 
-    } catch (error) {
-      setAlert(handleApiError(error, 'Error al registrar el rol'));
+    } catch (err) {
+      setAlert(handleApiError(err, 'Error al registrar el rol'));
     } finally { 
       setLoading(false); 
     }

@@ -127,7 +127,7 @@ const Update = ({ backPath }) => {
                 if (sede) setInitialSedeName(sede.nombre);
 
             } catch (err) {
-                setAlert({ type: 'error', message: 'Error cargando datos del empleado.' });
+                setAlert(handleApiError(err, 'Error cargando datos del empleado.'));
             } finally {
                 setLoading(false);
             }
@@ -241,7 +241,13 @@ const Update = ({ backPath }) => {
     return (
         <div className="w-full px-6 py-4">
             <PageHeader title="Editar Personal" subtitle={`${formData.datos_empleado.nombre} ${formData.datos_empleado.apellidoPaterno}`} icon={PencilSquareIcon} buttonText="Volver" buttonLink={rolIdRedirect ? `/personal/listar/${rolIdRedirect}` : backPath} />
-            <AlertMessage {...alert} onClose={() => setAlert(null)} />
+            
+            <AlertMessage            
+                type={alert?.type} 
+                message={alert?.message} 
+                details={alert?.details} 
+                onClose={() => setAlert(null)} 
+            />
 
             <form onSubmit={handleSubmit} className="w-full max-w-[98%] mx-auto">
                 <div className="grid grid-cols-12 gap-6">

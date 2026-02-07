@@ -14,6 +14,7 @@ import {
     ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
+import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
 // --- MAPA DE ESTADOS PARA UI (BADGES) ---
 const ESTADOS = {
@@ -80,7 +81,7 @@ const Index = () => {
                 totalItems: response.total,
             });
         } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cargar las admisiones.' });
+            setAlert(handleApiError(err,'Error al cargar las admisiones.'));
         } finally {
             setLoading(false);
         }
@@ -167,7 +168,7 @@ const Index = () => {
             });
 
         } catch (err) {
-            setAlert({ type: 'error', message: 'No se pudo cargar el detalle.' });
+            setAlert(handleApiError(err,'No se pudo cargar el detalle.'));
             setIsInfoOpen(false);
         } finally {
             setInfoLoading(false);
@@ -270,7 +271,7 @@ const Index = () => {
                 buttonLink="/gestion/nueva-admision"
             />
 
-            <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
+            <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
             <InfoModal 
                 isOpen={isInfoOpen}

@@ -74,7 +74,7 @@ const Index = () => {
                 totalItems: data.total,
             });
         } catch (err) {
-            setAlert({ type: 'error', message: 'No se pudieron cargar los clientes.' });
+            setAlert(handleApiError(err, 'Error al cargar los clientes.'));
         } finally {
             setLoading(false);
         }

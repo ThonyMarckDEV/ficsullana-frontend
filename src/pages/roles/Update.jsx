@@ -41,8 +41,8 @@ const Update = () => {
             permisos: permisosIds
         });
 
-      } catch (e) { 
-        setAlert({ type: 'error', message: 'No se pudo cargar la información.' }); 
+      } catch (err) { 
+        setAlert(handleApiError(err , 'No se pudo cargar la información.')); 
       } finally { 
         setLoading(false); 
       }

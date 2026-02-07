@@ -29,8 +29,8 @@ const Update = () => {
             estado: entidad.estado ?? true,
           }
         });
-      } catch (e) {
-        setAlert({ type: 'error', message: 'No se pudo cargar la información de la entidad.' });
+      } catch (err) {
+        setAlert(handleApiError(err, 'No se pudo cargar la información de la entidad.'));
       } finally {
         setLoading(false);
       }

@@ -86,7 +86,7 @@ const Update = () => {
         });
 
       } catch (err) {
-        setAlert({ type: 'error', message: "No se pudo cargar la información del cliente." });
+        setAlert(handleApiError(err, 'Error al cargar la informacion del cliente.'));
       } finally {
         setLoading(false);
       }
@@ -184,8 +184,7 @@ const Update = () => {
         setTimeout(() => navigate('/clientes/listar'), 1500);
 
     } catch (err) {
-        const errorData = handleApiError(err, 'Error al actualizar el cliente');
-        setAlert(errorData);
+        setAlert(handleApiError(err, 'Error al actualizar el cliente.'));
     } finally {
         setLoading(false);
     }

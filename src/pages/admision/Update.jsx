@@ -85,7 +85,7 @@ const Update = () => {
                 }
 
             } catch (err) {
-                setAlert({ type: 'error', message: 'No se pudo cargar la información de la admisión.' });
+                setAlert(handleApiError(err, 'No se pudo cargar la información de la admisión.'));
             } finally {
                 setLoading(false);
             }

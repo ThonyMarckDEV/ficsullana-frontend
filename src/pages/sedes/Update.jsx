@@ -29,9 +29,9 @@ const Update = () => {
             codigo_sunat: data.sede.codigo_sunat 
           }
         });
-      } catch (e) { 
+      } catch (err) { 
         console.error(e);
-        setAlert({ type: 'error', message: 'No se pudo cargar la información de la sede.' }); 
+        setAlert(handleApiError(err , 'No se pudo cargar la información de la sede.')); 
       } finally { 
         setLoading(false); 
       }

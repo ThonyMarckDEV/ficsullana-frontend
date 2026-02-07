@@ -70,7 +70,7 @@ const Index = () => {
                 totalItems: response.total,
             });
         } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cargar las sedes.' });
+            setAlert(handleApiError(err , 'Error al cargar las sedes.'));
         } finally {
             setLoading(false);
         }
@@ -124,7 +124,7 @@ const Index = () => {
             });
 
         } catch (err) {
-            setAlert({ type: 'error', message: 'No se pudo cargar el detalle de la sede.' });
+            setAlert(handleApiError(err , 'No se pudo cargar el detalle de la sede.'));
             setIsInfoOpen(false);
         } finally {
             setInfoLoading(false);
@@ -229,7 +229,7 @@ const Index = () => {
                 buttonLink="/sedes/agregar"
             />
 
-            <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
+            <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
             <InfoModal 
                 isOpen={isInfoOpen}

@@ -82,7 +82,7 @@ const Index = () => {
                 setRoles(response);
             }
         } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cargar los roles.' });
+            setAlert(handleApiError(err , 'Error al cargar los roles.'));
         } finally {
             setLoading(false);
         }
@@ -251,7 +251,7 @@ const Index = () => {
                 buttonLink="/roles/agregar"
             />
 
-            <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
+            <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
             <InfoModal 
                 isOpen={isInfoOpen}

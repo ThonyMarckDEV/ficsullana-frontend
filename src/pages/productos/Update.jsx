@@ -23,8 +23,8 @@ const Update = () => {
             nombre: data.nombre,
             rango_tasa: data.rango_tasa
         });
-      } catch (e) { 
-        setAlert({ type: 'error', message: 'No se pudo cargar la información del producto.' }); 
+      } catch (err) { 
+        setAlert(handleApiError(err , 'No se pudo cargar la información del producto.')); 
       } finally { 
         setLoading(false); 
       }

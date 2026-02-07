@@ -60,7 +60,7 @@ const Index = () => {
                 totalItems: response.total,
             });
         } catch (err) {
-            setAlert({ type: 'error', message: 'Error al cargar los productos.' });
+            setAlert(handleApiError(err, 'Error al cargar los productos.'));
         } finally {
             setLoading(false);
         }
@@ -186,7 +186,7 @@ const Index = () => {
                 buttonLink="/productos/agregar"
             />
 
-            <AlertMessage type={alert?.type} message={alert?.message} onClose={() => setAlert(null)} />
+            <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
             <InfoModal 
                 isOpen={isInfoOpen}

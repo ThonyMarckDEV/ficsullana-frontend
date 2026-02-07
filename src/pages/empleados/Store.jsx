@@ -207,7 +207,13 @@ const Store = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
     return (
         <div className="container mx-auto px-4 py-8 min-h-screen">
             <PageHeader title={`Nuevo ${propRolNombre || dynamicRoleName || "Usuario"}`} subtitle={`Registro de personal administrativo`} icon={UserPlusIcon} buttonText="← Volver" buttonLink={`/personal/listar/${rolId}`} />
-            <AlertMessage {...alert} onClose={() => setAlert(null)} />
+            
+            <AlertMessage            
+                type={alert?.type} 
+                message={alert?.message} 
+                details={alert?.details} 
+                onClose={() => setAlert(null)} 
+            />
             
             <div className="mb-12 max-w-5xl mx-auto flex items-center w-full relative">
                 <div className="absolute left-0 top-1/2 w-full h-1 bg-slate-200 -z-10 rounded"></div>
