@@ -30,7 +30,6 @@ const Update = () => {
           }
         });
       } catch (err) { 
-        console.error(e);
         setAlert(handleApiError(err , 'No se pudo cargar la información de la sede.')); 
       } finally { 
         setLoading(false); 
