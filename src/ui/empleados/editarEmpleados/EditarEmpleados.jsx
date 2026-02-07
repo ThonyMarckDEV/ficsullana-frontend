@@ -4,6 +4,7 @@ import { showEmpleado, updateEmpleado } from 'services/empleadoService';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import { buildAddressLine } from 'utilities/addressFormatter';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
@@ -23,6 +24,7 @@ const EditarEmpleado = ({ backPath }) => {
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [rolIdRedirect, setRolIdRedirect] = useState(null);
+    const [isCuentaAccesoValida, setIsCuentaAccesoValida] = useState(true);
 
     // Estado inicial idéntico a AgregarEmpleado
     const [formData, setFormData] = useState({
@@ -30,8 +32,10 @@ const EditarEmpleado = ({ backPath }) => {
         datos_empleado: { 
             nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '', 
             fechaNacimiento: '', fechaIngreso: '', sexo: '', estadoCivil: '',
+            tipoVia: '', nombreVia: '', numeroMzLt: '', urbanizacion: '',
             direccion: '', departamento: '', provincia: '', distrito: '',
-            area_id: ''
+            area_id: '',
+            esCarnetExtranjeria: false
         },
         // Contacto
         empleado_datos_contacto: {
@@ -98,14 +102,19 @@ const EditarEmpleado = ({ backPath }) => {
                         dni: datos_empleado.dni, 
                         fechaNacimiento: datos_empleado.fechaNacimiento,
                         fechaIngreso: datos_empleado.fechaIngreso,
-                        sexo: datos_empleado.sexo,
-                        estadoCivil: datos_empleado.estadoCivil,
+                        sexo: String(datos_empleado.sexo || '').toUpperCase(),
+                        estadoCivil: String(datos_empleado.estadoCivil || '').toUpperCase(),
+                        tipoVia: datos_empleado.tipoVia || '',
+                        nombreVia: datos_empleado.nombreVia || '',
+                        numeroMzLt: datos_empleado.numeroMzLt || '',
+                        urbanizacion: datos_empleado.urbanizacion || '',
                         direccion: datos_empleado.direccion,
                         departamento: datos_empleado.departamento,
                         provincia: datos_empleado.provincia,
                         distrito: datos_empleado.distrito,
                         area_id: datos_empleado.area_id,
-                        area: datos_empleado.area
+                        area: datos_empleado.area,
+                        esCarnetExtranjeria: String(datos_empleado.dni || '').length === 9
                     },
                     empleado_datos_contacto: contactoState,
                     empleado_cuentas_bancarias: bancoState, 
@@ -126,19 +135,27 @@ const EditarEmpleado = ({ backPath }) => {
         loadData();
     }, [id]);
 
+    const normalizeValue = (name, value, section) => {
+        if (typeof value !== 'string') return value;
+        if (name === 'correo' || name === 'email') return value.toLowerCase();
+        if (!section && ['username', 'password', 'password_confirmation'].includes(name)) return value;
+        return value.toUpperCase();
+    };
+
     const handleChange = (e, section) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
+        const nextValue = type === 'checkbox' ? checked : normalizeValue(name, value, section);
 
         if (name === 'telefono' && section === 'datos_empleado') {
              setFormData(prev => ({ 
                 ...prev, 
-                empleado_datos_contacto: { ...prev.empleado_datos_contacto, telefono: value } 
+                empleado_datos_contacto: { ...prev.empleado_datos_contacto, telefono: nextValue } 
             }));
             return;
         }
 
         if (name === 'email' || name === 'correo') {
-            const correoValue = value || '';
+            const correoValue = String(nextValue || '').toLowerCase();
             setFormData(prev => ({ 
                ...prev, 
                empleado_datos_contacto: { ...prev.empleado_datos_contacto, correo: correoValue, correos: [correoValue] }
@@ -146,8 +163,8 @@ const EditarEmpleado = ({ backPath }) => {
            return;
        }
 
-        if (section) setFormData(p => ({ ...p, [section]: { ...p[section], [name]: value } }));
-        else setFormData(p => ({ ...p, [name]: value }));
+        if (section) setFormData(p => ({ ...p, [section]: { ...p[section], [name]: nextValue } }));
+        else setFormData(p => ({ ...p, [name]: nextValue }));
     };
 
     const handleCuentasBancariasChange = (cuentas) => {
@@ -156,6 +173,15 @@ const EditarEmpleado = ({ backPath }) => {
 
    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!isCuentaAccesoValida) {
+            setAlert({
+                type: 'error',
+                message: 'La nueva contraseña no cumple validación. Debe tener mínimo 8 caracteres, un carácter especial y confirmación correcta.'
+            });
+            return;
+        }
+
         setLoading(true);
         setAlert(null);
         
@@ -163,13 +189,14 @@ const EditarEmpleado = ({ backPath }) => {
             const datosLimpios = { ...formData.datos_empleado };
             
             delete datosLimpios.area; 
+            datosLimpios.direccion = buildAddressLine(datosLimpios);
 
             const payload = { 
                 datos_empleado: datosLimpios,
                 empleado_datos_contacto: {
                     ...formData.empleado_datos_contacto,
                     correos: (formData.empleado_datos_contacto?.correos || [])
-                        .map(correo => (correo || '').trim())
+                        .map(correo => String(correo || '').trim().toLowerCase())
                         .filter(Boolean),
                 },
                 username: formData.username,
@@ -229,8 +256,8 @@ const EditarEmpleado = ({ backPath }) => {
                                         ...prev,
                                         empleado_datos_contacto: {
                                             ...prev.empleado_datos_contacto,
-                                            correos: nextEmails,
-                                            correo: nextEmails[0] || ''
+                                            correos: nextEmails.map((email) => String(email || '').toLowerCase()),
+                                            correo: String(nextEmails[0] || '').toLowerCase()
                                         }
                                     }))
                                 }
@@ -257,10 +284,11 @@ const EditarEmpleado = ({ backPath }) => {
                             <CuentaForm 
                                 data={{...formData, email: formData.empleado_datos_contacto.correo}} 
                                 handleChange={(e) => handleChange(e)} 
+                                onValidationChange={setIsCuentaAccesoValida}
                                 isEdit={true} 
                             />
                             <div className="mt-6 flex flex-col gap-2">
-                                <button type="submit" disabled={loading} className="w-full py-2.5 bg-fic-red text-white rounded font-bold uppercase text-xs shadow hover:bg-red-700 transition-all">
+                                <button type="submit" disabled={loading || !isCuentaAccesoValida} className="w-full py-2.5 bg-fic-red text-white rounded font-bold uppercase text-xs shadow hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                     {loading ? 'Guardando...' : 'Guardar Cambios'}
                                 </button>
                                 <button type="button" onClick={() => navigate(-1)} className="w-full py-2.5 bg-slate-100 text-slate-600 rounded font-bold uppercase text-xs hover:bg-slate-200">

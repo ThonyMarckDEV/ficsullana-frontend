@@ -1,9 +1,14 @@
 import React from 'react';
-import { IdentificationIcon } from '@heroicons/react/24/outline';
+import { IdentificationIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import DireccionDomiciliariaFields from 'components/Shared/Formularios/DireccionDomiciliariaFields';
 
-const ClienteForm = ({ data, handleChange }) => {
+const ClienteForm = ({ data, direcciones, handleChange, onDireccionChange }) => {
   const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-fic-red focus:border-fic-red outline-none transition-all text-sm font-medium text-slate-700 placeholder:font-normal bg-slate-50/30";
   const labelClass = "block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-wider";
+  const isCarnetExtranjeria = Boolean(data.esCarnetExtranjeria);
+  const documentoLength = isCarnetExtranjeria ? 9 : 8;
+  const direccionFiscal = direcciones?.fiscal || {};
+  const direccionCorrespondencia = direcciones?.correspondencia || {};
 
   // Función para permitir solo números
   const onlyNumbers = (e) => {
@@ -13,6 +18,28 @@ const ClienteForm = ({ data, handleChange }) => {
   // Función para permitir solo letras (incluye espacios y ñ)
   const onlyLetters = (e) => {
     e.target.value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+  };
+
+  const handleCarnetToggle = (e) => {
+    const checked = e.target.checked;
+
+    handleChange({
+      target: {
+        name: 'esCarnetExtranjeria',
+        type: 'checkbox',
+        checked,
+        value: checked
+      }
+    });
+
+    if (!checked && String(data.dni || '').length > 8) {
+      handleChange({
+        target: {
+          name: 'dni',
+          value: String(data.dni).slice(0, 8)
+        }
+      });
+    }
   };
 
   return (
@@ -29,9 +56,19 @@ const ClienteForm = ({ data, handleChange }) => {
                 <input 
                   id="dni" name="dni" type="text" value={data.dni} 
                   onChange={handleChange} onInput={onlyNumbers}
-                  placeholder="8 o 9 dígitos" className={inputClass} 
-                  minLength="8" maxLength="9" required 
+                  placeholder={isCarnetExtranjeria ? "9 digitos" : "8 digitos"} className={inputClass}
+                  minLength={documentoLength} maxLength={documentoLength} required
                 />
+                <label className="mt-2 inline-flex items-center gap-2 text-[11px] font-bold text-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="esCarnetExtranjeria"
+                      checked={isCarnetExtranjeria}
+                      onChange={handleCarnetToggle}
+                      className="w-4 h-4 rounded text-fic-red focus:ring-fic-red"
+                    />
+                    Carnet de Extranjeria (CE)
+                </label>
             </div>
             <div>
                 <label htmlFor="fechaCaducidadDni" className={labelClass}>Caducidad DNI</label>
@@ -75,20 +112,20 @@ const ClienteForm = ({ data, handleChange }) => {
           <div>
               <label htmlFor="sexo" className={labelClass}>Sexo</label>
               <select id="sexo" name="sexo" value={data.sexo} onChange={handleChange} className={inputClass} required>
-                  <option value="">Seleccione...</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Femenino">Femenino</option>
+                  <option value="">SELECCIONE...</option>
+                  <option value="MASCULINO">MASCULINO</option>
+                  <option value="FEMENINO">FEMENINO</option>
               </select>
           </div>
           <div>
               <label htmlFor="estadoCivil" className={labelClass}>Estado Civil</label>
               <select id="estadoCivil" name="estadoCivil" value={data.estadoCivil} onChange={handleChange} className={inputClass} required>
-                  <option value="">Seleccione...</option>
-                  <option value="SOLTERO/A">Soltero/a</option>
-                  <option value="CASADO/A">Casado/a</option>
-                  <option value="VIUDO/A">Viudo/a</option>
-                  <option value="DIVORCIADO/A">Divorciado/a</option>
-                  <option value="CONVIVIENTE">Conviviente</option>
+                  <option value="">SELECCIONE...</option>
+                  <option value="SOLTERO/A">SOLTERO/A</option>
+                  <option value="CASADO/A">CASADO/A</option>
+                  <option value="VIUDO/A">VIUDO/A</option>
+                  <option value="DIVORCIADO/A">DIVORCIADO/A</option>
+                  <option value="CONVIVIENTE">CONVIVIENTE</option>
               </select>
           </div>
           <div>
@@ -102,14 +139,46 @@ const ClienteForm = ({ data, handleChange }) => {
           </div>
       </div>
 
+      <div>
+        <div className="flex items-center gap-2 mb-4 border-b pb-2">
+            <MapPinIcon className="w-5 h-5 text-fic-yellow" />
+            <h2 className="text-lg font-black text-slate-800 uppercase tracking-tighter">2. Direcciones Del Cliente</h2>
+        </div>
+        <div className="space-y-6">
+          <section className="rounded-xl border border-slate-200 p-4">
+            <h3 className="text-xs font-black uppercase tracking-wide text-slate-700 mb-4">
+              Direccion Fiscal
+            </h3>
+            <DireccionDomiciliariaFields
+              data={direccionFiscal}
+              handleChange={(e) => onDireccionChange('fiscal', e)}
+              inputClass={inputClass}
+              labelClass={labelClass}
+            />
+          </section>
+
+          <section className="rounded-xl border border-slate-200 p-4">
+            <h3 className="text-xs font-black uppercase tracking-wide text-slate-700 mb-4">
+              Direccion De Correspondencia
+            </h3>
+            <DireccionDomiciliariaFields
+              data={direccionCorrespondencia}
+              handleChange={(e) => onDireccionChange('correspondencia', e)}
+              inputClass={inputClass}
+              labelClass={labelClass}
+            />
+          </section>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           <div className="lg:col-span-3">
               <label htmlFor="nivelEducativo" className={labelClass}>Nivel Educativo</label>
               <select id="nivelEducativo" name="nivelEducativo" value={data.nivelEducativo} onChange={handleChange} className={inputClass} required>
-                  <option value="">Seleccione...</option>
-                  <option value="TECNICO">Técnico</option>
-                  <option value="UNIVERSITARIO">Universitario</option>
-                  <option value="POSTGRADO">Postgrado</option>
+                  <option value="">SELECCIONE...</option>
+                  <option value="TECNICO">TECNICO</option>
+                  <option value="UNIVERSITARIO">UNIVERSITARIO</option>
+                  <option value="POSTGRADO">POSTGRADO</option>
               </select>
           </div>
           <div className="lg:col-span-3">

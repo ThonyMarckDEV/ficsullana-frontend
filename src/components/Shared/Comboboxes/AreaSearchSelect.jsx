@@ -77,7 +77,7 @@ const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
 
     return (
         <div className="relative" ref={wrapperRef}>
-            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">
+            <label className="block text-xs font-black text-slate-500 mb-1.5 uppercase tracking-wide">
                 Área
             </label>
 
@@ -92,10 +92,10 @@ const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                     onKeyDown={handleKeyDown}
                     onClick={handleInputClick}
                     placeholder="Buscar Área..."
-                    className={`w-full border rounded-md shadow-sm py-2 pl-3 pr-10 outline-none text-sm transition-colors ${
+                    className={`w-full px-3 py-2.5 border rounded-lg shadow-sm pr-10 outline-none text-sm font-medium transition-all ${
                         selectedId
-                            ? 'border-green-500 bg-green-50 text-green-800 font-bold'
-                            : 'border-gray-300 focus:border-fic-red focus:ring-1 focus:ring-fic-red'
+                            ? 'border-green-500 bg-green-50 text-green-800'
+                            : 'border-slate-300 focus:border-fic-red focus:ring-2 focus:ring-fic-red text-slate-700 placeholder:font-normal'
                     }`}
                     autoComplete="off"
                 />
@@ -104,7 +104,7 @@ const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                     type="button"
                     onClick={() => fetchAreas(inputValue)}
                     disabled={loading}
-                    className="absolute right-2 text-gray-400 hover:text-fic-red p-1"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-fic-red p-1"
                 >
                     {loading ? (
                         <div className="w-4 h-4 border-2 border-gray-300 border-t-fic-red rounded-full animate-spin"></div>

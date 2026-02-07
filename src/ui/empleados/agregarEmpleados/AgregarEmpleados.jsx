@@ -4,6 +4,7 @@ import { UserPlusIcon, CheckIcon, ChevronRightIcon } from '@heroicons/react/24/o
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { createEmpleado } from 'services/empleadoService';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import { buildAddressLine } from 'utilities/addressFormatter';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { useAuth } from 'context/AuthContext';
 
@@ -28,6 +29,7 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState(null);
     const [dynamicRoleName, setDynamicRoleName] = useState("");
+    const [isCuentaAccesoValida, setIsCuentaAccesoValida] = useState(false);
 
     const [formData, setFormData] = useState({
         rol_id: parseInt(rolId),
@@ -35,8 +37,10 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         datos_empleado: { 
             nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '', 
             fechaNacimiento: '', fechaIngreso: '', sexo: '', estadoCivil: '',
+            tipoVia: '', nombreVia: '', numeroMzLt: '', urbanizacion: '',
             direccion: '', departamento: '', provincia: '', distrito: '',
-            area_id: '', 
+            area_id: '',
+            esCarnetExtranjeria: false,
         },
         // 2. Contacto 
         empleado_datos_contacto: {
@@ -59,19 +63,27 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         }
     }, [rolId, propRolNombre, roles]);
 
+    const normalizeValue = (name, value, section) => {
+        if (typeof value !== 'string') return value;
+        if (name === 'correo' || name === 'email') return value.toLowerCase();
+        if (!section && ['username', 'password', 'password_confirmation'].includes(name)) return value;
+        return value.toUpperCase();
+    };
+
     const handleChange = (e, section) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
+        const nextValue = type === 'checkbox' ? checked : normalizeValue(name, value, section);
         
         if (name === 'telefono' && section === 'datos_empleado') {
              setFormData(prev => ({ 
                 ...prev, 
-                empleado_datos_contacto: { ...prev.empleado_datos_contacto, telefono: value } 
+                empleado_datos_contacto: { ...prev.empleado_datos_contacto, telefono: nextValue } 
             }));
             return;
         }
 
         if (name === 'email' || name === 'correo') {
-            const correoValue = value || '';
+            const correoValue = String(nextValue || '').toLowerCase();
             setFormData(prev => ({ 
                ...prev, 
                empleado_datos_contacto: { ...prev.empleado_datos_contacto, correo: correoValue, correos: [correoValue] }
@@ -80,9 +92,9 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
        }
 
         if (section) {
-            setFormData(prev => ({ ...prev, [section]: { ...prev[section], [name]: value } }));
+            setFormData(prev => ({ ...prev, [section]: { ...prev[section], [name]: nextValue } }));
         } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
+            setFormData(prev => ({ ...prev, [name]: nextValue }));
         }
     };
 
@@ -92,12 +104,25 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
+
+        if (!isCuentaAccesoValida) {
+            setAlert({
+                type: 'error',
+                message: 'Valida la cuenta de acceso: contraseña mínima de 8 caracteres, carácter especial y confirmación.'
+            });
+            return;
+        }
+
         setLoading(true);
         
         try {
             const payload = { ...formData };
+            payload.datos_empleado = {
+                ...payload.datos_empleado,
+                direccion: buildAddressLine(payload.datos_empleado)
+            };
             const correosLimpios = (payload.empleado_datos_contacto?.correos || [])
-                .map(correo => (correo || '').trim())
+                .map(correo => String(correo || '').trim().toLowerCase())
                 .filter(Boolean);
 
             payload.empleado_datos_contacto = {
@@ -150,8 +175,8 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
                                 ...prev,
                                 empleado_datos_contacto: {
                                     ...prev.empleado_datos_contacto,
-                                    correos: nextEmails,
-                                    correo: nextEmails[0] || ''
+                                    correos: nextEmails.map((email) => String(email || '').toLowerCase()),
+                                    correo: String(nextEmails[0] || '').toLowerCase()
                                 }
                             }))
                         }
@@ -170,7 +195,8 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
                 return (
                     <CuentaForm 
                         data={{...formData, email: formData.empleado_datos_contacto.correo}}
-                        handleChange={(e) => handleChange(e)} 
+                        handleChange={(e) => handleChange(e)}
+                        onValidationChange={setIsCuentaAccesoValida}
                     />
                 );
             default:
@@ -202,7 +228,7 @@ const AgregarEmpleado = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
                     {currentStep < 3 ? (
                         <button type="button" onClick={() => setCurrentStep(prev => prev + 1)} className="flex items-center gap-2 px-10 py-3 text-white bg-fic-red rounded-xl hover:bg-red-700 font-black uppercase tracking-wide shadow-lg transition-all">Siguiente <ChevronRightIcon className="w-4 h-4" /></button>
                     ) : (
-                        <button type="button" onClick={handleSubmit} disabled={loading} className="px-12 py-3 text-fic-dark bg-fic-yellow rounded-xl hover:bg-yellow-400 font-black uppercase tracking-wide shadow-lg transition-all">{loading ? 'Guardando...' : `Finalizar Registro`}</button>
+                        <button type="button" onClick={handleSubmit} disabled={loading || !isCuentaAccesoValida} className="px-12 py-3 text-fic-dark bg-fic-yellow rounded-xl hover:bg-yellow-400 font-black uppercase tracking-wide shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">{loading ? 'Guardando...' : `Finalizar Registro`}</button>
                     )}
                 </div>
             </form>

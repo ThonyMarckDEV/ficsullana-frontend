@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import SedeSearchSelect from 'components/Shared/Comboboxes/SedeSearchSelect';
 import AreaSearchSelect from 'components/Shared/Comboboxes/AreaSearchSelect';
+import DireccionDomiciliariaFields from 'components/Shared/Formularios/DireccionDomiciliariaFields';
 import { useAuth } from 'context/AuthContext';
 
 const DatosForm = ({ 
@@ -27,6 +28,8 @@ const DatosForm = ({
     onSedeChange          
 }) => {
   const { user } = useAuth();
+  const isCarnetExtranjeria = Boolean(data.esCarnetExtranjeria);
+  const documentoLength = isCarnetExtranjeria ? 9 : 8;
   
   const isSuperAdmin = user?.rol?.nombre?.toLowerCase() === 'superadmin' || user?.rol_id === 1;
 
@@ -39,16 +42,38 @@ const DatosForm = ({
     if (['dni', 'telefono'].includes(name)) {
       if (!/^\d*$/.test(value)) return;
     }
-    if (['nombre', 'apellidoPaterno', 'apellidoMaterno', 'departamento', 'provincia', 'distrito'].includes(name)) {
+    if (['nombre', 'apellidoPaterno', 'apellidoMaterno', 'nombreVia', 'urbanizacion'].includes(name)) {
       if (!/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]*$/.test(value)) return;
     }
     handleChange(e);
   };
 
+  const handleCarnetToggle = (e) => {
+    const checked = e.target.checked;
+
+    handleChange({
+      target: {
+        name: 'esCarnetExtranjeria',
+        type: 'checkbox',
+        checked,
+        value: checked
+      }
+    });
+
+    if (!checked && String(data.dni || '').length > 8) {
+      handleChange({
+        target: {
+          name: 'dni',
+          value: String(data.dni).slice(0, 8)
+        }
+      });
+    }
+  };
+
   const updateEmail = (index, value) => {
     if (!onEmailsChange) return;
     const next = [...emailList];
-    next[index] = value;
+    next[index] = String(value || '').toLowerCase();
     onEmailsChange(next);
   };
 
@@ -76,7 +101,26 @@ const DatosForm = ({
           {/* DNI */}
           <div>
             <label className={labelClass}>DNI</label>
-            <input name="dni" value={data.dni} onChange={handleInputValidation} placeholder="########" className={inputClass} maxLength={8} minLength={8} required />
+            <input
+              name="dni"
+              value={data.dni}
+              onChange={handleInputValidation}
+              placeholder={isCarnetExtranjeria ? "#########" : "########"}
+              className={inputClass}
+              maxLength={documentoLength}
+              minLength={documentoLength}
+              required
+            />
+            <label className="mt-2 inline-flex items-center gap-2 text-[11px] font-bold text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                name="esCarnetExtranjeria"
+                checked={isCarnetExtranjeria}
+                onChange={handleCarnetToggle}
+                className="w-4 h-4 rounded text-fic-red focus:ring-fic-red"
+              />
+              Carnet de Extranjeria (CE)
+            </label>
           </div>
           {/* Nombres */}
           <div>
@@ -96,21 +140,21 @@ const DatosForm = ({
           <div>
             <label className={labelClass}>Sexo</label>
             <select name="sexo" value={data.sexo} onChange={handleChange} className={inputClass} required>
-              <option value="">Seleccione...</option>
-              <option value="Masculino">Masculino</option>
-              <option value="Femenino">Femenino</option>
+              <option value="">SELECCIONE...</option>
+              <option value="MASCULINO">MASCULINO</option>
+              <option value="FEMENINO">FEMENINO</option>
             </select>
           </div>
           {/* Estado Civil */}
           <div>
             <label className={labelClass}>Estado Civil</label>
             <select name="estadoCivil" value={data.estadoCivil} onChange={handleChange} className={inputClass} required>
-              <option value="">Seleccione...</option>
-              <option value="SOLTERO/A">Soltero/a</option>
-              <option value="CASADO/A">Casado/a</option>
-              <option value="DIVORCIADO/A">Divorciado/a</option>
-              <option value="VIUDO/A">Viudo/a</option>
-              <option value="CONVIVIENTE">Conviviente</option>
+              <option value="">SELECCIONE...</option>
+              <option value="SOLTERO/A">SOLTERO/A</option>
+              <option value="CASADO/A">CASADO/A</option>
+              <option value="DIVORCIADO/A">DIVORCIADO/A</option>
+              <option value="VIUDO/A">VIUDO/A</option>
+              <option value="CONVIVIENTE">CONVIVIENTE</option>
             </select>
           </div>
           {/* Fecha Nacimiento */}
@@ -129,21 +173,21 @@ const DatosForm = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-2">
-            <div className="flex items-center justify-between">
-              <label className={labelClass}>Emails</label>
+          <div className="md:col-span-2">
+            <div className="relative mb-1.5">
+              <label className={`${labelClass} mb-0`}>Emails</label>
               {onEmailsChange && (
                 <button
                   type="button"
                   onClick={addEmail}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-black uppercase rounded-lg bg-fic-red text-white hover:bg-red-700 transition-colors"
+                  className="absolute right-0 top-0 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black uppercase rounded-lg bg-fic-red text-white hover:bg-red-700 transition-colors"
                 >
                   <PlusIcon className="w-3.5 h-3.5" />
                   Agregar email
                 </button>
               )}
             </div>
-
+            <div className="space-y-2">
             {emailList.map((currentEmail, index) => (
               <div key={`email-${index}`} className="flex gap-2">
                 <input 
@@ -167,11 +211,12 @@ const DatosForm = ({
                 )}
               </div>
             ))}
+            </div>
           </div>
           <div>
             <label className={labelClass}>Teléfono / Celular</label>
             <div className="relative">
-              <PhoneIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+              <PhoneIcon className="absolute left-3 top-1/2 w-4 h-4 text-slate-400 -translate-y-1/2" />
               <input name="telefono" value={data.telefono || ''} onChange={handleInputValidation} placeholder="987654321" className={`${inputClass} pl-10`} maxLength={9} minLength={9} required />
             </div>
           </div>
@@ -185,27 +230,12 @@ const DatosForm = ({
           <h2 className="text-xl font-black text-fic-dark">Dirección Domiciliaria</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className={labelClass}>Dirección</label>
-            <div className="relative">
-              <MapPinIcon className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-              <input name="direccion" value={data.direccion} onChange={handleChange} placeholder="Av. Ejemplo 123..." className={`${inputClass} pl-10`} required />
-            </div>
-          </div>
-          <div>
-            <label className={labelClass}>Departamento</label>
-            <input name="departamento" value={data.departamento || ''} onChange={handleInputValidation} placeholder="Lima" className={inputClass} required />
-          </div>
-          <div>
-            <label className={labelClass}>Provincia</label>
-            <input name="provincia" value={data.provincia || ''} onChange={handleInputValidation} placeholder="Lima" className={inputClass} required />
-          </div>
-          <div>
-            <label className={labelClass}>Distrito</label>
-            <input name="distrito" value={data.distrito || ''} onChange={handleInputValidation} placeholder="Miraflores" className={inputClass} required />
-          </div>
-        </div>
+        <DireccionDomiciliariaFields
+          data={data}
+          handleChange={handleChange}
+          inputClass={inputClass}
+          labelClass={labelClass}
+        />
       </div>
 
       {/* --- SECCIÓN LABORAL --- */}
