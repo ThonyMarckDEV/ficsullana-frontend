@@ -14,54 +14,55 @@ import SedeLayout from 'layouts/SedeLayout';
 // UIS AUTH
 import ErrorPage404 from 'components/ErrorPage404';
 import ErrorPage401 from 'components/ErrorPage401';
-import Login from 'ui/auth/Login/Login';
+import Login from 'pages/auth/Login/Login';
 
 // UI HOME
-import Home from 'ui/home/Home';
+import Home from 'pages/home/Home';
 
 // Modulos Sedes
-import AgregarSede from 'ui/sedes/agregarSede/AgregarSede';
-import ListarSedes from 'ui/sedes/listarSedes/ListarSedes';
-import EditarSede from 'ui/sedes/editarSede/EditarSede';
+import AgregarSede from 'pages/sedes/Store';
+import ListarSedes from 'pages/sedes/Index';
+import EditarSede from 'pages/sedes/Update';
 
 // Modulos Areas
-import AgregarArea from 'ui/areas/agregarArea/AgregarArea';
-import ListarAreas from 'ui/areas/listarAreas/ListarAreas';
-import EditarArea from 'ui/areas/editarArea/EditarArea';
+import AgregarArea from 'pages/areas/Store';
+import ListarAreas from 'pages/areas/Index';
+import EditarArea from 'pages/areas/Udpate';
 
 // Modulos Entidades Financieras
-import AgregarEntidadFinanciera from 'ui/entidadesFinancieras/agregarEntidadFinanciera/AgregarEntidadFinanciera';
-import ListarEntidadesFinancieras from 'ui/entidadesFinancieras/listarEntidadesFinancieras/ListarEntidadesFinancieras';
-import EditarEntidadFinanciera from 'ui/entidadesFinancieras/editarEntidadFinanciera/EditarEntidadFinanciera';
+import AgregarEntidadFinanciera from 'pages/entidadesFinancieras/Store';
+import ListarEntidadesFinancieras from 'pages/entidadesFinancieras/Index';
+import EditarEntidadFinanciera from 'pages/entidadesFinancieras/Update';
 
 // Modulos Productos
-import AgregarProducto from 'ui/productos/agregarProducto/AgregarProducto';
-import ListarProductos from 'ui/productos/listarProductos/ListarProductos';
-import EditarProducto from 'ui/productos/editarProductos/EditarProducto';
+import AgregarProducto from 'pages/productos/Store';
+import ListarProductos from 'pages/productos/Index';
+import EditarProducto from 'pages/productos/Update';
 
 // --- MÓDULO EMPLEADOS ---
-import ListarEmpleados from 'ui/empleados/listarEmpleados/ListarEmpleados';
-import AgregarEmpleado from 'ui/empleados/agregarEmpleados/AgregarEmpleados';
-import EditarEmpleado from 'ui/empleados/editarEmpleados/EditarEmpleados';
+import ListarEmpleados from 'pages/empleados/Index';
+import AgregarEmpleado from 'pages/empleados/Store';
+import EditarEmpleado from 'pages/empleados/Update';
 
 // Modulos Clientes
-import AgregarCliente from 'ui/clientes/agregarCliente/AgregarCliente';
-import EditarCliente from 'ui/clientes/editarCliente/EditarCliente';
+import AgregarCliente from 'pages/clientes/Store';
+import EditarCliente from 'pages/clientes/Update';
+import ListarCliente from 'pages/clientes/Index';
 
 // Modulos Admisiones
-import NuevaAdmision from 'ui/admision/nuevaAdmision/NuevaAdmision';
-import ListarAdmisiones from 'ui/admision/listarAdmisiones/ListarAdmisiones';
-import EditarAdmision from 'ui/admision/editarAdmision/EditarAdmision';
+import NuevaAdmision from 'pages/admision/Store';
+import ListarAdmisiones from 'pages/admision/Index';
+import EditarAdmision from 'pages/admision/Update';
 
 // Modulos Roles
-import NuevoRol from 'ui/roles/agregarRol/AgregarRol';
-import ListarRoles from 'ui/roles/listarRoles/ListarRoles';
-import EditarRol from 'ui/roles/editarRoles/EditarRol';
+import NuevoRol from 'pages/roles/Store';
+import ListarRoles from 'pages/roles/Index';
+import EditarRol from 'pages/roles/Update';
 
 // Utilities
 import ProtectedRouteLogin from 'utilities/ProtectedRoutes/ProtectedRouteLogin';
 import ProtectedRoute from 'utilities/ProtectedRoutes/ProtectedRoute';
-import ListarCliente from 'ui/clientes/listarClientes/ListarClientes';
+
 
 /* --- CONTENIDO PRINCIPAL --- */
 
