@@ -3,7 +3,12 @@
  * Siempre devuelve o lanza un objeto con un formato predecible.
  */
 export const handleResponse = async (response) => {
-    const result = await response.json();
+    let result = {};
+    try {
+        result = await response.json();
+    } catch {
+        result = {};
+    }
 
     if (!response.ok) {
         // Lógica de detección de detalles
@@ -17,7 +22,9 @@ export const handleResponse = async (response) => {
         const error = {
             type: 'error',
             message: result.message || 'Ocurrió un error inesperado.',
-            details: rawDetails, 
+            details: rawDetails,
+            status: response.status,
+            code: result.code || null,
         };
         
         throw error;
@@ -31,5 +38,6 @@ export const handleResponse = async (response) => {
         type: 'success',
         message: result.message || 'Operación realizada con éxito.',
         data: result.data || result,
+        status: response.status,
     };
 };

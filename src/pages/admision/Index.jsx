@@ -16,12 +16,36 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
+const buildFullName = (persona, type) => {
+    if (!persona) return 'Sin nombre';
+
+    if (type === 'CLIENTE') {
+        return `${persona.nombre || ''} ${persona.apellidoPaterno || ''} ${persona.apellidoMaterno || ''}`.trim() || 'Sin nombre';
+    }
+
+    return `${persona.nombres || ''} ${persona.apellido_paterno || ''} ${persona.apellido_materno || ''}`.trim() || 'Sin nombre';
+};
+
 // --- MAPA DE ESTADOS PARA UI (BADGES) ---
 const ESTADOS = {
     0: { label: 'PENDIENTE', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
     1: { label: 'APROBADO',  color: 'bg-green-100 text-green-800 border-green-200' },
     2: { label: 'OBSERVADO', color: 'bg-orange-100 text-orange-800 border-orange-200' },
     3: { label: 'RECHAZADO', color: 'bg-red-100 text-red-800 border-red-200' },
+};
+
+const ESTADO_LABEL_TO_VALUE = {
+    PENDIENTE: 0,
+    APROBADO: 1,
+    OBSERVADO: 2,
+    RECHAZADO: 3,
+};
+
+const normalizeEstado = (estado) => {
+    if (typeof estado === 'number' && Number.isInteger(estado)) return estado;
+    if (typeof estado === 'string' && /^\d+$/.test(estado)) return Number(estado);
+    if (typeof estado === 'string') return ESTADO_LABEL_TO_VALUE[estado.toUpperCase()] ?? null;
+    return null;
 };
 
 const Index = () => {
@@ -113,9 +137,12 @@ const Index = () => {
             const response = await showAdmision(id);
             const data = response.data;
             const solicitante = data.cliente ? data.cliente.datos : data.prospecto;
-            const nombreSolicitante = data.cliente ? `${solicitante.nombre || ''} ${solicitante.apellidoPaterno || ''} ${solicitante.apellidoMaterno || ''}`.trim() : 'Sin nombre';
-
-            const estadoInfo = ESTADOS[data.estado] || { label: 'DESCONOCIDO' };
+            const nombreSolicitante = buildFullName(solicitante, data.cliente ? 'CLIENTE' : 'PROSPECTO');
+            const estadoValue = normalizeEstado(data.estado);
+            const estadoInfo = ESTADOS[estadoValue] || { label: 'DESCONOCIDO' };
+            const asesorNombre = data.asesor?.datos
+                ? `${data.asesor.datos.nombre || ''} ${data.asesor.datos.apellidoPaterno || ''}`.trim()
+                : 'Desconocido';
 
             const secciones = [
                 {
@@ -123,9 +150,9 @@ const Index = () => {
                     icon: UserIcon,
                     items: [
                         { label: "Solicitante", value: nombreSolicitante, fullWidth: true },
-                        { label: "DNI", value: solicitante.dni },
+                        { label: "DNI", value: solicitante?.dni || 'N/A' },
                         { label: "Tipo", value: data.cliente ? 'CLIENTE RECURRENTE' : 'PROSPECTO NUEVO' },
-                        { label: "Asesor", value: data.asesor?.datos?.nombre || 'Desconocido' },
+                        { label: "Asesor", value: asesorNombre },
                         { label: "Sede", value: data.sede?.nombre || 'N/A' },
                     ]
                 },
@@ -133,7 +160,7 @@ const Index = () => {
                     title: "2. Resumen Financiero",
                     icon: BanknotesIcon,
                     items: [
-                        { label: "Estado", value: estadoInfo.label },
+                        { label: "Estado", value: data.estado_label || estadoInfo.label },
                         { label: "Tipo Préstamo", value: data.tipo_prestamo },
                         { label: "Total Deuda", value: `S/ ${data.total_deuda}` },
                         { label: "Total Protestos", value: `S/ ${data.total_protestos}` },
@@ -180,7 +207,7 @@ const Index = () => {
             header: 'Solicitante',
             render: (row) => {
                 const persona = row.cliente ? row.cliente.datos : row.prospecto;
-                const nombre = row.cliente ? `${row.cliente.nombre || ''} ${row.cliente.apellidoPaterno || ''} ${row.cliente.apellidoMaterno || ''}`.trim() : 'Sin nombre';
+                const nombre = buildFullName(persona, row.cliente ? 'CLIENTE' : 'PROSPECTO');
                 
                 return (
                     <div className="flex items-center gap-3">
@@ -189,7 +216,7 @@ const Index = () => {
                         </div>
                         <div>
                             <span className="font-black text-fic-dark block uppercase tracking-tight text-xs">{nombre}</span>
-                            <span className="text-[10px] text-slate-500 font-bold">{persona.dni}</span>
+                            <span className="text-[10px] text-slate-500 font-bold">{persona?.dni || 'N/A'}</span>
                         </div>
                     </div>
                 );
@@ -223,10 +250,11 @@ const Index = () => {
         {
             header: 'Estado',
             render: (row) => {
-                const config = ESTADOS[row.estado] || { label: 'DESC.', color: 'bg-gray-100' };
+                const estadoValue = normalizeEstado(row.estado);
+                const config = ESTADOS[estadoValue] || { label: 'DESC.', color: 'bg-gray-100' };
                 return (
                     <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full border ${config.color}`}>
-                        {config.label}
+                        {row.estado_label || config.label}
                     </span>
                 );
             }
@@ -245,12 +273,12 @@ const Index = () => {
                         Ver
                     </button>
                     
-                    {(row.estado === 0 || row.estado === 2) ? (
+                    {(normalizeEstado(row.estado) === 0 || normalizeEstado(row.estado) === 2) ? (
                         <Link 
                             to={`/gestion/editar-admision/${row.id}`} 
                             className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
                         >
-                            <PencilSquareIcon className="w-5 h-5" /> Editar
+                            <PencilSquareIcon className="w-5 h-5" /> EDITAR
                         </Link>
                     ) : null}
                 </div>

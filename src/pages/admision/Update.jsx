@@ -9,6 +9,27 @@ import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import { UserIcon, IdentificationIcon, BuildingOfficeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 
+const ESTADOS = {
+    0: { label: 'PENDIENTE', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+    1: { label: 'APROBADO', color: 'text-green-700 bg-green-50 border-green-200' },
+    2: { label: 'OBSERVADO', color: 'text-orange-700 bg-orange-50 border-orange-200' },
+    3: { label: 'RECHAZADO', color: 'text-red-700 bg-red-50 border-red-200' },
+};
+
+const ESTADO_LABEL_TO_VALUE = {
+    PENDIENTE: 0,
+    APROBADO: 1,
+    OBSERVADO: 2,
+    RECHAZADO: 3,
+};
+
+const normalizeEstado = (estado) => {
+    if (typeof estado === 'number' && Number.isInteger(estado)) return estado;
+    if (typeof estado === 'string' && /^\d+$/.test(estado)) return Number(estado);
+    if (typeof estado === 'string') return ESTADO_LABEL_TO_VALUE[estado.toUpperCase()] ?? 0;
+    return 0;
+};
+
 const Update = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -18,7 +39,7 @@ const Update = () => {
 
     const [header, setHeader] = useState({
         tipo_prestamo: 'NUEVO',
-        estado: 'PENDIENTE',
+        estado: 0,
         observaciones: '',
         solicitanteName: '',
         solicitanteDni: '',
@@ -51,7 +72,7 @@ const Update = () => {
                 // Setear Cabecera
                 setHeader({
                     tipo_prestamo: data.tipo_prestamo,
-                    estado: data.estado,
+                    estado: normalizeEstado(data.estado),
                     observaciones: data.observaciones || '',
                     solicitanteName: nombreSolicitante.trim(),
                     solicitanteDni: persona.dni,
@@ -95,7 +116,7 @@ const Update = () => {
 
     const handleHeaderChange = (e) => {
         const { name, value } = e.target;
-        setHeader(prev => ({ ...prev, [name]: value }));
+        setHeader(prev => ({ ...prev, [name]: name === 'estado' ? Number(value) : value }));
     };
 
     const handleSubmit = async (e) => {
@@ -105,7 +126,7 @@ const Update = () => {
 
         const payload = {
             tipo_prestamo: header.tipo_prestamo,
-            estado: header.estado,
+            estado: Number(header.estado),
             observaciones: header.observaciones,
             deudas: deudas,
             protestos: protestos
@@ -116,7 +137,7 @@ const Update = () => {
             setAlert({ type: 'success', message: response.message || 'Admisión actualizada correctamente.' });
             
             if(response.data) {
-                setHeader(prev => ({ ...prev, estado: response.data.estado }));
+                setHeader(prev => ({ ...prev, estado: normalizeEstado(response.data.estado) }));
             }
             setTimeout(() => navigate('/gestion/listar-admisiones'), 1500);
         } catch (error) {
@@ -190,6 +211,11 @@ const Update = () => {
                     {/* Tarjeta de Configuración */}
                     <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100">
                         <h2 className="text-lg font-bold text-slate-700 mb-4 border-b pb-2">1. Configuración</h2>
+                        {header.estado === 2 && (
+                            <p className="mb-4 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-md px-3 py-2 font-semibold">
+                                Estado OBSERVADO: al guardar, el sistema puede mantener este estado por reglas de riesgo.
+                            </p>
+                        )}
                         
                         <div className="mb-4">
                             <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Estado de Evaluación</label>
@@ -197,16 +223,12 @@ const Update = () => {
                                 name="estado" 
                                 value={header.estado} 
                                 onChange={handleHeaderChange}
-                                className={`w-full px-3 py-2 border rounded-md outline-none text-sm font-bold shadow-sm focus:ring-2 focus:ring-fic-red ${
-                                    header.estado === 'APROBADO' ? 'text-green-700 bg-green-50 border-green-200' : 
-                                    header.estado === 'RECHAZADO' ? 'text-red-700 bg-red-50 border-red-200' : 
-                                    'text-slate-700'
-                                }`}
+                                className={`w-full px-3 py-2 border rounded-md outline-none text-sm font-bold shadow-sm focus:ring-2 focus:ring-fic-red ${ESTADOS[header.estado]?.color || 'text-slate-700'}`}
                             >
-                                <option value="PENDIENTE">PENDIENTE</option>
-                                <option value="APROBADO">APROBADO</option>
-                                <option value="OBSERVADO">OBSERVADO</option>
-                                <option value="RECHAZADO">RECHAZADO</option>
+                                <option value={0}>PENDIENTE</option>
+                                <option value={1}>APROBADO</option>
+                                <option value={2}>OBSERVADO</option>
+                                <option value={3}>RECHAZADO</option>
                             </select>
                         </div>
 
@@ -241,14 +263,14 @@ const Update = () => {
 
                 {/* COLUMNA DERECHA */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 min-h-[600px]">
+                    <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 flex flex-col">
                         <h2 className="text-lg font-bold text-slate-700 mb-4 border-b pb-2">2. Evaluación Financiera</h2>
                         
                         <DeudasGrid deudas={deudas} setDeudas={setDeudas} />
                         
                         <ProtestosGrid protestos={protestos} setProtestos={setProtestos} />
 
-                        <div className="mt-8 pt-4 border-t border-slate-100 flex justify-end gap-4">
+                        <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap justify-end gap-4">
                             <button 
                                 type="button" 
                                 onClick={() => navigate('/gestion/listar-admisiones')} 

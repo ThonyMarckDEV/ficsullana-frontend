@@ -7,7 +7,15 @@ import {
   formatUbigeoLabel,
 } from "services/ubigeo/ubigeoRepo";
 
-const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClass }) => {
+const DireccionDomiciliariaFields = ({
+  data,
+  handleChange,
+  inputClass,
+  labelClass,
+  errors = {},
+  touched = {},
+  handleBlur,
+}) => {
   const tiposVia = useMemo(() => getTiposVia(), []);
   const departamentos = useMemo(() => getDepartamentos(), []);
   const provincias = useMemo(() => getProvincias(data.departamento), [data.departamento]);
@@ -31,6 +39,20 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
     }
   };
 
+  const getFieldClass = (name) =>
+    `${inputClass}${touched?.[name] && errors?.[name] ? " border-red-500 focus:ring-red-500" : ""}`;
+
+  const renderError = (name) =>
+    touched?.[name] && errors?.[name] ? (
+      <p className="text-[11px] text-red-600 mt-1">{errors[name]}</p>
+    ) : null;
+
+  const onBlurField = (e) => {
+    if (typeof handleBlur === "function") {
+      handleBlur(e);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div>
@@ -39,7 +61,8 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
           name="tipoVia"
           value={data.tipoVia || ""}
           onChange={handleAddressChange}
-          className={inputClass}
+          onBlur={onBlurField}
+          className={getFieldClass("tipoVia")}
           required
         >
           <option value="">SELECCIONE...</option>
@@ -49,6 +72,7 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
             </option>
           ))}
         </select>
+        {renderError("tipoVia")}
       </div>
 
       <div>
@@ -57,11 +81,13 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
           name="nombreVia"
           value={data.nombreVia || ""}
           onChange={handleAddressChange}
+          onBlur={onBlurField}
           placeholder="Ej: Los Laureles"
-          className={inputClass}
+          className={getFieldClass("nombreVia")}
           maxLength={150}
           required
         />
+        {renderError("nombreVia")}
       </div>
 
       <div>
@@ -70,11 +96,13 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
           name="numeroMzLt"
           value={data.numeroMzLt || ""}
           onChange={handleAddressChange}
+          onBlur={onBlurField}
           placeholder="Ej: 123 / MZ A LT 1"
-          className={inputClass}
+          className={getFieldClass("numeroMzLt")}
           maxLength={100}
           required
         />
+        {renderError("numeroMzLt")}
       </div>
 
       <div>
@@ -83,11 +111,13 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
           name="urbanizacion"
           value={data.urbanizacion || ""}
           onChange={handleAddressChange}
+          onBlur={onBlurField}
           placeholder="Ej: Chocan, La Orca"
-          className={inputClass}
+          className={getFieldClass("urbanizacion")}
           maxLength={150}
           required
         />
+        {renderError("urbanizacion")}
       </div>
 
       <div>
@@ -96,7 +126,8 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
           name="departamento"
           value={data.departamento || ""}
           onChange={handleAddressChange}
-          className={inputClass}
+          onBlur={onBlurField}
+          className={getFieldClass("departamento")}
           required
         >
           <option value="">SELECCIONE...</option>
@@ -106,6 +137,7 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
             </option>
           ))}
         </select>
+        {renderError("departamento")}
       </div>
 
       <div>
@@ -114,7 +146,8 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
           name="provincia"
           value={data.provincia || ""}
           onChange={handleAddressChange}
-          className={inputClass}
+          onBlur={onBlurField}
+          className={getFieldClass("provincia")}
           disabled={!data.departamento}
           required
         >
@@ -125,6 +158,7 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
             </option>
           ))}
         </select>
+        {renderError("provincia")}
       </div>
 
       <div>
@@ -133,7 +167,8 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
           name="distrito"
           value={data.distrito || ""}
           onChange={handleAddressChange}
-          className={inputClass}
+          onBlur={onBlurField}
+          className={getFieldClass("distrito")}
           disabled={!data.provincia}
           required
         >
@@ -144,6 +179,7 @@ const DireccionDomiciliariaFields = ({ data, handleChange, inputClass, labelClas
             </option>
           ))}
         </select>
+        {renderError("distrito")}
       </div>
     </div>
   );

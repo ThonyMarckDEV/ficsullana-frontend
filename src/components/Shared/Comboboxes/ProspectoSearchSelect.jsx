@@ -2,13 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getProspectosCombobox } from 'services/prospectoService';
 import { MagnifyingGlassIcon, UserPlusIcon, CheckCircleIcon, PlusIcon } from '@heroicons/react/24/outline';
 
+// Regla UX estándar para comboboxes remotos: mínimo 3 caracteres antes de consultar API.
+const MIN_SEARCH_LENGTH = 3;
+
 const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenModal }) => {
     const [inputValue, setInputValue] = useState(initialName);
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [searchError, setSearchError] = useState('');
     
     const wrapperRef = useRef(null);
+    const isSearchingRef = useRef(false);
 
     useEffect(() => {
         if (!selectedId) setInputValue('');
@@ -26,7 +31,10 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
     }, [wrapperRef]);
 
     const fetchProspectos = async (searchTerm = '') => {
+        if (isSearchingRef.current) return;
+        isSearchingRef.current = true;
         setLoading(true);
+        setSearchError('');
         try {
             const response = await getProspectosCombobox(1, searchTerm);
             setSuggestions(response.data || []);
@@ -34,21 +42,38 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
         } catch (error) {
             console.error("Error buscando prospectos", error);
             setSuggestions([]);
+            setSearchError(error?.message || 'No se pudo buscar prospectos en este momento.');
+            setShowSuggestions(true);
         } finally {
             setLoading(false);
+            isSearchingRef.current = false;
         }
     };
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            fetchProspectos(inputValue);
+            runSearch();
         }
     };
 
+    const runSearch = () => {
+        if (isSearchingRef.current) return;
+
+        const searchTerm = inputValue.trim();
+        if (searchTerm.length < MIN_SEARCH_LENGTH) {
+            setSearchError('Ingresa al menos 3 caracteres para buscar.');
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        fetchProspectos(searchTerm);
+    };
+
     const handleInputClick = () => {
-        if (!showSuggestions) {
-            fetchProspectos(inputValue);
+        if (!showSuggestions && suggestions.length > 0) {
+            setShowSuggestions(true);
         }
     };
 
@@ -71,6 +96,8 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                     value={inputValue}
                     onChange={(e) => {
                         setInputValue(e.target.value);
+                        setSearchError('');
+                        setShowSuggestions(false);
                         if (selectedId) onSelect(null);
                     }}
                     onKeyDown={handleKeyDown}
@@ -86,7 +113,7 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
 
                 <button
                     type="button"
-                    onClick={() => fetchProspectos(inputValue)}
+                    onClick={runSearch}
                     disabled={loading}
                     className="absolute right-2 text-gray-400 hover:text-fic-red p-1"
                 >
@@ -122,6 +149,18 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                                     </div>
                                 </li>
                             ))
+                        ) : searchError ? (
+                            <li className="p-3 bg-red-50 text-center">
+                                <p className="text-xs text-red-700 mb-2">{searchError}</p>
+                                <button
+                                    type="button"
+                                    onClick={runSearch}
+                                    disabled={loading}
+                                    className="bg-fic-red text-white text-xs px-4 py-2 rounded-md font-bold shadow hover:bg-red-700 w-full"
+                                >
+                                    Reintentar búsqueda
+                                </button>
+                            </li>
                         ) : (
                             <li className="p-3 bg-slate-50 text-center">
                                 <p className="text-xs text-slate-500 mb-2 italic">No se encontraron resultados.</p>
@@ -140,6 +179,9 @@ const ProspectoSearchSelect = ({ onSelect, selectedId, initialName = '', onOpenM
                     </ul>
                 )}
             </div>
+            {searchError && !showSuggestions && (
+                <p className="text-[11px] text-red-600 mt-1">{searchError}</p>
+            )}
             
             {/* Si no ha seleccionado nada, botón de ayuda rápida */}
             {!selectedId && !inputValue && (

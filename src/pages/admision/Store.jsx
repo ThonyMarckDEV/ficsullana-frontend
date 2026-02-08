@@ -39,6 +39,7 @@ const Store = () => {
 
     const [deudas, setDeudas] = useState([]);
     const [protestos, setProtestos] = useState([]);
+    const isSolicitanteSelected = Boolean(header.cliente_id || header.prospecto_id);
 
     // --- MANEJADORES DE SELECCIÓN ---
 
@@ -182,10 +183,10 @@ const Store = () => {
                 onSuccess={handleProspectoCreado} 
             />
 
-            <form onSubmit={handleSubmit} className="w-full max-w-[95%] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <form onSubmit={handleSubmit} className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
                 
                 {/* --- COLUMNA IZQUIERDA: DATOS --- */}
-                <div className="lg:col-span-1 space-y-6">
+                <div className="lg:col-span-1 space-y-6 self-start">
                     <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 sticky top-6">
                         <h2 className="text-lg font-bold text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">
                             <UserPlusIcon className="w-5 h-5 text-fic-red"/> 1. Solicitante
@@ -247,7 +248,7 @@ const Store = () => {
                             {/* Mensajes de Ayuda Contextual */}
                             {header.tipo_solicitante === 'PROSPECTO' && (
                                 <p className="text-[10px] text-blue-600 mt-1 font-bold bg-blue-50 p-1 rounded border border-blue-100 flex items-center gap-1">
-                                    🔒 Los prospectos siempre inician como NUEVO.
+                                    Los prospectos siempre inician como NUEVO.
                                 </p>
                             )}
                             
@@ -257,7 +258,7 @@ const Store = () => {
                                         ? 'text-orange-700 bg-orange-50 border-orange-100' 
                                         : 'text-green-700 bg-green-50 border-green-100'
                                 }`}>
-                                    🔒 Calculado según historial del cliente.
+                                    Calculado según historial del cliente.
                                 </p>
                             )}
                         </div>
@@ -277,34 +278,43 @@ const Store = () => {
 
                 {/* --- COLUMNA DERECHA: GRIDS --- */}
                 <div className="lg:col-span-3 space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 min-h-[500px]">
+                    <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 flex flex-col">
                         <h2 className="text-lg font-bold text-slate-700 mb-4 border-b pb-2">2. Evaluación Financiera</h2>
-                        
-                        <div className={!header.cliente_id && !header.prospecto_id ? 'opacity-50 pointer-events-none grayscale' : ''}>
-                            {/* Pasamos el tipo de prestamo para que los Grids sepan qué reglas aplicar */}
-                            <DeudasGrid 
-                                deudas={deudas} 
-                                setDeudas={setDeudas} 
-                                tipoPrestamo={header.tipo_prestamo || 'RCS'} // Fallback solo para renderizado interno
-                            />
-                            <ProtestosGrid protestos={protestos} setProtestos={setProtestos} />
+
+                        <div className="min-h-[360px]">
+                            {isSolicitanteSelected ? (
+                                <div className="space-y-8">
+                                    <div className="rounded-xl border border-slate-100 p-3">
+                                        {/* Pasamos el tipo de prestamo para que los Grids sepan qué reglas aplicar */}
+                                        <DeudasGrid 
+                                            deudas={deudas} 
+                                            setDeudas={setDeudas} 
+                                            tipoPrestamo={header.tipo_prestamo || 'RCS'} // Fallback solo para renderizado interno
+                                        />
+                                    </div>
+                                    <div className="rounded-xl border border-slate-100 p-3">
+                                        <ProtestosGrid protestos={protestos} setProtestos={setProtestos} />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                                    <p className="text-slate-500 font-bold text-base">
+                                        Seleccione un Cliente o Prospecto para habilitar la carga de datos financieros.
+                                    </p>
+                                    <p className="text-slate-400 text-sm mt-2">
+                                        El cuadro de deudas y protestos se habilitará automáticamente después de elegir al solicitante.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
-                        {!header.cliente_id && !header.prospecto_id && (
-                            <div className="text-center py-8 bg-slate-50 border border-dashed border-slate-300 rounded-lg mt-[-200px] relative z-10 mx-4">
-                                <p className="text-slate-400 font-bold text-sm">
-                                    🔍 Seleccione un Cliente o Prospecto para habilitar la carga de datos financieros.
-                                </p>
-                            </div>
-                        )}
-
-                        <div className="mt-8 pt-4 border-t border-slate-100 flex justify-end gap-4">
+                        <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap justify-end gap-4">
                             <button 
                                 type="button" 
                                 onClick={() => navigate('/gestion/listar-admisiones')} 
                                 className="px-6 py-2 text-slate-600 font-bold bg-slate-100 rounded hover:bg-slate-200 transition-colors"
                             >
-                                Cancelar
+                                CANCELAR
                             </button>
                             <button 
                                 type="submit" 
