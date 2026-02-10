@@ -1,84 +1,79 @@
 import React, { useEffect } from 'react';
-import { FaRegSadCry } from 'react-icons/fa';
+import { FaUserLock, FaShieldAlt } from 'react-icons/fa';
 
-const ErrorPage = () => {
-  // Efecto de animación al cargar la página
+const UnauthorizedPage = () => {
   useEffect(() => {
     const elementsToAnimate = document.querySelectorAll('.animate-in');
-    
     elementsToAnimate.forEach((element, index) => {
       setTimeout(() => {
         element.classList.add('animate-show');
-      }, 200 * index);
+      }, 150 * index);
     });
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-white">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 text-slate-600 font-sans">
+      
+      {/* Tarjeta Central */}
+      <div className="w-full max-w-lg p-8 bg-white rounded-2xl shadow-2xl border-t-8 border-[#e30613] relative overflow-hidden">
+        
+        {/* Logo Decorativo de fondo */}
+        <div className="absolute top-[-20px] right-[-20px] opacity-5">
+           <img src="/path-to-your-logo.png" alt="watermark" className="w-40" />
+        </div>
 
-      {/* Contenido principal */}
-      <div className="flex-grow flex justify-center items-center relative z-10">
-        <div className="text-center p-6 md:p-12">
-          {/* Ícono con animación */}
-          <div className="animate-in opacity-0 transform translate-y-8 transition-all duration-700 ease-out">
-            <FaRegSadCry className="text-8xl text-red-600 mb-8 mx-auto animate-bounce-slow" />
+        <div className="relative z-10 text-center">
+          
+          {/* Icono con colores de Fic Sullana */}
+          <div className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out mb-6">
+            <div className="relative inline-block">
+                <FaShieldAlt className="text-8xl text-red-50 absolute top-0 left-0 transform -translate-x-1 -translate-y-1" />
+                <FaUserLock className="text-6xl text-[#ffc107] relative z-10 mt-4 drop-shadow-md" />
+            </div>
           </div>
           
-          {/* Título "404" con efecto de glow */}
-          <h1 className="animate-in opacity-0 transform translate-y-8 transition-all duration-700 ease-out text-9xl font-bold text-transparent bg-clip-text bg-red-700 mb-4 ">
+          {/* Título */}
+          <h1 className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out text-6xl font-black text-[#e30613] mb-2">
             401
           </h1>
           
-          {/* Texto con animación */}
-          <p className="animate-in opacity-0 transform translate-y-8 transition-all duration-700 ease-out text-2xl text-black mb-8 max-w-2xl mx-auto">
-             La página que buscas no existe o se ha movido. Verifica la URL o regresa al inicio.
+          <h2 className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out text-xl font-bold text-slate-800 uppercase tracking-widest mb-4">
+            Acceso no autorizado
+          </h2>
+          
+          {/* Texto explicativo financiero */}
+          <p className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out text-slate-500 mb-8 leading-relaxed">
+             Su perfil de usuario no cuenta con las credenciales necesarias para realizar operaciones en este módulo del <strong>Sistema de Créditos</strong>. Por seguridad, la acción ha sido bloqueada.
           </p>
           
-          {/* Botón con animación */}
-          <div className="animate-in opacity-0 transform translate-y-8 transition-all duration-700 ease-out">
+          {/* Botones de acción */}
+          <div className="animate-in opacity-0 translate-y-4 transition-all duration-700 ease-out flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="/"
-              className="inline-block px-8 py-4 bg-red-600 text-white text-lg font-semibold rounded-lg  transition-all duration-300 transform hover:scale-105"
+              className="px-8 py-3 bg-[#e30613] text-white font-bold rounded-lg hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200"
             >
-              Volver al inicio
+              Ir al Dashboard
             </a>
+            <button
+              onClick={() => window.history.back()}
+              className="px-8 py-3 bg-white text-slate-700 border-2 border-slate-200 font-bold rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Volver
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Estilos CSS para las animaciones */}
+      {/* Footer Institucional */}
+      <p className="mt-8 text-slate-400 text-sm animate-in opacity-0">
+        © 2024 Fic Sullana - Departamento de Seguridad TI
+      </p>
+
       <style jsx>{`
-        @keyframes float {
-          0% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-          100% { transform: translateY(0) rotate(360deg); }
-        }
-        
-        .animate-bounce-slow {
-          animation: bounce 3s infinite;
-        }
-        
-        @keyframes bounce {
-          0%, 100% { transform: translateY(-5%); }
-          50% { transform: translateY(5%); }
-        }
-        
-        .glow-text {
-          text-shadow: 0 0 15px rgba(255, 0, 0, 0.5), 0 0 25px rgba(255, 200, 0, 0.3);
-        }
-        
-        .shadow-red-glow {
-          box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
-        }
-        
-        .shadow-red-glow-intense {
-          box-shadow: 0 0 25px rgba(255, 0, 0, 0.6), 0 0 15px rgba(255, 200, 0, 0.3);
-        }
-        
         .animate-in {
-          transition-property: opacity, transform;
+          opacity: 0;
+          transform: translateY(20px);
         }
-        
         .animate-show {
           opacity: 1 !important;
           transform: translateY(0) !important;
@@ -88,4 +83,4 @@ const ErrorPage = () => {
   );
 };
 
-export default ErrorPage;
+export default UnauthorizedPage;

@@ -2,8 +2,6 @@ import { fetchWithAuth } from 'js/authToken';
 import API_BASE_URL from 'js/urlHelper';
 import { handleResponse } from 'utilities/Responses/handleResponse'; 
 
-// ID del Rol para Clientes (según tu base de datos es 8)
-const ROL_CLIENTE = 8;
 
 export const createCliente = async (clienteData) => {
   const url = `${API_BASE_URL}/api/clientes/store`;
@@ -26,7 +24,6 @@ export const getClientes = async (page = 1, filters = {}) => {
     page: page,
     search: filters.search || '',
     estado: filters.estado || '',
-    rol_id: ROL_CLIENTE
   });
 
   const url = `${API_BASE_URL}/api/clientes/index?${params.toString()}`;
@@ -45,7 +42,6 @@ export const getClientesCombobox = async (page = 1, search = '') => {
   const params = new URLSearchParams({
     page: page,
     search: search,
-    rol_id: ROL_CLIENTE,
   });
 
   const url = `${API_BASE_URL}/api/clientes/index?${params.toString()}`;
