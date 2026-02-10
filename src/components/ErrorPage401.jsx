@@ -66,7 +66,7 @@ const UnauthorizedPage = () => {
 
       {/* Footer Institucional */}
       <p className="mt-8 text-slate-400 text-sm animate-in opacity-0">
-        © 2024 Fic Sullana - Departamento de Seguridad TI
+        © 2026 Fic Sullana 
       </p>
 
       <style jsx>{`
