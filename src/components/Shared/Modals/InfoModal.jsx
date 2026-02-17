@@ -3,16 +3,26 @@ import React from 'react';
 import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { BtnExportPdf } from 'components/Shared/Buttons/ExportButtons';
 
-const InfoItem = ({ label, value, fullWidth = false }) => (
-    <div className={`${fullWidth ? 'col-span-2 md:col-span-4' : 'col-span-1'}`}>
-        <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5">
-            {label}
-        </span>
-        <span className="block text-sm font-bold text-fic-dark break-words">
-            {value || <span className="text-slate-300 italic">No registrado</span>}
-        </span>
-    </div>
-);
+const InfoItem = ({ label, value, className = '', fullWidth = false }) => {
+    const hasValue = value !== null && value !== undefined && value !== '';
+    const isCustomValue = React.isValidElement(value);
+
+    return (
+        <div className={`${fullWidth ? 'col-span-2 md:col-span-4' : 'col-span-1'}`}>
+            <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5">
+                {label}
+            </span>
+
+            {!hasValue ? (
+                <span className="block text-sm text-slate-300 italic break-words">No registrado</span>
+            ) : isCustomValue ? (
+                <div className={`break-words ${className}`}>{value}</div>
+            ) : (
+                <span className={`block text-sm font-bold text-fic-dark break-words ${className}`}>{value}</span>
+            )}
+        </div>
+    );
+};
 
 const InfoModal = ({ 
     isOpen, 
@@ -95,11 +105,12 @@ const InfoModal = ({
                                         {/* Grid de Datos */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                                             {section.items.map((item, itemIdx) => (
-                                                <InfoItem 
-                                                    key={itemIdx} 
-                                                    label={item.label} 
-                                                    value={item.value} 
-                                                    fullWidth={item.fullWidth} 
+                                                <InfoItem
+                                                    key={itemIdx}
+                                                    label={item.label}
+                                                    value={item.value}
+                                                    className={item.className}
+                                                    fullWidth={item.fullWidth}
                                                 />
                                             ))}
                                         </div>

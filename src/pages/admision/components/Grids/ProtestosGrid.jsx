@@ -18,7 +18,7 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
 
     const handleChange = (index, field, value) => {
         const newProtestos = [...protestos];
-        newProtestos[index][field] = value;
+        newProtestos[index][field] = field === 'entidad_acreedora' ? value.toUpperCase() : value;
         setProtestos(newProtestos);
     };
 
@@ -51,7 +51,7 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
                                     <input 
                                         value={row.entidad_acreedora} 
                                         onChange={(e) => handleChange(i, 'entidad_acreedora', e.target.value)}
-                                        className={inputClass} placeholder="Entidad..."
+                                        className={`${inputClass} uppercase`} placeholder="Entidad..."
                                     />
                                 </td>
                                 <td className="p-1">
@@ -61,7 +61,7 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
                                         className={inputClass}
                                     >
                                         <option value="LETRA">LETRA</option>
-                                        <option value="PAGARE">PAGARE</option>
+                                        <option value="PAGARE">PAGARÉ</option>
                                         <option value="FACTURA">FACTURA</option>
                                     </select>
                                 </td>

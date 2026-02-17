@@ -22,6 +22,7 @@ const buildInitialFormData = () => ({
   apellido_paterno: '',
   apellido_materno: '',
   fecha_nacimiento: '',
+  fecha_caducidad_dni: '',
   prospecto_direccion: {
     tipoVia: '',
     nombreVia: '',
@@ -34,6 +35,7 @@ const buildInitialFormData = () => ({
   },
   prospecto_contacto: {
     celular: '',
+    correo: '',
   },
 });
 
@@ -43,9 +45,11 @@ const buildInitialTouched = () => ({
   apellido_paterno: false,
   apellido_materno: false,
   fecha_nacimiento: false,
+  fecha_caducidad_dni: false,
   prospecto_direccion: Object.fromEntries(ADDRESS_FIELD_KEYS.map((key) => [key, false])),
   prospecto_contacto: {
     celular: false,
+    correo: false,
   },
 });
 
@@ -55,20 +59,65 @@ const buildInitialErrors = () => ({
   apellido_paterno: '',
   apellido_materno: '',
   fecha_nacimiento: '',
+  fecha_caducidad_dni: '',
   prospecto_direccion: Object.fromEntries(ADDRESS_FIELD_KEYS.map((key) => [key, ''])),
   prospecto_contacto: {
     celular: '',
+    correo: '',
   },
 });
 
 const getMaxBirthDate = () => {
   const limit = new Date();
   limit.setFullYear(limit.getFullYear() - 19);
-  limit.setMonth(limit.getMonth() - 11);
   return toDateInputValue(limit);
 };
 
-const validateProspectoForm = (data, documentoLength, maxBirthDate) => {
+const getMinBirthDate = () => {
+  const limit = new Date();
+  limit.setFullYear(limit.getFullYear() - 71);
+  return toDateInputValue(limit);
+};
+
+const getGeneralBirthDateRange = () => {
+  const youngerLimit = new Date();
+  youngerLimit.setFullYear(youngerLimit.getFullYear() - 21);
+
+  const olderLimit = new Date();
+  olderLimit.setFullYear(olderLimit.getFullYear() - 69);
+  olderLimit.setMonth(olderLimit.getMonth() - 11);
+
+  return {
+    younger: toDateInputValue(youngerLimit),
+    older: toDateInputValue(olderLimit),
+  };
+};
+
+const getProspectoExceptionMessages = (data, maxBirthDate, minBirthDate) => {
+  const messages = [];
+  const birthDate = String(data.fecha_nacimiento || '');
+  const dniExpirationDate = String(data.fecha_caducidad_dni || '');
+  const today = toDateInputValue(new Date());
+  const { younger, older } = getGeneralBirthDateRange();
+
+  const isBirthDateInExceptionRange =
+    birthDate &&
+    birthDate >= minBirthDate &&
+    birthDate <= maxBirthDate &&
+    (birthDate > younger || birthDate < older);
+
+  if (isBirthDateInExceptionRange) {
+    messages.push('Edad fuera del rango general (21 a 69 años 11 meses). En admisión pedirá excepción.');
+  }
+
+  if (dniExpirationDate && dniExpirationDate < today) {
+    messages.push('DNI/CE vencido. En admisión pedirá excepción.');
+  }
+
+  return messages;
+};
+
+const validateProspectoForm = (data, documentoLength, maxBirthDate, minBirthDate) => {
   const errors = buildInitialErrors();
 
   const dni = String(data.dni || '').trim();
@@ -90,8 +139,14 @@ const validateProspectoForm = (data, documentoLength, maxBirthDate) => {
 
   if (!data.fecha_nacimiento) {
     errors.fecha_nacimiento = 'La fecha de nacimiento es obligatoria.';
+  } else if (data.fecha_nacimiento < minBirthDate) {
+    errors.fecha_nacimiento = 'No debe superar 71 años exactos.';
   } else if (data.fecha_nacimiento > maxBirthDate) {
-    errors.fecha_nacimiento = 'Debe ser mayor o igual a 19 años y 11 meses.';
+    errors.fecha_nacimiento = 'Debe tener al menos 19 años exactos.';
+  }
+
+  if (!data.fecha_caducidad_dni) {
+    errors.fecha_caducidad_dni = 'La fecha de caducidad del DNI/CE es obligatoria.';
   }
 
   ADDRESS_FIELD_KEYS.forEach((key) => {
@@ -105,6 +160,11 @@ const validateProspectoForm = (data, documentoLength, maxBirthDate) => {
     errors.prospecto_contacto.celular = 'El celular es obligatorio.';
   } else if (!/^9[0-9]{8}$/.test(celular)) {
     errors.prospecto_contacto.celular = 'Debe tener 9 dígitos e iniciar con 9.';
+  }
+
+  const correo = String(data.prospecto_contacto?.correo || '').trim();
+  if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    errors.prospecto_contacto.correo = 'El correo no es válido.';
   }
 
   return errors;
@@ -124,8 +184,10 @@ const isDirtyForm = (data) => {
     data.apellido_paterno ||
     data.apellido_materno ||
     data.fecha_nacimiento ||
+    data.fecha_caducidad_dni ||
     data.esCarnetExtranjeria ||
-    data.prospecto_contacto?.celular
+    data.prospecto_contacto?.celular ||
+    data.prospecto_contacto?.correo
   ) {
     return true;
   }
@@ -138,7 +200,9 @@ export {
   buildInitialErrors,
   buildInitialFormData,
   buildInitialTouched,
+  getMinBirthDate,
   getMaxBirthDate,
+  getProspectoExceptionMessages,
   hasAnyError,
   isDirtyForm,
   validateProspectoForm,

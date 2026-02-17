@@ -53,9 +53,9 @@ const EditarCliente = lazy(() => import('pages/clientes/Update'));
 const ListarCliente = lazy(() => import('pages/clientes/Index'));
 
 // Modulos Admisiones
-const NuevaAdmision = lazy(() => import('pages/admision/Store'));
-const ListarAdmisiones = lazy(() => import('pages/admision/Index'));
-const EditarAdmision = lazy(() => import('pages/admision/Update'));
+const NuevaAdmision = lazy(() => import('pages/admision/routes/Store'));
+const ListarAdmisiones = lazy(() => import('pages/admision/routes/Index'));
+const EditarAdmision = lazy(() => import('pages/admision/routes/Update'));
 
 // Modulos Roles
 const NuevoRol = lazy(() => import('pages/roles/Store'));

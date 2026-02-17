@@ -32,6 +32,25 @@ export const createAdmision = async (data) => {
   return handleResponse(response);
 };
 
+export const evaluarAdmision = async (data) => {
+  const url = `${BASE_URL}/evaluar`;
+  const response = await fetchWithAuth(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return handleResponse(response);
+};
+
+export const getCapitalPendienteFicsullana = async (clienteId) => {
+  const url = `${BASE_URL}/capital-pendiente/${clienteId}`;
+  const response = await fetchWithAuth(url, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+  });
+  return handleResponse(response);
+};
+
 export const showAdmision = async (id) => {
   const url = `${BASE_URL}/show/${id}`;
   const response = await fetchWithAuth(url, { method: 'GET' });
@@ -42,6 +61,16 @@ export const updateAdmision = async (id, data) => {
   const url = `${BASE_URL}/update/${id}`;
   const response = await fetchWithAuth(url, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return handleResponse(response);
+};
+
+export const resolverExcepcionAdmision = async (id, data) => {
+  const url = `${BASE_URL}/resolver-excepcion/${id}`;
+  const response = await fetchWithAuth(url, {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify(data)
   });

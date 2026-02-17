@@ -3,15 +3,13 @@ import { Link } from 'react-router-dom';
 import { getAdmisiones, showAdmision } from 'services/admisionService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
-import InfoModal from 'components/Shared/Modals/InfoModal';
 import Table from 'components/Shared/Tables/Table';
-import { 
-    PencilSquareIcon, 
-    EyeIcon, 
+import AdmisionDetailModal from '../components/Modals/AdmisionDetailModal';
+import {
+    PencilSquareIcon,
+    EyeIcon,
     UserIcon,
-    BanknotesIcon,
-    ExclamationTriangleIcon,
-    ClipboardDocumentCheckIcon
+    ClipboardDocumentCheckIcon,
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
@@ -26,10 +24,9 @@ const buildFullName = (persona, type) => {
     return `${persona.nombres || ''} ${persona.apellido_paterno || ''} ${persona.apellido_materno || ''}`.trim() || 'Sin nombre';
 };
 
-// --- MAPA DE ESTADOS PARA UI (BADGES) ---
 const ESTADOS = {
     0: { label: 'PENDIENTE', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    1: { label: 'APROBADO',  color: 'bg-green-100 text-green-800 border-green-200' },
+    1: { label: 'APROBADO', color: 'bg-green-100 text-green-800 border-green-200' },
     2: { label: 'OBSERVADO', color: 'bg-orange-100 text-orange-800 border-orange-200' },
     3: { label: 'RECHAZADO', color: 'bg-red-100 text-red-800 border-red-200' },
 };
@@ -40,6 +37,8 @@ const ESTADO_LABEL_TO_VALUE = {
     OBSERVADO: 2,
     RECHAZADO: 3,
 };
+
+const EXCEPCION_BADGE = { label: 'EXCEPCIÓN', color: 'bg-orange-100 text-orange-700 border-orange-200' };
 
 const normalizeEstado = (estado) => {
     if (typeof estado === 'number' && Number.isInteger(estado)) return estado;
@@ -52,16 +51,16 @@ const Index = () => {
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [admisiones, setAdmisiones] = useState([]);
-    
+
     const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
 
-    const [isInfoOpen, setIsInfoOpen] = useState(false);
-    const [infoLoading, setInfoLoading] = useState(false);
-    const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailData, setDetailData] = useState(null);
 
     const [filters, setFilters] = useState({
         search: '',
-        estado: ''
+        estado: '',
     });
 
     const filtersRef = useRef(filters);
@@ -75,7 +74,7 @@ const Index = () => {
             type: 'text',
             label: 'Buscador',
             placeholder: 'ID, DNI o Nombre...',
-            colSpan: 'md:col-span-8'
+            colSpan: 'md:col-span-8',
         },
         {
             name: 'estado',
@@ -86,10 +85,10 @@ const Index = () => {
                 { value: '0', label: 'Pendiente' },
                 { value: '1', label: 'Aprobado' },
                 { value: '2', label: 'Observado' },
-                { value: '3', label: 'Rechazado' }
+                { value: '3', label: 'Rechazado' },
             ],
-            colSpan: 'md:col-span-4'
-        }
+            colSpan: 'md:col-span-4',
+        },
     ], []);
 
     const fetchAdmisiones = useCallback(async (page = 1) => {
@@ -97,7 +96,7 @@ const Index = () => {
         try {
             const currentFilters = filtersRef.current;
             const response = await getAdmisiones(page, currentFilters);
-            
+
             setAdmisiones(response.data || []);
             setPaginationInfo({
                 currentPage: response.current_page,
@@ -105,18 +104,23 @@ const Index = () => {
                 totalItems: response.total,
             });
         } catch (err) {
-            setAlert(handleApiError(err,'Error al cargar las admisiones.'));
+            setAlert(handleApiError(err, 'Error al cargar las admisiones.'));
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => { 
-        fetchAdmisiones(1); 
+    useEffect(() => {
+        fetchAdmisiones(1);
     }, [fetchAdmisiones]);
 
+    const fetchAdmisionDetail = useCallback(async (id) => {
+        const response = await showAdmision(id);
+        return response.data;
+    }, []);
+
     const handleFilterChange = useCallback((name, value) => {
-        setFilters(prev => ({ ...prev, [name]: value }));
+        setFilters((prev) => ({ ...prev, [name]: value }));
     }, []);
 
     const handleFilterSubmit = useCallback(() => {
@@ -130,77 +134,19 @@ const Index = () => {
         fetchAdmisiones(1);
     }, [fetchAdmisiones]);
 
-    const handleViewAdmision = async (id) => {
-        setIsInfoOpen(true);
-        setInfoLoading(true);
+    const handleViewAdmision = useCallback(async (id) => {
+        setIsDetailOpen(true);
+        setDetailLoading(true);
         try {
-            const response = await showAdmision(id);
-            const data = response.data;
-            const solicitante = data.cliente ? data.cliente.datos : data.prospecto;
-            const nombreSolicitante = buildFullName(solicitante, data.cliente ? 'CLIENTE' : 'PROSPECTO');
-            const estadoValue = normalizeEstado(data.estado);
-            const estadoInfo = ESTADOS[estadoValue] || { label: 'DESCONOCIDO' };
-            const asesorNombre = data.asesor?.datos
-                ? `${data.asesor.datos.nombre || ''} ${data.asesor.datos.apellidoPaterno || ''}`.trim()
-                : 'Desconocido';
-
-            const secciones = [
-                {
-                    title: "1. Información General",
-                    icon: UserIcon,
-                    items: [
-                        { label: "Solicitante", value: nombreSolicitante, fullWidth: true },
-                        { label: "DNI", value: solicitante?.dni || 'N/A' },
-                        { label: "Tipo", value: data.cliente ? 'CLIENTE RECURRENTE' : 'PROSPECTO NUEVO' },
-                        { label: "Asesor", value: asesorNombre },
-                        { label: "Sede", value: data.sede?.nombre || 'N/A' },
-                    ]
-                },
-                {
-                    title: "2. Resumen Financiero",
-                    icon: BanknotesIcon,
-                    items: [
-                        { label: "Estado", value: data.estado_label || estadoInfo.label },
-                        { label: "Tipo Préstamo", value: data.tipo_prestamo },
-                        { label: "Total Deuda", value: `S/ ${data.total_deuda}` },
-                        { label: "Total Protestos", value: `S/ ${data.total_protestos}` },
-                        { label: "N° Entidades", value: data.total_ifis },
-                        { 
-                            label: "Riesgo Detectado", 
-                            value: data.excepcion_detectada ? 'SÍ (OBSERVADO)' : 'NO (CALIFICA)',
-                            className: data.excepcion_detectada ? 'text-red-600 font-black' : 'text-green-600 font-bold'
-                        },
-                    ]
-                },
-                {
-                    title: "3. Observaciones y Análisis",
-                    icon: ExclamationTriangleIcon,
-                    items: [
-                        { 
-                            label: "Detalle de Observaciones", 
-                            value: data.observaciones || 'Sin observaciones registradas.', 
-                            fullWidth: true,
-                            className: data.excepcion_detectada 
-                                ? 'bg-red-50 text-red-800 p-3 rounded-md border border-red-200 font-medium' 
-                                : 'text-slate-600'
-                        }
-                    ]
-                }
-            ];
-
-            setModalData({
-                title: "Ficha de Admisión",
-                subtitle: `Evaluación #${data.id} - Creado el: ${new Date(data.created_at).toLocaleDateString()}`,
-                sections: secciones
-            });
-
+            const data = await fetchAdmisionDetail(id);
+            setDetailData(data);
         } catch (err) {
-            setAlert(handleApiError(err,'No se pudo cargar el detalle.'));
-            setIsInfoOpen(false);
+            setAlert(handleApiError(err, 'No se pudo cargar el detalle de la admisión.'));
+            setIsDetailOpen(false);
         } finally {
-            setInfoLoading(false);
+            setDetailLoading(false);
         }
-    };
+    }, [fetchAdmisionDetail]);
 
     const columns = useMemo(() => [
         {
@@ -208,11 +154,11 @@ const Index = () => {
             render: (row) => {
                 const persona = row.cliente ? row.cliente.datos : row.prospecto;
                 const nombre = buildFullName(persona, row.cliente ? 'CLIENTE' : 'PROSPECTO');
-                
+
                 return (
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg border ${row.cliente ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-orange-50 text-orange-600 border-orange-100'}`}>
-                            <UserIcon className="w-5 h-5"/>
+                            <UserIcon className="w-5 h-5" />
                         </div>
                         <div>
                             <span className="font-black text-fic-dark block uppercase tracking-tight text-xs">{nombre}</span>
@@ -220,7 +166,7 @@ const Index = () => {
                         </div>
                     </div>
                 );
-            }
+            },
         },
         {
             header: 'Tipo',
@@ -228,7 +174,7 @@ const Index = () => {
                 <span className="font-bold text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
                     {row.tipo_prestamo}
                 </span>
-            )
+            ),
         },
         {
             header: 'Endeudamiento',
@@ -245,19 +191,30 @@ const Index = () => {
                         </span>
                     </div>
                 </div>
-            )
+            ),
         },
         {
             header: 'Estado',
             render: (row) => {
                 const estadoValue = normalizeEstado(row.estado);
                 const config = ESTADOS[estadoValue] || { label: 'DESC.', color: 'bg-gray-100' };
+                const excepcionState = Number(row.excepcion_estado || 0);
+                const hasException = excepcionState > 0;
+                const badgeBaseClass = 'inline-flex items-center rounded-full border font-black uppercase leading-none';
+
                 return (
-                    <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full border ${config.color}`}>
-                        {row.estado_label || config.label}
-                    </span>
+                    <div className="flex flex-col items-start gap-2">
+                        <span className={`${badgeBaseClass} px-3 py-1 text-[10px] ${config.color}`}>
+                            {row.estado_label || config.label}
+                        </span>
+                        {hasException && (
+                            <span className={`${badgeBaseClass} px-3 py-1 text-[10px] ${EXCEPCION_BADGE.color}`}>
+                                {EXCEPCION_BADGE.label}
+                            </span>
+                        )}
+                    </div>
                 );
-            }
+            },
         },
         {
             header: 'Acciones',
@@ -272,26 +229,26 @@ const Index = () => {
                         </div>
                         Ver
                     </button>
-                    
+
                     {(normalizeEstado(row.estado) === 0 || normalizeEstado(row.estado) === 2) ? (
-                        <Link 
-                            to={`/gestion/editar-admision/${row.id}`} 
+                        <Link
+                            to={`/gestion/editar-admision/${row.id}`}
                             className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
                         >
                             <PencilSquareIcon className="w-5 h-5" /> EDITAR
                         </Link>
                     ) : null}
+
                 </div>
-            )
-        }
-    ], []);
+            ),
+        },
+    ], [handleViewAdmision]);
 
     if (loading && admisiones.length === 0) return <LoadingScreen />;
 
     return (
         <div className="container mx-auto p-6">
-
-            <PageHeader 
+            <PageHeader
                 title="Admisiones"
                 subtitle="Evaluación crediticia de clientes y prospectos"
                 icon={ClipboardDocumentCheckIcon}
@@ -301,31 +258,27 @@ const Index = () => {
 
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
-            <InfoModal 
-                isOpen={isInfoOpen}
-                onClose={() => setIsInfoOpen(false)}
-                title={modalData.title}
-                subtitle={modalData.subtitle}
-                sections={modalData.sections}
-                loading={infoLoading}
+            <AdmisionDetailModal
+                isOpen={isDetailOpen}
+                onClose={() => setIsDetailOpen(false)}
+                loading={detailLoading}
+                data={detailData}
             />
 
             <div className="rounded-xl overflow-hidden">
-                <Table 
+                <Table
                     columns={columns}
                     data={admisiones}
                     loading={loading}
-                    
                     filterConfig={filterConfig}
                     filters={filters}
                     onFilterChange={handleFilterChange}
                     onFilterSubmit={handleFilterSubmit}
                     onFilterClear={handleFilterClear}
-
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchAdmisiones(page)
+                        onPageChange: (page) => fetchAdmisiones(page),
                     }}
                 />
             </div>
