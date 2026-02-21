@@ -90,7 +90,8 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
             id: cliente.id, 
             nombre: nombreCompleto, 
             dni: d.dni,
-            tipo_prestamo: cliente.tipo_prestamo
+            tipo_prestamo: cliente.tipo_prestamo?.tipo || 'NUEVO',
+            motivo_bloqueo: cliente.tipo_prestamo?.motivo || null
         });
     };
 

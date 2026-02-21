@@ -20,6 +20,7 @@ const buildInitialHeader = () => ({
   prospecto_id: null,
   tipo_solicitante: 'CLIENTE',
   tipo_prestamo: '',
+  motivo_bloqueo: null, 
   observaciones: '',
 });
 
@@ -52,6 +53,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
       cliente_id: null,
       prospecto_id: null,
       tipo_prestamo: nuevoTipo === 'PROSPECTO' ? 'NUEVO' : '',
+      motivo_bloqueo: null,
     }));
 
     setClienteSelected(null);
@@ -62,19 +64,22 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
 
   const onSelectCliente = async (cliente) => {
     if (!cliente) {
-      setHeader((prev) => ({ ...prev, cliente_id: null, tipo_prestamo: '' }));
+      setHeader((prev) => ({ ...prev, cliente_id: null, tipo_prestamo: '', motivo_bloqueo: null }));
       setClienteSelected(null);
       setCapitalPendienteFicsullana(0);
       setCapitalLoading(false);
       return;
     }
 
-    const tipoSugerido = cliente.tipo_prestamo;
+    const tipoSugerido = cliente.tipo_prestamo || 'NUEVO';
+    const motivo = cliente.motivo_bloqueo || null;
+
     setHeader((prev) => ({
       ...prev,
       cliente_id: cliente.id,
       prospecto_id: null,
       tipo_prestamo: tipoSugerido,
+      motivo_bloqueo: motivo,
     }));
 
     setClienteSelected(cliente);
@@ -85,7 +90,8 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     if (tipoSugerido === 'RCS') mensajeTipo = 'Deuda vigente detectada (RCS).';
     else if (tipoSugerido === 'RSS') mensajeTipo = 'Sin deuda activa (RSS).';
     else if (tipoSugerido === 'NUEVO') mensajeTipo = 'Sin historial previo.';
-    else if (tipoSugerido === 'NO APLICA') mensajeTipo = 'No cumple requisitos mínimos para nueva admisión.';
+    else if (tipoSugerido === 'NO APLICA') mensajeTipo = motivo || 'No cumple requisitos mínimos para nueva admisión.';
+
     setAlert({ 
       type: tipoSugerido === 'NO APLICA' ? 'error' : 'info', 
       message: tipoSugerido === 'NO APLICA' ? `Cliente Bloqueado. ${mensajeTipo}` : `Cliente seleccionado. ${mensajeTipo}` 
@@ -115,7 +121,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
 
   const onSelectProspecto = (prospecto) => {
     if (!prospecto) {
-      setHeader((prev) => ({ ...prev, prospecto_id: null, tipo_prestamo: '' }));
+      setHeader((prev) => ({ ...prev, prospecto_id: null, tipo_prestamo: '', motivo_bloqueo: null }));
       setProspectoSelected(null);
       setCapitalPendienteFicsullana(0);
       setCapitalLoading(false);
@@ -127,6 +133,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
       prospecto_id: prospecto.id,
       cliente_id: null,
       tipo_prestamo: 'NUEVO',
+      motivo_bloqueo: null,
     }));
     setProspectoSelected(prospecto);
     setClienteSelected(null);
@@ -281,7 +288,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     if (header.tipo_prestamo === 'NUEVO') return 'NUEVO (Primer Crédito)';
     if (header.tipo_prestamo === 'RCS') return 'RCS (Recurrente con Saldo)';
     if (header.tipo_prestamo === 'RSS') return 'RSS (Recurrente sin Saldo)';
-    if (header.tipo_prestamo === 'NO APLICA') return 'NO APLICA (Bloqueado)';
+    if (header.tipo_prestamo === 'NO APLICA') return 'NO APLICA';
     return header.tipo_prestamo;
   };
 

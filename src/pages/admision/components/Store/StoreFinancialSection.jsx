@@ -31,8 +31,8 @@ const StoreFinancialSection = ({
             <p className="text-red-600 font-medium text-base">
               El cliente seleccionado no es apto para iniciar una nueva admisión.
             </p>
-            <p className="text-red-500 text-sm mt-2">
-              Debe solucionar su situación actual o seleccionar otro cliente para continuar.
+            <p className="text-red-500 font-bold text-sm mt-2">
+              Motivo: {header.motivo_bloqueo || 'Debe solucionar su situación actual para continuar.'}
             </p>
           </div>
         ) : isSolicitanteSelected ? (
