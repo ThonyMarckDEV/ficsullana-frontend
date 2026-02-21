@@ -69,7 +69,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
       return;
     }
 
-    const tipoSugerido = cliente.tipo_financiero;
+    const tipoSugerido = cliente.tipo_prestamo;
     setHeader((prev) => ({
       ...prev,
       cliente_id: cliente.id,
@@ -85,7 +85,11 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     if (tipoSugerido === 'RCS') mensajeTipo = 'Deuda vigente detectada (RCS).';
     else if (tipoSugerido === 'RSS') mensajeTipo = 'Sin deuda activa (RSS).';
     else if (tipoSugerido === 'NUEVO') mensajeTipo = 'Sin historial previo.';
-    setAlert({ type: 'info', message: `Cliente seleccionado. ${mensajeTipo}` });
+    else if (tipoSugerido === 'NO APLICA') mensajeTipo = 'No cumple requisitos mínimos para nueva admisión.';
+    setAlert({ 
+      type: tipoSugerido === 'NO APLICA' ? 'error' : 'info', 
+      message: tipoSugerido === 'NO APLICA' ? `Cliente Bloqueado. ${mensajeTipo}` : `Cliente seleccionado. ${mensajeTipo}` 
+    });
 
     if (tipoSugerido === 'RCS') {
       setCapitalLoading(true);
@@ -277,6 +281,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     if (header.tipo_prestamo === 'NUEVO') return 'NUEVO (Primer Crédito)';
     if (header.tipo_prestamo === 'RCS') return 'RCS (Recurrente con Saldo)';
     if (header.tipo_prestamo === 'RSS') return 'RSS (Recurrente sin Saldo)';
+    if (header.tipo_prestamo === 'NO APLICA') return 'NO APLICA (Bloqueado)';
     return header.tipo_prestamo;
   };
 

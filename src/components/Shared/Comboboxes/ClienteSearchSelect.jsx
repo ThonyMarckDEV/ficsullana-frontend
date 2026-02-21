@@ -90,7 +90,7 @@ const ClienteSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
             id: cliente.id, 
             nombre: nombreCompleto, 
             dni: d.dni,
-            tipo_financiero: cliente.tipo_financiero
+            tipo_prestamo: cliente.tipo_prestamo
         });
     };
 
