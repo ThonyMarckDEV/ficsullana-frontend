@@ -44,7 +44,7 @@ export const getClientesCombobox = async (page = 1, search = '') => {
     search: search,
   });
 
-  const url = `${API_BASE_URL}/api/clientes/index?${params.toString()}`;
+  const url = `${API_BASE_URL}/api/clientes/index-combobox?${params.toString()}`;
 
   const response = await fetchWithAuth(url, {
     method: 'GET',
