@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
+import { useAuth } from 'context/AuthContext';
 
 const buildFullName = (persona, type) => {
     if (!persona) return 'Sin nombre';
@@ -48,6 +49,8 @@ const normalizeEstado = (estado) => {
 };
 
 const Index = () => {
+    const { checkPermission } = useAuth(); 
+
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState(null);
     const [admisiones, setAdmisiones] = useState([]);
@@ -148,6 +151,8 @@ const Index = () => {
         }
     }, [fetchAdmisionDetail]);
 
+    const hasAnyActionPermission = checkPermission('admisiones.mostrar') || checkPermission('admisiones.editar');
+
     const columns = useMemo(() => [
         {
             header: 'Solicitante',
@@ -216,21 +221,23 @@ const Index = () => {
                 );
             },
         },
-        {
+        hasAnyActionPermission ? {
             header: 'Acciones',
             render: (row) => (
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => handleViewAdmision(row.id)}
-                        className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
-                    >
-                        <div className="p-1 rounded-full group-hover:bg-slate-200 transition-colors">
-                            <EyeIcon className="w-5 h-5" />
-                        </div>
-                        Ver
-                    </button>
+                    {checkPermission('admisiones.mostrar') && (
+                        <button
+                            onClick={() => handleViewAdmision(row.id)}
+                            className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
+                        >
+                            <div className="p-1 rounded-full group-hover:bg-slate-200 transition-colors">
+                                <EyeIcon className="w-5 h-5" />
+                            </div>
+                            Ver
+                        </button>
+                    )}
 
-                    {(normalizeEstado(row.estado) === 0 || normalizeEstado(row.estado) === 2) ? (
+                    {(normalizeEstado(row.estado) === 0 || normalizeEstado(row.estado) === 2) && checkPermission('admisiones.editar') ? (
                         <Link
                             to={`/gestion/editar-admision/${row.id}`}
                             className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
@@ -238,11 +245,10 @@ const Index = () => {
                             <PencilSquareIcon className="w-5 h-5" /> EDITAR
                         </Link>
                     ) : null}
-
                 </div>
             ),
-        },
-    ], [handleViewAdmision]);
+        } : null 
+    ].filter(Boolean), [handleViewAdmision, checkPermission, hasAnyActionPermission]);
 
     if (loading && admisiones.length === 0) return <LoadingScreen />;
 
@@ -252,7 +258,7 @@ const Index = () => {
                 title="Admisiones"
                 subtitle="Evaluación crediticia de clientes y prospectos"
                 icon={ClipboardDocumentCheckIcon}
-                buttonText="+ Nueva Admisión"
+                buttonText={checkPermission('admisiones.crear') ? "+ Nueva Admisión" : undefined}
                 buttonLink="/gestion/nueva-admision"
             />
 
