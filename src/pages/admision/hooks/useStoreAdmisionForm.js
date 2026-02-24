@@ -232,13 +232,23 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
       return;
     }
 
+    // Limpiamos las filas vacías antes de enviarlas
+    // Si la entidad acreedora está vacía, ignoramos ese protesto
+    const protestosLimpios = protestos.filter(
+      (p) => p.entidad_acreedora && p.entidad_acreedora.trim() !== ''
+    );
+    
+    const deudasLimpias = deudas.filter(
+      (d) => d.nombre_entidad && d.nombre_entidad.trim() !== ''
+    );
+
     const payload = {
       cliente_id: header.tipo_solicitante === 'CLIENTE' ? header.cliente_id : null,
       prospecto_id: header.tipo_solicitante === 'PROSPECTO' ? header.prospecto_id : null,
       tipo_prestamo: header.tipo_prestamo,
       observaciones: header.observaciones,
-      deudas,
-      protestos,
+      deudas: deudasLimpias,
+      protestos: protestosLimpios,
     };
 
     try {

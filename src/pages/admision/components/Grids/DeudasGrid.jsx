@@ -202,7 +202,7 @@ const DeudasGrid = ({
         });
     };
 
-    const inputClass = 'w-full text-xs px-2 py-1 border border-slate-300 rounded focus:border-fic-red outline-none disabled:bg-slate-100 disabled:text-slate-400 transition-colors invalid:border-red-500 invalid:text-red-600';
+   const inputClass = 'w-full text-xs px-2 py-1.5 border border-slate-300 rounded focus:border-fic-red outline-none disabled:bg-slate-100 disabled:text-slate-400 transition-colors invalid:border-red-500 invalid:text-red-600';
 
     return (
         <div className="space-y-2">
@@ -213,29 +213,32 @@ const DeudasGrid = ({
                         <p className="text-[10px] text-orange-700 font-bold mt-1">Calculando saldo pendiente de FICSULLANA...</p>
                     )}
                 </div>
-                <button type="button" onClick={addRow} className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold hover:bg-green-200 flex items-center gap-1">
-                    <PlusIcon className="w-3 h-3" /> Agregar Deuda
+                <button type="button" onClick={addRow} className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded font-bold hover:bg-green-200 flex items-center gap-1">
+                    <PlusIcon className="w-4 h-4" /> Agregar Deuda
                 </button>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
-                <table className="w-full text-left text-xs">
+            {/* 1. Eliminé "overflow-x-auto" para quitar el scroll horizontal */}
+            <div className="rounded-lg border border-slate-200 bg-white">
+                {/* 2. La tabla ahora usa "table-fixed" para respetar los anchos que le digamos */}
+                <table className="w-full text-left text-xs table-fixed">
                     <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px]">
+                        {/* 3. Distribuimos el ancho en porcentajes para que ocupen todo el monitor grande */}
                         <tr>
-                            <th className="p-2 w-20">Persona</th>
-                            <th className="p-2 w-24">DNI</th>
-                            <th className="p-2 min-w-[120px]">Entidad</th>
-                            <th className="p-2 w-24">Tipo Créd.</th>
-                            <th className="p-2 w-28">Calificación</th>
-                            <th className="p-2 w-10 text-center" title="¿Es tienda por departamento?">Tienda?</th>
-                            <th className="p-2 w-20">Saldo Cap.</th>
-                            <th className="p-2 w-20">Línea Créd.</th>
-                            <th className="p-2 w-12">Plazo</th>
-                            <th className="p-2 w-16">Cuota</th>
-                            <th className="p-2 w-24">Amortización</th>
-                            <th className="p-2 w-24">Vencimiento</th>
-                            {tipoPrestamo === 'RCS' && <th className="p-2 w-12 text-center">% Canc.</th>}
-                            <th className="p-2 w-8"></th>
+                            <th className="p-2 w-[8%]">Persona</th>
+                            <th className="p-2 w-[8%]">DNI</th>
+                            <th className="p-2 w-[14%]">Entidad</th>
+                            <th className="p-2 w-[8%]">Tipo Créd.</th>
+                            <th className="p-2 w-[14%]">Calificación</th>
+                            <th className="p-2 w-[4%] text-center" title="¿Es tienda por departamento?">Tienda?</th>
+                            <th className="p-2 w-[8%]">Saldo Cap.</th>
+                            <th className="p-2 w-[7%]">Línea Créd.</th>
+                            <th className="p-2 w-[5%]">Plazo</th>
+                            <th className="p-2 w-[7%]">Cuota</th>
+                            <th className="p-2 w-[8%]">Amortización</th>
+                            <th className="p-2 w-[9%]">Vencimiento</th>
+                            {tipoPrestamo === 'RCS' && <th className="p-2 w-[5%] text-center">% Canc.</th>}
+                            <th className="p-2 w-[3%]"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -247,7 +250,7 @@ const DeudasGrid = ({
 
                             return (
                                 <tr key={i} className={isProtectedRow ? 'bg-orange-50/40' : 'hover:bg-slate-50'}>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <select
                                             value={row.persona_tipo}
                                             onChange={(e) => handleChange(i, 'persona_tipo', e.target.value)}
@@ -258,7 +261,7 @@ const DeudasGrid = ({
                                             <option value="AVAL">AVAL</option>
                                         </select>
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <input
                                             value={row.dni_relacionado}
                                             onChange={(e) => handleChange(i, 'dni_relacionado', e.target.value)}
@@ -268,7 +271,7 @@ const DeudasGrid = ({
                                             disabled={isTitular}
                                         />
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <input
                                             value={row.nombre_entidad}
                                             onChange={(e) => handleChange(i, 'nombre_entidad', normalizeEntityName(e.target.value))}
@@ -277,7 +280,7 @@ const DeudasGrid = ({
                                             disabled={isProtectedRow}
                                         />
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <select
                                             value={row.tipo_credito || 'CONSUMO'}
                                             onChange={(e) => handleChange(i, 'tipo_credito', e.target.value)}
@@ -287,18 +290,17 @@ const DeudasGrid = ({
                                             <option value="PYME">PYME</option>
                                         </select>
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <select
                                             value={row.calificacion_banco ?? ''}
                                             onChange={(e) => {
                                                 const nextValue = e.target.value;
                                                 handleChange(i, 'calificacion_banco', nextValue === '' ? '' : Number(nextValue));
                                             }}
-                                            className={`${inputClass} ${
-                                                row.calificacion_banco === '' || row.calificacion_banco === null || row.calificacion_banco === undefined
+                                            className={`${inputClass} truncate ${row.calificacion_banco === '' || row.calificacion_banco === null || row.calificacion_banco === undefined
                                                     ? ''
                                                     : (calificacionClassMap[Number(row.calificacion_banco)] || '')
-                                            }`}
+                                                }`}
                                         >
                                             <option value="">SELECCIONAR...</option>
                                             <option value={0}>NORMAL</option>
@@ -308,7 +310,7 @@ const DeudasGrid = ({
                                             <option value={4}>PÉRDIDA</option>
                                         </select>
                                     </td>
-                                    <td className="p-1 text-center">
+                                    <td className="p-1.5 text-center flex justify-center items-center h-full mt-2">
                                         <input
                                             type="checkbox"
                                             checked={Boolean(row.es_tienda_departamento)}
@@ -317,7 +319,7 @@ const DeudasGrid = ({
                                             disabled={isProtectedRow}
                                         />
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <input
                                             type="number"
                                             step="0.01"
@@ -329,7 +331,7 @@ const DeudasGrid = ({
                                             disabled={isProtectedRow}
                                         />
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <input
                                             type="number"
                                             step="0.01"
@@ -341,7 +343,7 @@ const DeudasGrid = ({
                                             placeholder="---"
                                         />
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <input
                                             type="number"
                                             min="1"
@@ -352,7 +354,7 @@ const DeudasGrid = ({
                                             placeholder=">0"
                                         />
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <input
                                             type="number"
                                             step="0.01"
@@ -363,7 +365,7 @@ const DeudasGrid = ({
                                             placeholder=">0"
                                         />
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <select
                                             value={row.frecuencia_pago ?? ''}
                                             onChange={(e) => handleChange(i, 'frecuencia_pago', e.target.value)}
@@ -376,7 +378,7 @@ const DeudasGrid = ({
                                             <option value="MENSUAL">MENSUAL</option>
                                         </select>
                                     </td>
-                                    <td className="p-1">
+                                    <td className="p-1.5">
                                         <input
                                             type="date"
                                             value={row.fecha_pago}
@@ -385,26 +387,26 @@ const DeudasGrid = ({
                                         />
                                     </td>
                                     {tipoPrestamo === 'RCS' && (
-                                        <td className="p-1">
+                                        <td className="p-1.5">
                                             <input
                                                 type="number"
                                                 min="0"
                                                 max="100"
                                                 value={row.porcentaje_cancelacion ?? 0}
                                                 onChange={(e) => handleChange(i, 'porcentaje_cancelacion', e.target.value)}
-                                                className="w-full text-xs px-1 py-1 border border-blue-300 rounded focus:border-blue-500 font-bold text-blue-700 text-center outline-none"
+                                                className="w-full text-xs px-1 py-1.5 border border-blue-300 rounded focus:border-blue-500 font-bold text-blue-700 text-center outline-none"
                                                 placeholder="%"
                                             />
                                         </td>
                                     )}
-                                    <td className="p-1 text-center">
+                                    <td className="p-1.5 text-center">
                                         <button
                                             type="button"
                                             onClick={() => removeRow(i)}
-                                            className={`text-red-400 hover:text-red-600 ${isProtectedRow ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                            className={`text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors ${isProtectedRow ? 'opacity-30 cursor-not-allowed hover:bg-transparent' : ''}`}
                                             disabled={isProtectedRow}
                                         >
-                                            <TrashIcon className="w-4 h-4" />
+                                            <TrashIcon className="w-5 h-5 mx-auto" />
                                         </button>
                                     </td>
                                 </tr>
@@ -412,7 +414,7 @@ const DeudasGrid = ({
                         })}
                     </tbody>
                 </table>
-                {deudas.length === 0 && <div className="p-4 text-center text-slate-400 italic text-xs">No hay deudas registradas</div>}
+                {deudas.length === 0 && <div className="p-6 text-center text-slate-400 italic text-sm border-t border-slate-100">No hay deudas registradas</div>}
             </div>
         </div>
     );

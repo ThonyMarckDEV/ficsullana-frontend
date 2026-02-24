@@ -52,7 +52,8 @@ const Store = () => {
   if (loading) return <LoadingScreen />;
 
   return (
-    <div className="container mx-auto p-4 lg:p-6">
+    // 1. Quité "container" y agregué "w-full" con paddings responsivos para que se expanda a los lados
+    <div className="w-full px-4 lg:px-8 xl:px-12 2xl:px-16 py-6">
       <PageHeader
         title="Nueva Admisión"
         subtitle="Evaluación de historial financiero y capacidad crediticia"
@@ -74,7 +75,8 @@ const Store = () => {
         onSuccess={handleProspectoCreado}
       />
 
-      <form onSubmit={handleSubmit} className="w-full max-w-7xl mx-auto space-y-6">
+      {/* 2. Cambié max-w-7xl por max-w-[1600px] (o puedes usar max-w-screen-2xl) para que el form sea mucho más ancho */}
+      <form onSubmit={handleSubmit} className="w-full max-w-[1700px] mx-auto space-y-6">
         <StoreSolicitanteSection
           header={header}
           clienteSelected={clienteSelected}
