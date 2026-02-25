@@ -10,7 +10,7 @@ import {
   ADMISION_COPY_COMMON,
   ADMISION_COPY_DETAIL_MODAL,
 } from 'utilities/pages/admision/copy';
-import { updateAdmision } from 'services/admisionService';
+import { updateEstado } from 'services/admisionService';
 import { useAuth } from 'context/AuthContext';
 
 const getExceptionStatusLabel = (value) => {
@@ -219,13 +219,9 @@ const AdmisionDetailModal = ({
     try {
       const payload = {
         estado: parseInt(nuevoEstado),
-        tipo_prestamo: data.tipo_prestamo, 
-        deudas: viewModel.deudas,
-        protestos: viewModel.protestos,
-        observaciones: data.observaciones,
       };
 
-      await updateAdmision(viewModel.id, payload);
+      await updateEstado(viewModel.id, payload);
       
       if (onUpdateSuccess) {
             onUpdateSuccess();
