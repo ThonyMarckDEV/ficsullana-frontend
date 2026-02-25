@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, DocumentTextIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { BtnExportPdf } from 'components/Shared/Buttons/ExportButtons';
 import {
   getExceptionRuleName,
@@ -10,6 +10,8 @@ import {
   ADMISION_COPY_COMMON,
   ADMISION_COPY_DETAIL_MODAL,
 } from 'utilities/pages/admision/copy';
+import { updateAdmision } from 'services/admisionService';
+import { useAuth } from 'context/AuthContext';
 
 const getExceptionStatusLabel = (value) => {
   const numericValue = Number(value);
@@ -32,29 +34,21 @@ const buildFullName = (persona, type) => {
   if (type === 'CLIENTE') {
     return `${persona.nombre || ''} ${persona.apellidoPaterno || ''} ${persona.apellidoMaterno || ''}`.trim() || ADMISION_COPY_COMMON.FALLBACK.SIN_NOMBRE;
   }
-
   return `${persona.nombres || ''} ${persona.apellido_paterno || ''} ${persona.apellido_materno || ''}`.trim() || ADMISION_COPY_COMMON.FALLBACK.SIN_NOMBRE;
 };
 
 const formatDateTime = (value) => {
   if (!value) return 'N/A';
   return new Date(value).toLocaleString('es-PE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
   });
 };
 
 const formatDateOnly = (value) => {
   if (!value) return 'N/A';
   return new Date(value).toLocaleDateString('es-PE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
+    day: '2-digit', month: '2-digit', year: 'numeric',
   });
 };
 
@@ -73,7 +67,6 @@ const Badge = ({ label, tone = 'slate' }) => {
     yellow: 'bg-yellow-100 text-yellow-700 border-yellow-200',
     dark: 'bg-slate-900 text-white border-slate-900',
   };
-
   return (
     <span className={`inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-black uppercase ${toneClass[tone] || toneClass.slate}`}>
       {label}
@@ -94,10 +87,7 @@ const toNumeric = (value) => {
 };
 
 const formatMoney = (value) =>
-  toNumeric(value).toLocaleString('es-PE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  toNumeric(value).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const getCalificacionLabel = (value) => {
   if (value === '' || value === null || value === undefined) return 'SIN CALIFICACIÓN';
@@ -115,25 +105,38 @@ const getCalificacionTone = (value) => {
   return 'slate';
 };
 
+// --- COMPONENTE PRINCIPAL ---
+
 const AdmisionDetailModal = ({
   isOpen,
   onClose,
   loading = false,
   data = null,
+  onUpdateSuccess // <-- Prop nueva para refrescar la tabla al guardar
 }) => {
   const [activeTab, setActiveTab] = useState('resumen');
+  const { checkPermission } = useAuth(); // <-- Hook de permisos
+
+  // --- ESTADOS PARA GESTIÓN DE ADMISIÓN ---
+  const [nuevoEstado, setNuevoEstado] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
       setActiveTab('resumen');
+      setNuevoEstado(''); // Limpiamos el selector al abrir
+      setUpdateError(null);
     }
   }, [isOpen, data?.id]);
 
   const exportContainerId = 'admision-detail-export-content';
 
   const viewModel = useMemo(() => {
+    // ... (El viewModel se mantiene IGUALITO) ...
     if (!data) {
       return {
+        id: null,
         solicitante: ADMISION_COPY_COMMON.FALLBACK.NA,
         solicitanteDni: ADMISION_COPY_COMMON.FALLBACK.NA,
         asesor: ADMISION_COPY_COMMON.FALLBACK.NA,
@@ -176,6 +179,7 @@ const AdmisionDetailModal = ({
     const totalTiendas = deudas.reduce((acc, deuda) => acc + (Boolean(deuda?.es_tienda_departamento) ? 1 : 0), 0);
 
     return {
+      id: data.id,
       solicitante: buildFullName(persona, data.cliente ? 'CLIENTE' : 'PROSPECTO'),
       solicitanteDni: persona?.dni || 'N/A',
       asesor: data.asesor?.datos
@@ -207,7 +211,38 @@ const AdmisionDetailModal = ({
     };
   }, [data]);
 
+  const handleGuardarEstado = async () => {
+    if (!nuevoEstado || !viewModel.id) return;
+    setIsUpdating(true);
+    setUpdateError(null);
+
+    try {
+      const payload = {
+        estado: parseInt(nuevoEstado),
+        tipo_prestamo: data.tipo_prestamo, 
+        deudas: viewModel.deudas,
+        protestos: viewModel.protestos,
+        observaciones: data.observaciones,
+      };
+
+      await updateAdmision(viewModel.id, payload);
+      
+      if (onUpdateSuccess) {
+            onUpdateSuccess();
+      }
+        
+      onClose();
+
+    } catch (error) {
+      setUpdateError(error?.response?.data?.message || 'Error al actualizar el estado de la admisión.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (!isOpen) return null;
+
+  const canManageState = checkPermission('admisiones.gestionar.estado');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fic-dark/80 backdrop-blur-sm">
@@ -296,7 +331,6 @@ const AdmisionDetailModal = ({
                       )}
                     </div>
                   </div>
-
                   <div>
                     <p className="text-xs font-black uppercase text-slate-600 mb-2">Reglas bloqueantes</p>
                     <div className="space-y-2">
@@ -312,7 +346,6 @@ const AdmisionDetailModal = ({
                       )}
                     </div>
                   </div>
-
                   <div className="rounded-xl border border-slate-200 bg-white p-4">
                     <p className="text-xs font-black uppercase text-slate-600 mb-2">Excepciones seleccionadas por asesor</p>
                     {viewModel.selectedExceptionNames.length === 0 ? (
@@ -325,7 +358,6 @@ const AdmisionDetailModal = ({
                       </div>
                     )}
                   </div>
-
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="rounded-xl border border-slate-200 bg-white p-4">
                       <p className="text-xs font-black uppercase text-slate-600">Motivo asesor</p>
@@ -341,6 +373,47 @@ const AdmisionDetailModal = ({
 
               {activeTab === 'financiero' && (
                 <section className="space-y-5">
+                  {canManageState && (
+                    <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                      <div className="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
+                        <CheckCircleIcon className="w-5 h-5 text-slate-700" />
+                        <p className="text-xs font-black uppercase text-slate-700">Gestión de Admisión</p>
+                      </div>
+                      
+                      <div className="p-5 bg-white flex flex-col md:flex-row gap-4 items-end">
+                        <div className="flex-1 w-full">
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-2">
+                            Modificar Estado de Evaluación
+                          </label>
+                          <select 
+                            value={nuevoEstado}
+                            onChange={(e) => setNuevoEstado(e.target.value)}
+                            className="w-full text-sm px-3 py-2.5 border border-slate-300 rounded-md outline-none focus:border-fic-red focus:ring-1 focus:ring-fic-red text-slate-700 font-bold transition-all bg-slate-50 hover:bg-white cursor-pointer"
+                          >
+                            <option value="" className="text-slate-500 font-normal">-- Seleccione la decisión final --</option>
+                            <option value="1" className="text-green-700 font-bold">✓ Aprobar Admisión</option>
+                            <option value="3" className="text-red-700 font-bold">✗ Rechazar Admisión</option>
+                          </select>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleGuardarEstado}
+                          disabled={!nuevoEstado || isUpdating}
+                          className="w-full md:w-auto px-8 py-2.5 bg-fic-red hover:bg-red-700 text-white font-black rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase text-xs tracking-wide shadow-md"
+                        >
+                          {isUpdating ? 'Procesando...' : 'Aplicar Decisión'}
+                        </button>
+                      </div>
+
+                      {updateError && (
+                        <div className="px-5 pb-4 bg-white">
+                          <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-600 font-bold">
+                            {updateError}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 grid grid-cols-1 md:grid-cols-6 gap-4">
                     <InfoBlock label={ADMISION_COPY_COMMON.COUNTERS.ENTIDADES} value={String(viewModel.totalIfis)} />
                     <InfoBlock label={ADMISION_COPY_COMMON.COUNTERS.TIENDAS} value={String(viewModel.totalTiendas)} />
@@ -552,7 +625,7 @@ const AdmisionDetailModal = ({
           >
             {ADMISION_COPY_COMMON.ACTIONS.CERRAR}
           </button>
-        </div>
+        </div> 
       </div>
     </div>
   );

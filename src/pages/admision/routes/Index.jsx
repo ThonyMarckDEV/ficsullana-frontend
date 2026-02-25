@@ -269,6 +269,7 @@ const Index = () => {
                 onClose={() => setIsDetailOpen(false)}
                 loading={detailLoading}
                 data={detailData}
+                onUpdateSuccess={() => fetchAdmisiones(paginationInfo.currentPage)} // Recargar lista
             />
 
             <div className="rounded-xl overflow-hidden">
