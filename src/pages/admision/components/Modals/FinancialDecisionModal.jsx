@@ -18,6 +18,7 @@ const FinancialDecisionModal = ({
 
   const isApprove = Number(decision) === 1;
   const isCommentEmpty = comment.trim() === '';
+  const hasCommentError = Boolean(error);
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4">
@@ -36,23 +37,27 @@ const FinancialDecisionModal = ({
           </p>
         </div>
 
-        <div className="mt-4">
-          <label className="block text-[11px] uppercase font-black text-slate-600 mb-1">
+        <div className={`mt-4 rounded-lg border p-3 ${isApprove ? 'border-green-200 bg-green-50/40' : 'border-red-200 bg-red-50/40'}`}>
+          <label htmlFor="financial-comment" className="block text-[11px] uppercase font-black text-slate-700">
             {ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.COMENTARIO_LABEL}
           </label>
           <textarea
+            id="financial-comment"
             value={comment}
             onChange={(e) => onCommentChange(e.target.value)}
-            className="w-full h-28 text-sm border rounded-md p-2 outline-none focus:border-fic-red"
+            aria-invalid={hasCommentError}
+            className={`mt-2 w-full h-28 rounded-md border bg-white p-2 text-sm text-slate-700 outline-none transition-all ${hasCommentError ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500/40' : 'border-slate-300 focus:border-fic-red focus:ring-1 focus:ring-fic-red/40'}`}
             placeholder={ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.COMENTARIO_PLACEHOLDER}
           />
-          {isCommentEmpty && (
-            <p className="mt-2 text-xs font-bold text-red-700">
-              {ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.COMENTARIO_REQUERIDO}
-            </p>
-          )}
+          <p className="mt-2 text-[11px] text-slate-500">
+            Este comentario se registrará en la auditoria de la admisión.
+          </p>
           {Boolean(error) && (
-            <p className="mt-2 text-xs font-bold text-red-700">{error}</p>
+            <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2">
+              <p className="text-xs font-bold text-red-700">
+                {error}
+              </p>
+            </div>
           )}
         </div>
 
