@@ -1,236 +1,156 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { XMarkIcon, DocumentTextIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import { BtnExportPdf } from 'components/Shared/Buttons/ExportButtons';
-import {
-  getExceptionRuleName,
-  getExceptionRules,
-  stripSystemAlertPrefix,
-} from 'utilities/pages/admision/exceptionRules';
+import { resolverExcepcionAdmision, updateEstado } from 'services/admisionService';
+import { useAuth } from 'context/AuthContext';
 import {
   ADMISION_COPY_COMMON,
   ADMISION_COPY_DETAIL_MODAL,
+  ADMISION_COPY_EXCEPTION_MODAL,
 } from 'utilities/pages/admision/copy';
-import { updateEstado } from 'services/admisionService';
-import { useAuth } from 'context/AuthContext';
-
-const getExceptionStatusLabel = (value) => {
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return ADMISION_COPY_COMMON.FALLBACK.NA;
-  return numericValue > 0
-    ? ADMISION_COPY_DETAIL_MODAL.STATES.CON_EXCEPCION
-    : ADMISION_COPY_DETAIL_MODAL.STATES.SIN_EXCEPCION;
-};
-
-const CALIFICACION_LABELS = {
-  0: 'NORMAL',
-  1: 'PROBLEMAS POTENCIALES',
-  2: 'DEFICIENTE',
-  3: 'DUDOSO',
-  4: 'PÉRDIDA',
-};
-
-const buildFullName = (persona, type) => {
-  if (!persona) return ADMISION_COPY_COMMON.FALLBACK.SIN_NOMBRE;
-  if (type === 'CLIENTE') {
-    return `${persona.nombre || ''} ${persona.apellidoPaterno || ''} ${persona.apellidoMaterno || ''}`.trim() || ADMISION_COPY_COMMON.FALLBACK.SIN_NOMBRE;
-  }
-  return `${persona.nombres || ''} ${persona.apellido_paterno || ''} ${persona.apellido_materno || ''}`.trim() || ADMISION_COPY_COMMON.FALLBACK.SIN_NOMBRE;
-};
-
-const formatDateTime = (value) => {
-  if (!value) return 'N/A';
-  return new Date(value).toLocaleString('es-PE', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
-  });
-};
-
-const formatDateOnly = (value) => {
-  if (!value) return 'N/A';
-  return new Date(value).toLocaleDateString('es-PE', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-  });
-};
-
-const buildReviewerName = (reviewer) => {
-  if (!reviewer) return ADMISION_COPY_COMMON.FALLBACK.NO_REGISTRADO;
-  if (reviewer.nombre_completo) return reviewer.nombre_completo;
-  return reviewer.username || reviewer.email || ADMISION_COPY_COMMON.FALLBACK.NO_REGISTRADO;
-};
-
-const Badge = ({ label, tone = 'slate' }) => {
-  const toneClass = {
-    slate: 'bg-slate-100 text-slate-700 border-slate-200',
-    orange: 'bg-orange-100 text-orange-700 border-orange-200',
-    red: 'bg-red-100 text-red-700 border-red-200',
-    green: 'bg-green-100 text-green-700 border-green-200',
-    yellow: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    dark: 'bg-slate-900 text-white border-slate-900',
-  };
-  return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-black uppercase ${toneClass[tone] || toneClass.slate}`}>
-      {label}
-    </span>
-  );
-};
-
-const InfoBlock = ({ label, value }) => (
-  <div>
-    <p className="text-[10px] uppercase font-black text-slate-500">{label}</p>
-    <p className="text-sm font-bold text-slate-800 mt-1">{value || ADMISION_COPY_COMMON.FALLBACK.NA}</p>
-  </div>
-);
-
-const toNumeric = (value) => {
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) ? numberValue : 0;
-};
-
-const formatMoney = (value) =>
-  toNumeric(value).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-const getCalificacionLabel = (value) => {
-  if (value === '' || value === null || value === undefined) return 'SIN CALIFICACIÓN';
-  const numericValue = Number(value);
-  return CALIFICACION_LABELS[numericValue] || String(value);
-};
-
-const getCalificacionTone = (value) => {
-  const numericValue = Number(value);
-  if (numericValue === 0) return 'green';
-  if (numericValue === 1) return 'yellow';
-  if (numericValue === 2) return 'orange';
-  if (numericValue === 3) return 'red';
-  if (numericValue === 4) return 'dark';
-  return 'slate';
-};
-
-// --- COMPONENTE PRINCIPAL ---
+import FinancialDecisionModal from './FinancialDecisionModal';
+import AdmisionDetailHeader from './detail/AdmisionDetailHeader';
+import AdmisionDetailTabs from './detail/AdmisionDetailTabs';
+import AdmisionResumenTab from './detail/AdmisionResumenTab';
+import AdmisionExcepcionesTab from './detail/AdmisionExcepcionesTab';
+import AdmisionFinancieroTab from './detail/AdmisionFinancieroTab';
+import AdmisionAuditoriaTab from './detail/AdmisionAuditoriaTab';
+import AdmisionExportContent from './detail/AdmisionExportContent';
+import { buildAdmisionViewModel } from '../../../../utilities/pages/admision/viewModel';
 
 const AdmisionDetailModal = ({
   isOpen,
   onClose,
   loading = false,
   data = null,
-  onUpdateSuccess // <-- Prop nueva para refrescar la tabla al guardar
+  onUpdateSuccess,
 }) => {
   const [activeTab, setActiveTab] = useState('resumen');
-  const { checkPermission } = useAuth(); // <-- Hook de permisos
+  const { checkPermission } = useAuth();
+  const [currentData, setCurrentData] = useState(data);
 
-  // --- ESTADOS PARA GESTIÓN DE ADMISIÓN ---
   const [nuevoEstado, setNuevoEstado] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
+  const [financialComment, setFinancialComment] = useState('');
+  const [showFinancialDecisionModal, setShowFinancialDecisionModal] = useState(false);
+  const [financialDecisionError, setFinancialDecisionError] = useState('');
+
+  const [exceptionComment, setExceptionComment] = useState('');
+  const [resolvingAction, setResolvingAction] = useState(null);
+  const [resolveExceptionError, setResolveExceptionError] = useState('');
+
+  useEffect(() => {
+    setCurrentData(data);
+  }, [data]);
 
   useEffect(() => {
     if (isOpen) {
       setActiveTab('resumen');
-      setNuevoEstado(''); // Limpiamos el selector al abrir
+      setNuevoEstado('');
       setUpdateError(null);
+      setFinancialComment('');
+      setFinancialDecisionError('');
+      setShowFinancialDecisionModal(false);
+      setExceptionComment('');
+      setResolveExceptionError('');
+      setResolvingAction(null);
     }
   }, [isOpen, data?.id]);
 
   const exportContainerId = 'admision-detail-export-content';
 
-  const viewModel = useMemo(() => {
-    // ... (El viewModel se mantiene IGUALITO) ...
-    if (!data) {
-      return {
-        id: null,
-        solicitante: ADMISION_COPY_COMMON.FALLBACK.NA,
-        solicitanteDni: ADMISION_COPY_COMMON.FALLBACK.NA,
-        asesor: ADMISION_COPY_COMMON.FALLBACK.NA,
-        sede: ADMISION_COPY_COMMON.FALLBACK.NA,
-        tipoPrestamo: ADMISION_COPY_COMMON.FALLBACK.NA,
-        estado: ADMISION_COPY_COMMON.FALLBACK.NA,
-        estadoExcepcion: ADMISION_COPY_COMMON.FALLBACK.NA,
-        totalDeuda: '0.00',
-        totalProtestos: '0.00',
-        totalIfis: 0,
-        totalCuota: '0.00',
-        totalLineaCredito: '0.00',
-        totalTiendas: 0,
-        isProspecto: false,
-        reglasExcepcion: [],
-        reglasBloqueantes: [],
-        selectedExceptionNames: [],
-        motivoAsesor: ADMISION_COPY_COMMON.FALLBACK.SIN_MOTIVO,
-        comentarioRevision: ADMISION_COPY_COMMON.FALLBACK.SIN_COMENTARIO_REVISION,
-        observacionAsesor: ADMISION_COPY_COMMON.FALLBACK.SIN_OBSERVACIONES,
-        revisor: ADMISION_COPY_COMMON.FALLBACK.NO_REGISTRADO,
-        revisadoAt: ADMISION_COPY_COMMON.FALLBACK.NA,
-        createdAt: ADMISION_COPY_COMMON.FALLBACK.NA,
-        updatedAt: ADMISION_COPY_COMMON.FALLBACK.NA,
-        deudas: [],
-        protestos: [],
-      };
+  const viewModel = useMemo(
+    () => buildAdmisionViewModel(currentData),
+    [currentData]
+  );
+
+  const exceptionState = Number(currentData?.excepcion_estado || 0);
+  const hasExceptionDetected = Boolean(currentData?.excepcion_detectada);
+  const hasExceptionPending = hasExceptionDetected && exceptionState === 1;
+  const financialEnabled = !hasExceptionDetected || exceptionState === 2;
+
+  const canManageState = checkPermission('admisiones.gestionar.estado');
+  const canApproveException = checkPermission('admisiones.excepciones.aprobar');
+  const canRejectException = checkPermission('admisiones.excepciones.rechazar');
+  const canReviewExceptions = canApproveException || canRejectException;
+  const isResolvingException = Boolean(resolvingAction);
+  const isExceptionCommentEmpty = exceptionComment.trim() === '';
+
+  const availableTabs = useMemo(
+    () => ADMISION_COPY_DETAIL_MODAL.TABS.filter((tab) => tab.id !== 'financiero' || financialEnabled),
+    [financialEnabled]
+  );
+
+  useEffect(() => {
+    if (!financialEnabled && activeTab === 'financiero') {
+      setActiveTab('excepciones');
+    }
+  }, [activeTab, financialEnabled]);
+
+  const handleResolveException = async (accion) => {
+    if (!viewModel.id) return;
+
+    const comentario = exceptionComment.trim();
+    if (!comentario) {
+      setResolveExceptionError(ADMISION_COPY_EXCEPTION_MODAL.REVIEW.COMENTARIO_REQUERIDO);
+      return;
     }
 
-    const evaluacion = data.resultado_evaluacion || {};
-    const reglasExcepcion = getExceptionRules(evaluacion);
-    const reglasBloqueantes = Array.isArray(evaluacion.blocking_rules) ? evaluacion.blocking_rules : [];
-    const selectedExceptionNames = Array.isArray(evaluacion.selected_exception_names) && evaluacion.selected_exception_names.length > 0
-      ? evaluacion.selected_exception_names
-      : reglasExcepcion.map((rule) => getExceptionRuleName(rule));
-    const persona = data.cliente ? data.cliente?.datos : data.prospecto;
-    const deudas = Array.isArray(data.deudas) ? data.deudas : [];
-    const totalCuota = deudas.reduce((acc, deuda) => acc + toNumeric(deuda?.monto_cuota), 0);
-    const totalLineaCredito = deudas.reduce((acc, deuda) => acc + toNumeric(deuda?.linea_credito), 0);
-    const totalTiendas = deudas.reduce((acc, deuda) => acc + (Boolean(deuda?.es_tienda_departamento) ? 1 : 0), 0);
+    setResolvingAction(accion);
+    setResolveExceptionError('');
 
-    return {
-      id: data.id,
-      solicitante: buildFullName(persona, data.cliente ? 'CLIENTE' : 'PROSPECTO'),
-      solicitanteDni: persona?.dni || 'N/A',
-      asesor: data.asesor?.datos
-        ? buildFullName(data.asesor.datos, 'CLIENTE')
-        : data.asesor?.username || 'Desconocido',
-      sede: data.sede?.nombre || ADMISION_COPY_COMMON.FALLBACK.NA,
-      tipoPrestamo: data.tipo_prestamo || ADMISION_COPY_COMMON.FALLBACK.NA,
-      estado: data.estado_label || ADMISION_COPY_COMMON.FALLBACK.NA,
-      estadoExcepcion: getExceptionStatusLabel(data.excepcion_estado),
-      totalDeuda: String(data.total_deuda || '0.00'),
-      totalProtestos: String(data.total_protestos || '0.00'),
-      totalIfis: data.total_ifis ?? 0,
-      totalCuota: String(totalCuota),
-      totalLineaCredito: String(totalLineaCredito),
-      totalTiendas,
-      isProspecto: Boolean(data.prospecto_id) || Boolean(data.prospecto),
-      reglasExcepcion,
-      reglasBloqueantes,
-      selectedExceptionNames,
-      motivoAsesor: data.excepcion_motivo_asesor || ADMISION_COPY_COMMON.FALLBACK.SIN_MOTIVO,
-      comentarioRevision: data.excepcion_revision_comentario || ADMISION_COPY_COMMON.FALLBACK.SIN_COMENTARIO_REVISION,
-      observacionAsesor: stripSystemAlertPrefix(data.observaciones || '') || ADMISION_COPY_COMMON.FALLBACK.SIN_OBSERVACIONES,
-      revisor: buildReviewerName(data.excepcion_revisor),
-      revisadoAt: formatDateTime(data.excepcion_revisado_at),
-      createdAt: formatDateTime(data.created_at),
-      updatedAt: formatDateTime(data.updated_at),
-      deudas,
-      protestos: Array.isArray(data.protestos) ? data.protestos : [],
-    };
-  }, [data]);
+    try {
+      const response = await resolverExcepcionAdmision(viewModel.id, { accion, comentario });
+      setCurrentData(response?.data || currentData);
+      setExceptionComment('');
+      if (onUpdateSuccess) onUpdateSuccess();
+    } catch (error) {
+      setResolveExceptionError(
+        error?.response?.data?.details ||
+        error?.response?.data?.message ||
+        ADMISION_COPY_EXCEPTION_MODAL.REVIEW.ERROR_PROCESAR
+      );
+    } finally {
+      setResolvingAction(null);
+    }
+  };
+
+  const handleOpenFinancialDecision = () => {
+    if (!nuevoEstado) return;
+    setFinancialDecisionError('');
+    setShowFinancialDecisionModal(true);
+  };
 
   const handleGuardarEstado = async () => {
     if (!nuevoEstado || !viewModel.id) return;
+
+    const comentario = financialComment.trim();
+    if (!comentario) {
+      setFinancialDecisionError(ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.COMENTARIO_REQUERIDO);
+      return;
+    }
+
     setIsUpdating(true);
     setUpdateError(null);
+    setFinancialDecisionError('');
 
     try {
       const payload = {
-        estado: parseInt(nuevoEstado),
+        estado: parseInt(nuevoEstado, 10),
+        comentario_financiero: comentario,
       };
 
-      await updateEstado(viewModel.id, payload);
-      
-      if (onUpdateSuccess) {
-            onUpdateSuccess();
-      }
-        
-      onClose();
-
+      const response = await updateEstado(viewModel.id, payload);
+      setCurrentData(response?.data || currentData);
+      setShowFinancialDecisionModal(false);
+      setFinancialComment('');
+      setNuevoEstado('');
+      if (onUpdateSuccess) onUpdateSuccess();
     } catch (error) {
-      setUpdateError(error?.response?.data?.message || 'Error al actualizar el estado de la admisión.');
+      const message = error?.response?.data?.details
+        || error?.response?.data?.message
+        || ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.ERROR_PROCESAR;
+      setUpdateError(message);
+      setFinancialDecisionError(message);
     } finally {
       setIsUpdating(false);
     }
@@ -238,48 +158,21 @@ const AdmisionDetailModal = ({
 
   if (!isOpen) return null;
 
-  const canManageState = checkPermission('admisiones.gestionar.estado');
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fic-dark/80 backdrop-blur-sm">
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
-        <div className="bg-fic-red px-5 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 bg-white/20 rounded-full text-white">
-              <DocumentTextIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-white uppercase leading-none">{ADMISION_COPY_DETAIL_MODAL.HEADER.TITLE}</h3>
-              <p className="text-red-100 text-xs font-medium mt-1">
-                {loading
-                  ? ADMISION_COPY_DETAIL_MODAL.HEADER.SUBTITLE_LOADING
-                  : `${ADMISION_COPY_DETAIL_MODAL.HEADER.SUBTITLE_PREFIX} #${data?.id || '---'} - ${ADMISION_COPY_DETAIL_MODAL.HEADER.SUBTITLE_CREATED_AT}: ${formatDateOnly(data?.created_at)}`}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {!loading && <BtnExportPdf elementId={exportContainerId} fileName={`${ADMISION_COPY_DETAIL_MODAL.HEADER.EXPORT_FILE_PREFIX}-${data?.id || 'detalle'}.pdf`} />}
-            <button onClick={onClose} className="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full">
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+        <AdmisionDetailHeader
+          loading={loading}
+          currentData={currentData}
+          exportContainerId={exportContainerId}
+          onClose={onClose}
+        />
 
-        <div className="border-b border-slate-200 bg-slate-50 px-5 py-2 flex flex-wrap gap-2">
-          {ADMISION_COPY_DETAIL_MODAL.TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-black uppercase transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-fic-dark text-white'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <AdmisionDetailTabs
+          tabs={availableTabs}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
 
         <div className="p-5 overflow-y-auto space-y-5 bg-white">
           {loading ? (
@@ -289,329 +182,52 @@ const AdmisionDetailModal = ({
           ) : (
             <>
               {activeTab === 'resumen' && (
-                <section className="space-y-4">
-                  <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <InfoBlock label="Solicitante" value={viewModel.solicitante} />
-                      <InfoBlock label="DNI" value={viewModel.solicitanteDni} />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200/80 pt-4">
-                      <InfoBlock label="Asesor" value={viewModel.asesor} />
-                      <InfoBlock label="Sede" value={viewModel.sede} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 rounded-xl border border-slate-200 bg-white p-4">
-                    <InfoBlock label="Tipo préstamo" value={viewModel.tipoPrestamo} />
-                    <InfoBlock label="Estado" value={viewModel.estado} />
-                    <InfoBlock label="Estado excepción" value={viewModel.estadoExcepcion} />
-                    <InfoBlock label="Total deuda" value={`S/ ${viewModel.totalDeuda}`} />
-                    <InfoBlock label="Total protestos" value={`S/ ${viewModel.totalProtestos}`} />
-                  </div>
-                </section>
+                <AdmisionResumenTab viewModel={viewModel} />
               )}
 
               {activeTab === 'excepciones' && (
-                <section className="space-y-4">
-                  <div>
-                    <p className="text-xs font-black uppercase text-slate-600 mb-2">Excepciones detectadas</p>
-                    <div className="space-y-2">
-                      {viewModel.reglasExcepcion.length === 0 ? (
-                        <p className="text-xs text-slate-500 italic">{ADMISION_COPY_DETAIL_MODAL.EMPTY.SIN_EXCEPCIONES}</p>
-                      ) : (
-                        viewModel.reglasExcepcion.map((rule, index) => (
-                          <div key={`${rule.code || 'RULE'}-${index}`} className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2">
-                            <p className="text-[11px] font-black uppercase text-orange-800">{getExceptionRuleName(rule)}</p>
-                            <p className="text-xs text-orange-700 mt-1">{rule.message || ADMISION_COPY_COMMON.FALLBACK.SIN_DETALLE}</p>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-black uppercase text-slate-600 mb-2">Reglas bloqueantes</p>
-                    <div className="space-y-2">
-                      {viewModel.reglasBloqueantes.length === 0 ? (
-                        <p className="text-xs text-slate-500 italic">{ADMISION_COPY_DETAIL_MODAL.EMPTY.SIN_REGLAS_BLOQUEANTES}</p>
-                      ) : (
-                        viewModel.reglasBloqueantes.map((rule, index) => (
-                          <div key={`${rule.code || 'BLOCK'}-${index}`} className="rounded-md border border-red-200 bg-red-50 px-3 py-2">
-                            <p className="text-[11px] font-black uppercase text-red-800">{getExceptionRuleName(rule)}</p>
-                            <p className="text-xs text-red-700 mt-1">{rule.message || ADMISION_COPY_COMMON.FALLBACK.SIN_DETALLE}</p>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <p className="text-xs font-black uppercase text-slate-600 mb-2">Excepciones seleccionadas por asesor</p>
-                    {viewModel.selectedExceptionNames.length === 0 ? (
-                      <p className="text-xs text-slate-500 italic">{ADMISION_COPY_DETAIL_MODAL.EMPTY.SIN_SELECCIONES}</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {viewModel.selectedExceptionNames.map((name, idx) => (
-                          <Badge key={`${name}-${idx}`} label={name} tone="orange" />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="text-xs font-black uppercase text-slate-600">Motivo asesor</p>
-                      <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap">{viewModel.motivoAsesor}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="text-xs font-black uppercase text-slate-600">Comentario revisión</p>
-                      <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap">{viewModel.comentarioRevision}</p>
-                    </div>
-                  </div>
-                </section>
+                <AdmisionExcepcionesTab
+                  viewModel={viewModel}
+                  hasExceptionPending={hasExceptionPending}
+                  canReviewExceptions={canReviewExceptions}
+                  canRejectException={canRejectException}
+                  canApproveException={canApproveException}
+                  isResolvingException={isResolvingException}
+                  isExceptionCommentEmpty={isExceptionCommentEmpty}
+                  exceptionComment={exceptionComment}
+                  resolveExceptionError={resolveExceptionError}
+                  resolvingAction={resolvingAction}
+                  onExceptionCommentChange={(value) => {
+                    setExceptionComment(value);
+                    setResolveExceptionError('');
+                  }}
+                  onResolveException={handleResolveException}
+                />
               )}
 
               {activeTab === 'financiero' && (
-                <section className="space-y-5">
-                  {canManageState && (
-                    <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                      <div className="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
-                        <CheckCircleIcon className="w-5 h-5 text-slate-700" />
-                        <p className="text-xs font-black uppercase text-slate-700">Gestión de Admisión</p>
-                      </div>
-                      
-                      <div className="p-5 bg-white flex flex-col md:flex-row gap-4 items-end">
-                        <div className="flex-1 w-full">
-                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-2">
-                            Modificar Estado de Evaluación
-                          </label>
-                          <select 
-                            value={nuevoEstado}
-                            onChange={(e) => setNuevoEstado(e.target.value)}
-                            className="w-full text-sm px-3 py-2.5 border border-slate-300 rounded-md outline-none focus:border-fic-red focus:ring-1 focus:ring-fic-red text-slate-700 font-bold transition-all bg-slate-50 hover:bg-white cursor-pointer"
-                          >
-                            <option value="" className="text-slate-500 font-normal">-- Seleccione la decisión final --</option>
-                            <option value="1" className="text-green-700 font-bold">✓ Aprobar Admisión</option>
-                            <option value="3" className="text-red-700 font-bold">✗ Rechazar Admisión</option>
-                          </select>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleGuardarEstado}
-                          disabled={!nuevoEstado || isUpdating}
-                          className="w-full md:w-auto px-8 py-2.5 bg-fic-red hover:bg-red-700 text-white font-black rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase text-xs tracking-wide shadow-md"
-                        >
-                          {isUpdating ? 'Procesando...' : 'Aplicar Decisión'}
-                        </button>
-                      </div>
-
-                      {updateError && (
-                        <div className="px-5 pb-4 bg-white">
-                          <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-600 font-bold">
-                            {updateError}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 grid grid-cols-1 md:grid-cols-6 gap-4">
-                    <InfoBlock label={ADMISION_COPY_COMMON.COUNTERS.ENTIDADES} value={String(viewModel.totalIfis)} />
-                    <InfoBlock label={ADMISION_COPY_COMMON.COUNTERS.TIENDAS} value={String(viewModel.totalTiendas)} />
-                    <InfoBlock label="Total deuda" value={`S/ ${formatMoney(viewModel.totalDeuda)}`} />
-                    <InfoBlock label="Total cuotas" value={`S/ ${formatMoney(viewModel.totalCuota)}`} />
-                    <InfoBlock label="Línea de crédito" value={`S/ ${formatMoney(viewModel.totalLineaCredito)}`} />
-                    <InfoBlock label="Total protestos" value={`S/ ${formatMoney(viewModel.totalProtestos)}`} />
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 overflow-hidden">
-                    <div className="bg-slate-100 px-4 py-2 border-b border-slate-200">
-                      <p className="text-xs font-black uppercase text-slate-700">Deudas</p>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-xs">
-                        <thead className="bg-white">
-                          <tr className="text-slate-500 uppercase">
-                            <th className="px-3 py-2 text-left">Persona</th>
-                            <th className="px-3 py-2 text-left">DNI</th>
-                            <th className="px-3 py-2 text-left">Entidad</th>
-                            <th className="px-3 py-2 text-center">Calificación</th>
-                            <th className="px-3 py-2 text-center">Tienda</th>
-                            <th className="px-3 py-2 text-center">Tipo crédito</th>
-                            <th className="px-3 py-2 text-center">Saldo capital</th>
-                            <th className="px-3 py-2 text-center">Línea de crédito</th>
-                            <th className="px-3 py-2 text-center">Plazo</th>
-                            <th className="px-3 py-2 text-center">Cuota</th>
-                            <th className="px-3 py-2 text-center">Frecuencia</th>
-                            <th className="px-3 py-2 text-center">Vencimiento</th>
-                            {!viewModel.isProspecto && <th className="px-3 py-2 text-left">% cancel.</th>}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {viewModel.deudas.length === 0 ? (
-                            <tr>
-                              <td className="px-3 py-3 text-slate-500 italic" colSpan={viewModel.isProspecto ? 12 : 13}>{ADMISION_COPY_DETAIL_MODAL.EMPTY.SIN_DEUDAS}</td>
-                            </tr>
-                          ) : (
-                            viewModel.deudas.map((deuda, index) => (
-                              <tr key={`deuda-${index}`} className="border-t border-slate-100">
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700">{deuda.persona_tipo || 'N/A'}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700">{deuda.dni_relacionado || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
-                                <td className="px-3 py-2 whitespace-nowrap font-semibold text-slate-800">{deuda.nombre_entidad || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-center">
-                                  <Badge
-                                    label={getCalificacionLabel(deuda.calificacion_banco)}
-                                    tone={getCalificacionTone(deuda.calificacion_banco)}
-                                  />
-                                </td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{deuda.es_tienda_departamento ? 'Sí' : 'No'}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{deuda.tipo_credito || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">S/ {formatMoney(deuda.saldo_capital)}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">S/ {formatMoney(deuda.linea_credito)}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{deuda.plazo_pendiente || 0}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">S/ {formatMoney(deuda.monto_cuota)}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{deuda.frecuencia_pago || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{formatDateOnly(deuda.fecha_pago)}</td>
-                                {!viewModel.isProspecto && (
-                                  <td className="px-3 py-2 whitespace-nowrap text-slate-700">
-                                    {deuda.porcentaje_cancelacion !== null && deuda.porcentaje_cancelacion !== undefined && deuda.porcentaje_cancelacion !== ''
-                                      ? `${toNumeric(deuda.porcentaje_cancelacion)}%`
-                                      : ADMISION_COPY_COMMON.FALLBACK.NA}
-                                  </td>
-                                )}
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 overflow-hidden">
-                    <div className="bg-slate-100 px-4 py-2 border-b border-slate-200">
-                      <p className="text-xs font-black uppercase text-slate-700">Protestos</p>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-xs">
-                        <thead className="bg-white">
-                          <tr className="text-slate-500 uppercase">
-                            <th className="px-3 py-2 text-left">Documento</th>
-                            <th className="px-3 py-2 text-left">Entidad acreedora</th>
-                            <th className="px-3 py-2 text-left">Monto deuda</th>
-                            <th className="px-3 py-2 text-left">Días venc.</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {viewModel.protestos.length === 0 ? (
-                            <tr>
-                              <td className="px-3 py-3 text-slate-500 italic" colSpan={4}>{ADMISION_COPY_DETAIL_MODAL.EMPTY.SIN_PROTESTOS}</td>
-                            </tr>
-                          ) : (
-                            viewModel.protestos.map((protesto, index) => (
-                              <tr key={`protesto-${index}`} className="border-t border-slate-100">
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700">{protesto.documento_tipo || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
-                                <td className="px-3 py-2 whitespace-nowrap font-semibold text-slate-800">{protesto.entidad_acreedora || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700">S/ {formatMoney(protesto.monto_deuda)}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700">{protesto.dias_vencimiento}</td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </section>
+                <AdmisionFinancieroTab
+                  viewModel={viewModel}
+                  canManageState={canManageState}
+                  nuevoEstado={nuevoEstado}
+                  isUpdating={isUpdating}
+                  updateError={updateError}
+                  onNuevoEstadoChange={setNuevoEstado}
+                  onOpenFinancialDecision={handleOpenFinancialDecision}
+                />
               )}
 
               {activeTab === 'auditoria' && (
-                <section className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <InfoBlock label="Creado" value={viewModel.createdAt} />
-                    <InfoBlock label="Actualizado" value={viewModel.updatedAt} />
-                    <InfoBlock label="Revisado" value={viewModel.revisadoAt} />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-white p-4">
-                    <InfoBlock label="Revisor excepción" value={viewModel.revisor} />
-                    <InfoBlock label="Estado excepción" value={viewModel.estadoExcepcion} />
-                  </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <p className="text-xs font-black uppercase text-slate-600">Observación asesor</p>
-                    <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap">{viewModel.observacionAsesor}</p>
-                  </div>
-                </section>
+                <AdmisionAuditoriaTab viewModel={viewModel} />
               )}
             </>
           )}
 
-          <div id={exportContainerId} className="fixed left-[-100000px] top-0 w-[1200px] bg-white p-6">
-            <h1 className="text-xl font-black uppercase text-fic-dark">{ADMISION_COPY_DETAIL_MODAL.HEADER.TITLE} #{data?.id || '---'}</h1>
-            <p className="text-sm text-slate-600 mt-1">Generado: {formatDateTime(new Date())}</p>
-
-            <section className="mt-6">
-              <h2 className="text-sm font-black uppercase text-fic-dark">Resumen</h2>
-              <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
-                <p><b>Solicitante:</b> {viewModel.solicitante}</p>
-                <p><b>DNI:</b> {viewModel.solicitanteDni}</p>
-                <p><b>Asesor:</b> {viewModel.asesor}</p>
-                <p><b>Sede:</b> {viewModel.sede}</p>
-                <p><b>Tipo préstamo:</b> {viewModel.tipoPrestamo}</p>
-                <p><b>Estado:</b> {viewModel.estado}</p>
-                <p><b>Estado excepción:</b> {viewModel.estadoExcepcion}</p>
-              </div>
-            </section>
-
-            <section className="mt-6">
-              <h2 className="text-sm font-black uppercase text-fic-dark">Excepciones</h2>
-              <ul className="mt-2 list-disc pl-5 text-sm">
-                {viewModel.reglasExcepcion.map((rule, index) => (
-                  <li key={`exp-${index}`}><b>{getExceptionRuleName(rule)}:</b> {rule.message}</li>
-                ))}
-              </ul>
-              <p className="mt-2 text-sm"><b>Motivo asesor:</b> {viewModel.motivoAsesor}</p>
-              <p className="mt-1 text-sm"><b>Comentario revisión:</b> {viewModel.comentarioRevision}</p>
-            </section>
-
-            <section className="mt-6">
-              <h2 className="text-sm font-black uppercase text-fic-dark">Financiero</h2>
-              <table className="mt-2 w-full text-xs border border-slate-200 border-collapse">
-                <thead>
-                  <tr>
-                    <th className="border border-slate-200 p-1 text-left">Persona</th>
-                    <th className="border border-slate-200 p-1 text-left">DNI</th>
-                    <th className="border border-slate-200 p-1 text-left">Entidad</th>
-                    <th className="border border-slate-200 p-1 text-left">Saldo</th>
-                    <th className="border border-slate-200 p-1 text-left">Cuota</th>
-                    <th className="border border-slate-200 p-1 text-left">Vencimiento</th>
-                    {!viewModel.isProspecto && <th className="border border-slate-200 p-1 text-left">% Canc.</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {viewModel.deudas.map((deuda, index) => (
-                    <tr key={`exp-deuda-${index}`}>
-                      <td className="border border-slate-200 p-1">{deuda.persona_tipo || 'N/A'}</td>
-                      <td className="border border-slate-200 p-1">{deuda.dni_relacionado || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
-                      <td className="border border-slate-200 p-1">{deuda.nombre_entidad || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
-                      <td className="border border-slate-200 p-1">S/ {formatMoney(deuda.saldo_capital)}</td>
-                      <td className="border border-slate-200 p-1">S/ {formatMoney(deuda.monto_cuota)}</td>
-                      <td className="border border-slate-200 p-1">{formatDateOnly(deuda.fecha_pago)}</td>
-                      {!viewModel.isProspecto && (
-                        <td className="border border-slate-200 p-1">
-                          {deuda.porcentaje_cancelacion !== null && deuda.porcentaje_cancelacion !== undefined && deuda.porcentaje_cancelacion !== ''
-                            ? `${toNumeric(deuda.porcentaje_cancelacion)}%`
-                            : ADMISION_COPY_COMMON.FALLBACK.NA}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
-
-            <section className="mt-6">
-              <h2 className="text-sm font-black uppercase text-fic-dark">Auditoría</h2>
-              <div className="mt-2 text-sm space-y-1">
-                <p><b>Creado:</b> {viewModel.createdAt}</p>
-                <p><b>Actualizado:</b> {viewModel.updatedAt}</p>
-                <p><b>Revisado:</b> {viewModel.revisadoAt}</p>
-                <p><b>Revisor:</b> {viewModel.revisor}</p>
-              </div>
-            </section>
-          </div>
+          <AdmisionExportContent
+            exportContainerId={exportContainerId}
+            currentData={currentData}
+            viewModel={viewModel}
+          />
         </div>
 
         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
@@ -621,8 +237,26 @@ const AdmisionDetailModal = ({
           >
             {ADMISION_COPY_COMMON.ACTIONS.CERRAR}
           </button>
-        </div> 
+        </div>
       </div>
+
+      <FinancialDecisionModal
+        isOpen={showFinancialDecisionModal}
+        loading={isUpdating}
+        decision={nuevoEstado}
+        comment={financialComment}
+        error={financialDecisionError}
+        onCommentChange={(value) => {
+          setFinancialComment(value);
+          setFinancialDecisionError('');
+        }}
+        onClose={() => {
+          if (isUpdating) return;
+          setShowFinancialDecisionModal(false);
+          setFinancialDecisionError('');
+        }}
+        onConfirm={handleGuardarEstado}
+      />
     </div>
   );
 };
