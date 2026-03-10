@@ -41,6 +41,8 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
   const [protestos, setProtestos] = useState([]);
   const [capitalPendienteFicsullana, setCapitalPendienteFicsullana] = useState(0);
   const [capitalLoading, setCapitalLoading] = useState(false);
+  
+  const [isManualTipo, setIsManualTipo] = useState(false);
 
   const isSolicitanteSelected = Boolean(header.cliente_id || header.prospecto_id);
 
@@ -60,9 +62,12 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     setProspectoSelected(null);
     setCapitalPendienteFicsullana(0);
     setCapitalLoading(false);
+    setIsManualTipo(false);
   };
 
   const onSelectCliente = async (cliente) => {
+    setIsManualTipo(false);
+    
     if (!cliente) {
       setHeader((prev) => ({ ...prev, cliente_id: null, tipo_prestamo: '', motivo_bloqueo: null }));
       setClienteSelected(null);
@@ -120,6 +125,8 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
   };
 
   const onSelectProspecto = (prospecto) => {
+    setIsManualTipo(false);
+    
     if (!prospecto) {
       setHeader((prev) => ({ ...prev, prospecto_id: null, tipo_prestamo: '', motivo_bloqueo: null }));
       setProspectoSelected(null);
@@ -151,6 +158,17 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     };
     onSelectProspecto(prospectoObj);
     setAlert({ type: 'success', message: ADMISION_COPY_ALERTS.STORE.PROSPECTO_CREADO });
+  };
+
+  const handleToggleManualTipo = () => {
+    setIsManualTipo(!isManualTipo);
+  };
+
+  const handleTipoPrestamoChange = (nuevoTipo) => {
+    setHeader((prev) => ({
+      ...prev,
+      tipo_prestamo: nuevoTipo
+    }));
   };
 
   const submitAdmision = async (payload, solicitudExcepcion = null) => {
@@ -232,8 +250,6 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
       return;
     }
 
-    // Limpiamos las filas vacías antes de enviarlas
-    // Si la entidad acreedora está vacía, ignoramos ese protesto
     const protestosLimpios = protestos.filter(
       (p) => p.entidad_acreedora && p.entidad_acreedora.trim() !== ''
     );
@@ -325,6 +341,9 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     capitalPendienteFicsullana,
     capitalLoading,
     isSolicitanteSelected,
+    isManualTipo,
+    handleToggleManualTipo,
+    handleTipoPrestamoChange,
     handleTipoSolicitanteChange,
     onSelectCliente,
     onSelectProspecto,

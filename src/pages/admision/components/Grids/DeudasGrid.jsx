@@ -202,7 +202,7 @@ const DeudasGrid = ({
         });
     };
 
-   const inputClass = 'w-full text-xs px-2 py-1.5 border border-slate-300 rounded focus:border-fic-red outline-none disabled:bg-slate-100 disabled:text-slate-400 transition-colors invalid:border-red-500 invalid:text-red-600';
+    const inputClass = 'w-full text-xs px-2 py-1.5 border border-slate-300 rounded focus:border-fic-red outline-none disabled:bg-slate-100 disabled:text-slate-400 transition-colors invalid:border-red-500 invalid:text-red-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none';
 
     return (
         <div className="space-y-2">
@@ -218,12 +218,9 @@ const DeudasGrid = ({
                 </button>
             </div>
 
-            {/* 1. Eliminé "overflow-x-auto" para quitar el scroll horizontal */}
             <div className="rounded-lg border border-slate-200 bg-white">
-                {/* 2. La tabla ahora usa "table-fixed" para respetar los anchos que le digamos */}
                 <table className="w-full text-left text-xs table-fixed">
                     <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px]">
-                        {/* 3. Distribuimos el ancho en porcentajes para que ocupen todo el monitor grande */}
                         <tr>
                             <th className="p-2 w-[8%]">Persona</th>
                             <th className="p-2 w-[8%]">DNI</th>
@@ -355,6 +352,7 @@ const DeudasGrid = ({
                                         />
                                     </td>
                                     <td className="p-1.5">
+                                        {/* La cuota se sigue manejando como número en HTML pero visualmente es solo un campo de texto */}
                                         <input
                                             type="number"
                                             step="0.01"
@@ -394,7 +392,7 @@ const DeudasGrid = ({
                                                 max="100"
                                                 value={row.porcentaje_cancelacion ?? 0}
                                                 onChange={(e) => handleChange(i, 'porcentaje_cancelacion', e.target.value)}
-                                                className="w-full text-xs px-1 py-1.5 border border-blue-300 rounded focus:border-blue-500 font-bold text-blue-700 text-center outline-none"
+                                                className="w-full text-xs px-1 py-1.5 border border-blue-300 rounded focus:border-blue-500 font-bold text-blue-700 text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 placeholder="%"
                                             />
                                         </td>

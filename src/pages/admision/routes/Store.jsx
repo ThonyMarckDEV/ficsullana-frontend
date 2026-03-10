@@ -39,6 +39,9 @@ const Store = () => {
     capitalPendienteFicsullana,
     capitalLoading,
     isSolicitanteSelected,
+    isManualTipo,             
+    handleToggleManualTipo,   
+    handleTipoPrestamoChange, 
     handleTipoSolicitanteChange,
     onSelectCliente,
     onSelectProspecto,
@@ -52,7 +55,6 @@ const Store = () => {
   if (loading) return <LoadingScreen />;
 
   return (
-    // 1. Quité "container" y agregué "w-full" con paddings responsivos para que se expanda a los lados
     <div className="w-full px-4 lg:px-8 xl:px-12 2xl:px-16 py-6">
       <PageHeader
         title="Nueva Admisión"
@@ -87,6 +89,9 @@ const Store = () => {
           onOpenProspectoModal={() => setIsModalProspectoOpen(true)}
           onObservacionesChange={(e) => setHeader((prev) => ({ ...prev, observaciones: e.target.value }))}
           getTipoPrestamoLabel={getTipoPrestamoLabel}
+          isManualTipo={isManualTipo}                  
+          onToggleManualTipo={handleToggleManualTipo}   
+          onTipoPrestamoChange={handleTipoPrestamoChange} 
         />
 
         <StoreFinancialSection

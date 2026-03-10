@@ -13,6 +13,9 @@ const StoreSolicitanteSection = ({
   onOpenProspectoModal,
   onObservacionesChange,
   getTipoPrestamoLabel,
+  isManualTipo,
+  onToggleManualTipo,
+  onTipoPrestamoChange,
 }) => {
   const isBloqueado = header.tipo_prestamo === 'NO APLICA';
 
@@ -53,24 +56,55 @@ const StoreSolicitanteSection = ({
         </div>
 
         <div className="md:col-span-4">
-          <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Tipo de Préstamo (Automático)</label>
-          <div className="relative">
-            <input
-              type="text"
-              value={getTipoPrestamoLabel()}
-              placeholder="Seleccione un solicitante..."
-              disabled
-              className={`w-full px-3 py-2 border rounded-md bg-slate-200 font-black text-sm cursor-not-allowed shadow-inner outline-none ${
-                !header.tipo_prestamo ? 'italic text-slate-400 font-normal' : 
-                isBloqueado ? 'text-red-600 border-red-300' : 'text-slate-600'
-              }`}
-            />
-            <div className="absolute right-3 top-2.5">
-              {header.tipo_prestamo === 'RCS' && <span className="h-2 w-2 rounded-full bg-orange-500 inline-block animate-pulse" />}
-              {header.tipo_prestamo === 'RSS' && <span className="h-2 w-2 rounded-full bg-green-500 inline-block animate-pulse" />}
-              {header.tipo_prestamo === 'NUEVO' && <span className="h-2 w-2 rounded-full bg-blue-500 inline-block animate-pulse" />}
-              {isBloqueado && <span className="h-2 w-2 rounded-full bg-red-600 inline-block animate-pulse" />}
+          <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">
+            Tipo de Préstamo {isManualTipo ? '(Manual)' : '(Automático)'}
+          </label>
+          
+          {isManualTipo ? (
+            <select
+              value={header.tipo_prestamo}
+              onChange={(e) => onTipoPrestamoChange(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-fic-red outline-none text-sm font-bold text-slate-700 bg-white"
+            >
+              <option value="">Seleccione...</option>
+              <option value="NUEVO">NUEVO (Primer Crédito)</option>
+              <option value="RCS">RCS (Recurrente con Saldo)</option>
+              <option value="RSS">RSS (Recurrente sin Saldo)</option>
+              <option value="NO APLICA">NO APLICA</option>
+            </select>
+          ) : (
+            <div className="relative">
+              <input
+                type="text"
+                value={getTipoPrestamoLabel()}
+                placeholder="Seleccione un solicitante..."
+                disabled
+                className={`w-full px-3 py-2 border rounded-md bg-slate-200 font-black text-sm cursor-not-allowed shadow-inner outline-none ${
+                  !header.tipo_prestamo ? 'italic text-slate-400 font-normal' : 
+                  isBloqueado ? 'text-red-600 border-red-300' : 'text-slate-600'
+                }`}
+              />
+              <div className="absolute right-3 top-2.5">
+                {header.tipo_prestamo === 'RCS' && <span className="h-2 w-2 rounded-full bg-orange-500 inline-block animate-pulse" />}
+                {header.tipo_prestamo === 'RSS' && <span className="h-2 w-2 rounded-full bg-green-500 inline-block animate-pulse" />}
+                {header.tipo_prestamo === 'NUEVO' && <span className="h-2 w-2 rounded-full bg-blue-500 inline-block animate-pulse" />}
+                {isBloqueado && <span className="h-2 w-2 rounded-full bg-red-600 inline-block animate-pulse" />}
+              </div>
             </div>
+          )}
+
+          {/* Checkbox para Cambiar Tipo */}
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="cambiar-tipo"
+              checked={isManualTipo}
+              onChange={onToggleManualTipo}
+              className="rounded border-slate-300 text-fic-red focus:ring-fic-red w-3.5 h-3.5 cursor-pointer"
+            />
+            <label htmlFor="cambiar-tipo" className="text-[10px] font-bold text-slate-500 uppercase cursor-pointer select-none">
+              Cambiar Tipo
+            </label>
           </div>
 
           {header.tipo_solicitante === 'PROSPECTO' && (
@@ -78,7 +112,7 @@ const StoreSolicitanteSection = ({
               Los prospectos siempre inician como NUEVO.
             </p>
           )}
-          {header.tipo_solicitante === 'CLIENTE' && header.cliente_id && (
+          {header.tipo_solicitante === 'CLIENTE' && header.cliente_id && !isManualTipo && (
             <p
               className={`text-[10px] mt-1 font-bold p-1 rounded border ${
                 isBloqueado
@@ -99,11 +133,11 @@ const StoreSolicitanteSection = ({
             name="observaciones"
             value={header.observaciones}
             onChange={onObservacionesChange}
-            disabled={isBloqueado}
+            disabled={isBloqueado && !isManualTipo}
             className={`w-full px-3 py-2 border rounded-md outline-none text-sm h-24 resize-none ${
-              isBloqueado ? 'bg-slate-100 cursor-not-allowed text-slate-400 border-slate-200' : 'focus:border-fic-red'
+              isBloqueado && !isManualTipo ? 'bg-slate-100 cursor-not-allowed text-slate-400 border-slate-200' : 'focus:border-fic-red'
             }`}
-            placeholder={isBloqueado ? "Admisión bloqueada..." : "Notas del asesor..."}
+            placeholder={isBloqueado && !isManualTipo ? "Admisión bloqueada..." : "Notas del asesor..."}
           />
         </div>
       </div>
