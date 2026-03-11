@@ -46,7 +46,7 @@ const Update = () => {
   const tipoSolicitante = header.tipoPersona.includes('PROSPECTO') ? 'PROSPECTO' : 'CLIENTE';
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="w-full px-4 lg:px-8 xl:px-12 2xl:px-16 py-6">
       <PageHeader
         title={`Editar Admisión #${id}`}
         subtitle={`Solicitante: ${header.solicitanteName}`}
@@ -62,8 +62,9 @@ const Update = () => {
         onClose={() => setAlert(null)}
       />
 
-      <form onSubmit={handleSubmit} className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 space-y-6">
+      <form onSubmit={handleSubmit} className="w-full max-w-[1700px] mx-auto grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        
+        <div className="lg:col-span-1 xl:col-span-1 space-y-6">
           <ExpedienteInfoCard header={header} />
           <UpdateConfigurationCard
             header={header}
@@ -72,7 +73,7 @@ const Update = () => {
           />
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 xl:col-span-3 space-y-6">
           <UpdateFinancialEvaluationCard
             deudas={deudas}
             setDeudas={setDeudas}
