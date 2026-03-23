@@ -66,7 +66,7 @@ const AdmisionFinancieroTab = ({
       <InfoBlock label={ADMISION_COPY_COMMON.COUNTERS.TIENDAS} value={String(viewModel.totalTiendas)} />
       <InfoBlock label="Total deuda" value={`S/ ${formatMoney(viewModel.totalDeuda)}`} />
       <InfoBlock label="Total cuotas" value={`S/ ${formatMoney(viewModel.totalCuota)}`} />
-      <InfoBlock label="Línea de crédito" value={`S/ ${formatMoney(viewModel.totalLineaCredito)}`} />
+      <InfoBlock label="Monto línea créd." value={`S/ ${formatMoney(viewModel.totalLineaCredito)}`} />
       <InfoBlock label="Total protestos" value={`S/ ${formatMoney(viewModel.totalProtestos)}`} />
     </div>
     <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -86,21 +86,22 @@ const AdmisionFinancieroTab = ({
               <th className="px-3 py-2 text-left">DNI</th>
               <th className="px-3 py-2 text-left">Entidad</th>
               <th className="px-3 py-2 text-center">Calificación</th>
-              <th className="px-3 py-2 text-center">Tienda</th>
+              <th className="px-3 py-2 text-center">Línea créd.</th>
               <th className="px-3 py-2 text-center">Tipo crédito</th>
+              <th className="px-3 py-2 text-center">Días atraso</th>
               <th className="px-3 py-2 text-center">Saldo capital</th>
-              <th className="px-3 py-2 text-center">Línea de crédito</th>
+              <th className="px-3 py-2 text-center">Monto línea créd.</th>
               <th className="px-3 py-2 text-center">Plazo</th>
               <th className="px-3 py-2 text-center">Cuota</th>
-              <th className="px-3 py-2 text-center">Frecuencia</th>
-              <th className="px-3 py-2 text-center">Vencimiento</th>
+              <th className="px-3 py-2 text-center">Amortización</th>
+              <th className="px-3 py-2 text-center">Fecha vencimiento</th>
               {!viewModel.isProspecto && <th className="px-3 py-2 text-left">% cancel.</th>}
             </tr>
           </thead>
           <tbody>
             {viewModel.deudas.length === 0 ? (
               <tr>
-                <td className="px-3 py-3 text-slate-500 italic" colSpan={viewModel.isProspecto ? 12 : 13}>{ADMISION_COPY_DETAIL_MODAL.EMPTY.SIN_DEUDAS}</td>
+                <td className="px-3 py-3 text-slate-500 italic" colSpan={viewModel.isProspecto ? 13 : 14}>{ADMISION_COPY_DETAIL_MODAL.EMPTY.SIN_DEUDAS}</td>
               </tr>
             ) : (
               viewModel.deudas.map((deuda, index) => (
@@ -116,6 +117,7 @@ const AdmisionFinancieroTab = ({
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{deuda.es_tienda_departamento ? 'Sí' : 'No'}</td>
                   <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{deuda.tipo_credito || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{deuda.dias_atraso ?? ADMISION_COPY_COMMON.FALLBACK.NA}</td>
                   <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">S/ {formatMoney(deuda.saldo_capital)}</td>
                   <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">S/ {formatMoney(deuda.linea_credito)}</td>
                   <td className="px-3 py-2 whitespace-nowrap text-slate-700 text-center">{deuda.plazo_pendiente || 0}</td>

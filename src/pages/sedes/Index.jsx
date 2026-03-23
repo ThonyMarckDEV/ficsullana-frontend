@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getSedes, toggleSedeEstado, showSede } from 'services/sedeService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -6,6 +6,8 @@ import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import InfoModal from 'components/Shared/Modals/InfoModal';
 import Table from 'components/Shared/Tables/Table';
+import useInfoModal from 'hooks/useInfoModal';
+import usePaginatedIndex from 'hooks/usePaginatedIndex';
 import { 
     PencilSquareIcon, 
     BuildingStorefrontIcon, 
@@ -15,26 +17,32 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
+const INITIAL_FILTERS = {
+    search: '',
+    estado: ''
+};
+
 const Index = () => {
-    const [loading, setLoading] = useState(true);
-    const [alert, setAlert] = useState(null);
-    const [sedes, setSedes] = useState([]);
-    const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
     const [sedeToToggle, setSedeToToggle] = useState(null);
-    
-    const [isInfoOpen, setIsInfoOpen] = useState(false);
-    const [infoLoading, setInfoLoading] = useState(false);
-    const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
 
-    const [filters, setFilters] = useState({
-        search: '',
-        estado: ''
+    const {
+        loading,
+        setLoading,
+        alert,
+        setAlert,
+        rows: sedes,
+        paginationInfo,
+        filters,
+        fetchRows: fetchSedes,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleFilterClear,
+    } = usePaginatedIndex({
+        initialFilters: INITIAL_FILTERS,
+        fetcher: getSedes,
+        onError: (error) => handleApiError(error , 'Error al cargar las sedes.'),
     });
-
-    const filtersRef = useRef(filters);
-    useEffect(() => {
-        filtersRef.current = filters;
-    }, [filters]);
+    const { modalProps, openInfoModal } = useInfoModal({ setAlert });
 
     const filterConfig = useMemo(() => [
         {
@@ -57,50 +65,9 @@ const Index = () => {
         }
     ], []);
 
-    const fetchSedes = useCallback(async (page = 1) => {
-        setLoading(true);
-        try {
-            const currentFilters = filtersRef.current;
-            const response = await getSedes(page, currentFilters);
-            
-            setSedes(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                totalPages: response.last_page,
-                totalItems: response.total,
-            });
-        } catch (err) {
-            setAlert(handleApiError(err , 'Error al cargar las sedes.'));
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchSedes(1);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleFilterChange = useCallback((name, value) => {
-        setFilters(prev => ({ ...prev, [name]: value }));
-    }, []);
-
-    const handleFilterSubmit = useCallback(() => {
-        fetchSedes(1);
-    }, [fetchSedes]);
-
-    const handleFilterClear = useCallback(() => {
-        const cleanFilters = { search: '', estado: '' };
-        setFilters(cleanFilters);
-        filtersRef.current = cleanFilters;
-        fetchSedes(1);
-    }, [fetchSedes]);
-
-    const handleViewSede = async (id) => {
-        setIsInfoOpen(true);
-        setInfoLoading(true);
-        try {
-            const response = await showSede(id);
+    const handleViewSede = useCallback((id) => openInfoModal({
+        fetcher: () => showSede(id),
+        mapData: (response) => {
             const { sede } = response.data; 
             
             const seccionesFormateadas = [
@@ -117,19 +84,14 @@ const Index = () => {
                 }
             ];
 
-            setModalData({
+            return {
                 title: "Ficha de Sede",
                 subtitle: `Detalle de: ${sede.nombre}`,
                 sections: seccionesFormateadas
-            });
-
-        } catch (err) {
-            setAlert(handleApiError(err , 'No se pudo cargar el detalle de la sede.'));
-            setIsInfoOpen(false);
-        } finally {
-            setInfoLoading(false);
-        }
-    };
+            };
+        },
+        onError: (error) => handleApiError(error , 'No se pudo cargar el detalle de la sede.'),
+    }), [openInfoModal]);
 
     const executeToggleEstado = async () => {
         if (!sedeToToggle || sedeToToggle.esPrincipal) return;
@@ -139,10 +101,9 @@ const Index = () => {
         try {
             await toggleSedeEstado(sedeToToggle.id, nuevoEstado);
             setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
-            await fetchSedes(paginationInfo.currentPage);
+            await fetchSedes(paginationInfo.currentPage).catch(() => {});
         } catch (err) {
             setAlert(handleApiError(err, 'Error al cambiar estado.')); 
-            setLoading(false);
         }
     };
 
@@ -215,7 +176,7 @@ const Index = () => {
                 </div>
             )
         }
-    ], []);
+    ], [handleViewSede]);
 
     if (loading && sedes.length === 0) return <LoadingScreen />;
 
@@ -231,14 +192,7 @@ const Index = () => {
 
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
-            <InfoModal 
-                isOpen={isInfoOpen}
-                onClose={() => setIsInfoOpen(false)}
-                title={modalData.title}
-                subtitle={modalData.subtitle}
-                sections={modalData.sections}
-                loading={infoLoading}
-            />
+            <InfoModal {...modalProps} />
 
             {sedeToToggle && (
                 <ConfirmModal
@@ -263,7 +217,7 @@ const Index = () => {
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchSedes(page)
+                        onPageChange: (page) => fetchSedes(page).catch(() => {})
                     }}
                 />
             </div>

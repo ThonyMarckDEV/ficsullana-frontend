@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
 import authService from 'services/authService';
 import jwtUtils from 'utilities/Token/jwtUtils'; 
 
@@ -9,63 +16,72 @@ export const AuthProvider = ({ children }) => {
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // FUNCIÓN CENTRALIZADA DE PERMISOS
-    const checkPermission = (requiredPermission, idRol = null) => {
-        if (!user) return false;
-        
-        const rawPermisos = user.rol?.permisos || [];
-        const permisosUsuario = rawPermisos.map(p => (typeof p === 'object' ? p.nombre : p));
+    const userPermissions = useMemo(() => (
+        (user?.rol?.permisos || []).map((permission) => (
+            typeof permission === 'object' ? permission.nombre : permission
+        ))
+    ), [user]);
 
-        // Caso 1: Si hay un idRol (Rutas como listar/:idRol)
+    // FUNCION CENTRALIZADA DE PERMISOS
+    const checkPermission = useCallback((requiredPermission, idRol = null) => {
+        if (!user) return false;
+
         if (idRol) {
-            const targetRol = roles.find(r => String(r.id) === String(idRol));
+            const targetRol = roles.find((role) => String(role.id) === String(idRol));
             if (targetRol) {
                 const specificPermission = `${requiredPermission}.${targetRol.nombre}`;
-                return permisosUsuario.includes(specificPermission);
+                return userPermissions.includes(specificPermission);
             }
         }
 
-        // Caso 2: Si no hay idRol o para rutas generales (Wildcard)
-        return permisosUsuario.some(p => 
-            p === requiredPermission || p.startsWith(`${requiredPermission}.`)
-        );
-    };
+        return userPermissions.some((permission) => (
+            permission === requiredPermission || permission.startsWith(`${requiredPermission}.`)
+        ));
+    }, [roles, user, userPermissions]);
 
-    const refreshSession = async () => {
+    const refreshSession = useCallback(async () => {
+        setLoading(true);
         const token = jwtUtils.getAccessTokenFromCookie();
 
         if (!token) {
             setUser(null);
             setRoles([]);
             setLoading(false);
-            return; 
+            return;
         }
 
         try {
             const response = await authService.verifySession();
             const serverData = response.data || response;
-            
+
             setUser(serverData);
             setRoles(serverData.todos_los_roles || []);
-            
         } catch (error) {
-            console.warn("Error validando sesión (Token inválido o Servidor caído). Limpiando...", error);
-            
+            console.warn('Error validando sesión (Token inválido o Servidor caído). Limpiando...', error);
+
             jwtUtils.removeTokensFromCookie();
-            
+
             setUser(null);
             setRoles([]);
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => { 
-        refreshSession(); 
     }, []);
 
+    useEffect(() => {
+        refreshSession();
+    }, [refreshSession]);
+
+    const contextValue = useMemo(() => ({
+        user,
+        roles,
+        loading,
+        refreshSession,
+        checkPermission,
+    }), [checkPermission, loading, refreshSession, roles, user]);
+
     return (
-        <AuthContext.Provider value={{ user, roles, loading, refreshSession , checkPermission }}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );

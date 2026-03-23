@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BuildingLibraryIcon, PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { getEntidadesFinancieras, showEntidadFinanciera, toggleEntidadFinancieraEstado } from 'services/entidadFinancieraService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
@@ -7,34 +8,37 @@ import InfoModal from 'components/Shared/Modals/InfoModal';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
+import useInfoModal from 'hooks/useInfoModal';
+import usePaginatedIndex from 'hooks/usePaginatedIndex';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import { BuildingLibraryIcon, PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
+
+const INITIAL_FILTERS = {
+  search: '',
+  tipo: '',
+  estado: '',
+};
 
 const Index = () => {
-  const [loading, setLoading] = useState(true);
-  const [alert, setAlert] = useState(null);
-  const [entidades, setEntidades] = useState([]);
-  const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
   const [entidadToToggle, setEntidadToToggle] = useState(null);
-
-  // Modales
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [infoLoading, setInfoLoading] = useState(false);
-  const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
-
-  // Filtros
-  const [filters, setFilters] = useState({ 
-    search: '', 
-    tipo: '', 
-    estado: '' 
+  const {
+    loading,
+    setLoading,
+    alert,
+    setAlert,
+    rows: entidades,
+    paginationInfo,
+    filters,
+    fetchRows: fetchEntidades,
+    handleFilterChange,
+    handleFilterSubmit,
+    handleFilterClear,
+  } = usePaginatedIndex({
+    initialFilters: INITIAL_FILTERS,
+    fetcher: getEntidadesFinancieras,
+    onError: (error) => handleApiError(error, 'Error al cargar entidades financieras.'),
   });
+  const { modalProps, openInfoModal } = useInfoModal({ setAlert });
 
-  const filtersRef = useRef(filters);
-  useEffect(() => {
-    filtersRef.current = filters;
-  }, [filters]);
-
-  // Configuración de los campos de filtrado
   const filterConfig = useMemo(() => [
     {
       name: 'search',
@@ -68,60 +72,12 @@ const Index = () => {
     }
   ], []);
 
-  // Función de carga de datos 
-  const fetchEntidades = useCallback(async (page = 1) => {
-    setLoading(true);
-    try {
-      const currentFilters = filtersRef.current;
-      const response = await getEntidadesFinancieras(page, currentFilters);
-      
-      setEntidades(response.data || []);
-      setPaginationInfo({
-        currentPage: response.current_page,
-        totalPages: response.last_page,
-        totalItems: response.total,
-      });
-    } catch (err) {
-      setAlert(handleApiError(err, 'Error al cargar entidades financieras.'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Carga inicial
-  useEffect(() => {
-    fetchEntidades(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Manejadores de Filtros
-  const handleFilterChange = useCallback((name, value) => {
-    setFilters(prev => ({ ...prev, [name]: value }));
-  }, []);
-
-  const handleFilterSubmit = useCallback(() => {
-    fetchEntidades(1);
-  }, [fetchEntidades]);
-
-  const handleFilterClear = useCallback(() => {
-    const cleanFilters = { search: '', tipo: '', estado: '' };
-    setFilters(cleanFilters);
-    filtersRef.current = cleanFilters;
-    fetchEntidades(1);
-  }, [fetchEntidades]);
-
-
-  // Ver Detalle (Modal)
-  const handleViewEntidad = async (id) => {
-    setIsInfoOpen(true);
-    setInfoLoading(true);
-    setModalData({ title: 'Cargando...', sections: [] });
-
-    try {
-      const response = await showEntidadFinanciera(id);
+  const handleViewEntidad = useCallback((id) => openInfoModal({
+    fetcher: () => showEntidadFinanciera(id),
+    mapData: (response) => {
       const entidad = response.data || response;
 
-      setModalData({
+      return {
         title: 'Detalle de Entidad',
         subtitle: entidad.nombre,
         sections: [
@@ -136,31 +92,27 @@ const Index = () => {
             ]
           }
         ]
-      });
-    } catch (err) {
-      setAlert(handleApiError(err, 'No se pudo cargar el detalle.'));
-      setIsInfoOpen(false);
-    } finally {
-      setInfoLoading(false);
-    }
-  };
+      };
+    },
+    onError: (error) => handleApiError(error, 'No se pudo cargar el detalle.'),
+  }), [openInfoModal]);
 
-  // Cambiar Estado
-  const handleToggleEstado = async () => {
+  const handleToggleEstado = useCallback(async () => {
     if (!entidadToToggle) return;
+
     const nuevoEstado = entidadToToggle.estado ? 0 : 1;
     setEntidadToToggle(null);
     setLoading(true);
+
     try {
       await toggleEntidadFinancieraEstado(entidadToToggle.id, nuevoEstado);
       setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
-      // Recargamos la página actual
-      await fetchEntidades(paginationInfo.currentPage);
-    } catch (err) {
-      setAlert(handleApiError(err, 'Error al cambiar estado.'));
+      await fetchEntidades(paginationInfo.currentPage).catch(() => {});
+    } catch (error) {
+      setAlert(handleApiError(error, 'Error al cambiar estado.'));
       setLoading(false);
     }
-  };
+  }, [entidadToToggle, fetchEntidades, paginationInfo.currentPage, setAlert, setLoading]);
 
   const columns = useMemo(() => [
     {
@@ -223,7 +175,7 @@ const Index = () => {
         </div>
       )
     }
-  ], []);
+  ], [handleViewEntidad]);
 
   if (loading && entidades.length === 0) return <LoadingScreen />;
 
@@ -239,14 +191,7 @@ const Index = () => {
 
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
-      <InfoModal
-        isOpen={isInfoOpen}
-        onClose={() => setIsInfoOpen(false)}
-        title={modalData.title}
-        subtitle={modalData.subtitle}
-        sections={modalData.sections}
-        loading={infoLoading}
-      />
+      <InfoModal {...modalProps} />
 
       {entidadToToggle && (
         <ConfirmModal
@@ -261,19 +206,15 @@ const Index = () => {
           columns={columns}
           data={entidades}
           loading={loading}
-          
-          // Configuración de Filtros
           filterConfig={filterConfig}
           filters={filters}
           onFilterChange={handleFilterChange}
           onFilterSubmit={handleFilterSubmit}
           onFilterClear={handleFilterClear}
-
-          // Configuración de Paginación
           pagination={{
             currentPage: paginationInfo.currentPage,
             totalPages: paginationInfo.totalPages,
-            onPageChange: (page) => fetchEntidades(page)
+            onPageChange: (page) => fetchEntidades(page).catch(() => {})
           }}
         />
       </div>

@@ -12,6 +12,13 @@ const ESTADO_LABEL_TO_VALUE = {
   RECHAZADO: 3,
 };
 
+const toOptionalNumber = (value) => {
+  if (value === null || value === undefined || value === '') return '';
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : '';
+};
+
 const normalizeEstado = (estado) => {
   if (typeof estado === 'number' && Number.isInteger(estado)) return estado;
   if (typeof estado === 'string' && /^\d+$/.test(estado)) return Number(estado);
@@ -61,13 +68,14 @@ const mapDeudasFromAdmision = (deudas) => {
     dni_relacionado: d.dni_relacionado,
     nombre_entidad: d.nombre_entidad,
     calificacion_banco: Number(d.calificacion_banco ?? 0),
+    dias_atraso: d.dias_atraso ?? '',
     es_tienda_departamento: Boolean(d.es_tienda_departamento),
     tipo_credito: d.tipo_credito,
     saldo_capital: parseFloat(d.saldo_capital || 0),
     linea_credito: parseFloat(d.linea_credito || 0),
     plazo_pendiente: parseInt(d.plazo_pendiente || 0, 10),
-    monto_cuota: parseFloat(d.monto_cuota || 0),
-    frecuencia_pago: d.frecuencia_pago,
+    monto_cuota: toOptionalNumber(d.monto_cuota),
+    frecuencia_pago: d.frecuencia_pago || '',
     fecha_pago: d.fecha_pago ? d.fecha_pago.split('T')[0] : '',
     porcentaje_cancelacion: parseFloat(d.porcentaje_cancelacion || 0),
   }));

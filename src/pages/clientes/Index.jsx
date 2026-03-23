@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getClientes, toggleClienteEstado, showCliente } from 'services/clienteService'; 
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -6,6 +6,8 @@ import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import InfoModal from 'components/Shared/Modals/InfoModal';
 import Table from 'components/Shared/Tables/Table';
+import useInfoModal from 'hooks/useInfoModal';
+import usePaginatedIndex from 'hooks/usePaginatedIndex';
 import { 
     PencilSquareIcon, 
     UsersIcon, 
@@ -17,28 +19,32 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 
-const Index = () => {
-    const [loading, setLoading] = useState(true);
-    const [alert, setAlert] = useState(null);
-    const [clientes, setClientes] = useState([]);
-    
-    const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
+const INITIAL_FILTERS = {
+    search: '',
+    estado: ''
+};
 
+const Index = () => {
     const [clienteToToggle, setClienteToToggle] = useState(null);
 
-    const [isInfoOpen, setIsInfoOpen] = useState(false);
-    const [infoLoading, setInfoLoading] = useState(false);
-    const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
-
-    const [filters, setFilters] = useState({
-        search: '',
-        estado: ''
+    const {
+        loading,
+        setLoading,
+        alert,
+        setAlert,
+        rows: clientes,
+        paginationInfo,
+        filters,
+        fetchRows: fetchClientes,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleFilterClear,
+    } = usePaginatedIndex({
+        initialFilters: INITIAL_FILTERS,
+        fetcher: getClientes,
+        onError: (error) => handleApiError(error, 'Error al cargar los clientes.'),
     });
-
-    const filtersRef = useRef(filters);
-    useEffect(() => {
-        filtersRef.current = filters;
-    }, [filters]);
+    const { modalProps, openInfoModal } = useInfoModal({ setAlert });
 
     const filterConfig = useMemo(() => [
         {
@@ -61,57 +67,15 @@ const Index = () => {
         }
     ], []);
 
-    const fetchClientes = useCallback(async (page = 1) => {
-        setLoading(true);
-        try {
-            const currentFilters = filtersRef.current;
-            const data = await getClientes(page, currentFilters);
-            
-            setClientes(data.data);
-            setPaginationInfo({
-                currentPage: data.current_page,
-                totalPages: data.last_page,
-                totalItems: data.total,
-            });
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al cargar los clientes.'));
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchClientes(1);
-    }, [fetchClientes]);
-
-    const handleFilterChange = useCallback((name, value) => {
-        setFilters(prev => ({ ...prev, [name]: value }));
-    }, []);
-
-    const handleFilterSubmit = useCallback(() => {
-        fetchClientes(1);
-    }, [fetchClientes]);
-
-    const handleFilterClear = useCallback(() => {
-        const cleanFilters = { search: '', estado: '' };
-        setFilters(cleanFilters);
-        filtersRef.current = cleanFilters;
-        fetchClientes(1);
-    }, [fetchClientes]);
-
     // --- LÓGICA DEL MODAL ADAPTADA AL JSON ---
-    const handleViewCliente = async (id) => {
-        setIsInfoOpen(true);
-        setInfoLoading(true);
-        try {
-            const response = await showCliente(id);
-            // Extraemos la estructura plana que definimos en el backend
+    const handleViewCliente = useCallback((id) => openInfoModal({
+        fetcher: () => showCliente(id),
+        mapData: (response) => {
             const { datos_cliente, cliente_datos_contacto, cliente_cuentas_bancarias } = response.data;
 
             const formatBool = (val) => (val === 1 || val === true) ? 'SÍ' : 'NO';
             const valOrHyphen = (val) => val || '-';
 
-            // Sección 1: Datos Personales
             const secciones = [
                 {
                     title: "1. Datos Personales",
@@ -142,7 +106,6 @@ const Index = () => {
                 }
             ];
 
-            // Sección 3: Datos Bancarios (Solo si existen)
             if (cliente_cuentas_bancarias && cliente_cuentas_bancarias.numero_cuenta) {
                 secciones.push({
                     title: "3. Datos Bancarios",
@@ -154,7 +117,7 @@ const Index = () => {
                     ]
                 });
             } else {
-                 secciones.push({
+                secciones.push({
                     title: "3. Datos Bancarios",
                     icon: CreditCardIcon,
                     items: [
@@ -163,19 +126,14 @@ const Index = () => {
                 });
             }
 
-            setModalData({
+            return {
                 title: "Ficha de Cliente",
                 subtitle: `Visualizando a: ${datos_cliente.nombre} ${datos_cliente.apellidoPaterno}`,
                 sections: secciones
-            });
-
-        } catch (err) {
-            setAlert(handleApiError(err, 'No se pudo cargar la información del usuario.'));
-            setIsInfoOpen(false);
-        } finally {
-            setInfoLoading(false);
-        }
-    };
+            };
+        },
+        onError: (error) => handleApiError(error, 'No se pudo cargar la información del usuario.'),
+    }), [openInfoModal]);
 
     const executeToggleEstado = async () => {
         if (!clienteToToggle) return;
@@ -188,7 +146,7 @@ const Index = () => {
         try {
             const response = await toggleClienteEstado(id, nuevoEstado);
             setAlert(response);
-            await fetchClientes(paginationInfo.currentPage); 
+            await fetchClientes(paginationInfo.currentPage).catch(() => {}); 
         } catch (err) {
             setAlert(handleApiError(err, 'Error al cambiar estado.')); 
             setLoading(false);
@@ -259,7 +217,7 @@ const Index = () => {
                 </div>
             )
         }
-    ], []);
+    ], [handleViewCliente]);
 
     if (loading && clientes.length === 0) return <LoadingScreen />;
 
@@ -281,14 +239,7 @@ const Index = () => {
                 onClose={() => setAlert(null)}
             />
 
-            <InfoModal 
-                isOpen={isInfoOpen}
-                onClose={() => setIsInfoOpen(false)}
-                title={modalData.title}
-                subtitle={modalData.subtitle}
-                sections={modalData.sections}
-                loading={infoLoading}
-            />
+            <InfoModal {...modalProps} />
 
             {clienteToToggle && (
                 <ConfirmModal
@@ -313,7 +264,7 @@ const Index = () => {
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchClientes(page)
+                        onPageChange: (page) => fetchClientes(page).catch(() => {})
                     }}
                 />
             </div>

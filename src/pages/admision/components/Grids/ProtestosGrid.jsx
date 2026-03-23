@@ -22,39 +22,44 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
         setProtestos(newProtestos);
     };
 
-    const inputClass = "w-full text-xs px-2 py-1 border border-slate-300 rounded focus:border-fic-red outline-none invalid:border-red-500 invalid:text-red-600 transition-colors";
+    const inputClass = "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none transition focus:border-fic-red focus:ring-2 focus:ring-red-100 invalid:border-red-500 invalid:text-red-600";
 
     return (
-        <div className="space-y-2 mt-6">
-             <div className="flex justify-between items-center mb-2 border-b border-fic-red pb-1">
-                <h3 className="font-bold text-fic-dark text-sm uppercase">Cuadro de Protestos</h3>
-                <button type="button" onClick={addRow} className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold hover:bg-green-200 flex items-center gap-1">
-                    <PlusIcon className="w-3 h-3"/> Agregar Protesto
+        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.45)] sm:p-5">
+             <div className="mb-4 flex flex-col gap-4 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h3 className="text-sm font-black uppercase tracking-[0.08em] text-slate-800">Cuadro de Protestos</h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Mantén separados los protestos externos. Aquí solo importa la deuda comercial reportada y sus días de atraso.
+                    </p>
+                </div>
+                <button type="button" onClick={addRow} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-black uppercase tracking-[0.08em] text-emerald-700 transition hover:bg-emerald-100">
+                    <PlusIcon className="h-4 w-4"/> Agregar protesto
                 </button>
             </div>
             
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
-                <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px]">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">
                         <tr>
-                            <th className="p-2">Entidad Acreedora</th>
-                            <th className="p-2 w-32">Documento</th>
-                            <th className="p-2 w-24">Monto</th>
-                            <th className="p-2 w-24">Días Atraso</th>
-                            <th className="p-2 w-10"></th>
+                            <th className="p-3">Entidad Acreedora</th>
+                            <th className="p-3 w-40">Documento</th>
+                            <th className="p-3 w-32">Monto</th>
+                            <th className="p-3 w-36">Días Atraso</th>
+                            <th className="p-3 w-12"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {protestos.map((row, i) => (
                             <tr key={i} className="hover:bg-slate-50">
-                                <td className="p-1">
+                                <td className="p-2">
                                     <input 
                                         value={row.entidad_acreedora} 
                                         onChange={(e) => handleChange(i, 'entidad_acreedora', e.target.value)}
                                         className={`${inputClass} uppercase`} placeholder="Entidad..."
                                     />
                                 </td>
-                                <td className="p-1">
+                                <td className="p-2">
                                     <select 
                                         value={row.documento_tipo} 
                                         onChange={(e) => handleChange(i, 'documento_tipo', e.target.value)}
@@ -65,34 +70,34 @@ const ProtestosGrid = ({ protestos, setProtestos }) => {
                                         <option value="FACTURA">FACTURA</option>
                                     </select>
                                 </td>
-                                <td className="p-1">
+                                <td className="p-2">
                                     <input 
-                                        type="number" step="0.01" min="0.01" // <--- VALIDACIÓN: > 0
+                                        type="number" step="0.01" min="0.01"
                                         value={row.monto_deuda} 
                                         onChange={(e) => handleChange(i, 'monto_deuda', e.target.value)}
                                         className={inputClass}
                                         placeholder=">0.00"
                                     />
                                 </td>
-                                <td className="p-1">
+                                <td className="p-2">
                                     <input 
-                                        type="number" min="1" step="1" // <--- VALIDACIÓN: > 0
+                                        type="number" min="1" step="1"
                                         value={row.dias_vencimiento} 
                                         onChange={(e) => handleChange(i, 'dias_vencimiento', e.target.value)}
                                         className={`${inputClass} ${row.dias_vencimiento > 0 ? 'text-red-600 font-bold' : ''}`}
                                         placeholder=">0"
                                     />
                                 </td>
-                                <td className="p-1 text-center">
-                                    <button type="button" onClick={() => removeRow(i)} className="text-red-400 hover:text-red-600">
-                                        <TrashIcon className="w-4 h-4"/>
+                                <td className="p-2 text-center">
+                                    <button type="button" onClick={() => removeRow(i)} className="rounded-xl p-2 text-red-400 transition hover:bg-red-50 hover:text-red-600">
+                                        <TrashIcon className="h-4 w-4"/>
                                     </button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                {protestos.length === 0 && <div className="p-4 text-center text-slate-400 italic text-xs">Sin protestos registrados</div>}
+                {protestos.length === 0 && <div className="p-6 text-center text-sm italic text-slate-400">Sin protestos registrados</div>}
             </div>
         </div>
     );

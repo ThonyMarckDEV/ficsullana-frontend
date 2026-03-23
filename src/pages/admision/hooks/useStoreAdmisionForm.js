@@ -1,19 +1,20 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   createAdmision,
   evaluarAdmision,
-  getCapitalPendienteFicsullana,
 } from 'services/admisionService';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import {
-  buildExceptionSelectionMap,
-  getExceptionRuleName,
-  getExceptionRules,
-  getMissingExceptionRules,
-  getSelectedExceptionCodes,
-  normalizeRuleCode,
-} from 'utilities/pages/admision/exceptionRules';
 import { ADMISION_COPY_ALERTS } from 'utilities/pages/admision/copy';
+import {
+  ADMISION_EVALUATION_STATUS,
+  resolveAdmisionEvaluationAction,
+} from 'utilities/pages/admision/evaluation';
+import {
+  buildAdmisionPayload,
+  validateStoreAdmisionHeader,
+} from 'utilities/pages/admision/payload';
+import useAdmisionExceptionFlow from './useAdmisionExceptionFlow';
+import useCapitalPendienteFicsullana from './useCapitalPendienteFicsullana';
 
 const buildInitialHeader = () => ({
   cliente_id: null,
@@ -28,23 +29,54 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState(null);
   const [isModalProspectoOpen, setIsModalProspectoOpen] = useState(false);
-  const [showExceptionModal, setShowExceptionModal] = useState(false);
-  const [exceptionReason, setExceptionReason] = useState('');
-  const [exceptionRules, setExceptionRules] = useState([]);
-  const [exceptionSelectionMap, setExceptionSelectionMap] = useState({});
-  const [pendingPayload, setPendingPayload] = useState(null);
 
   const [header, setHeader] = useState(buildInitialHeader);
   const [clienteSelected, setClienteSelected] = useState(null);
   const [prospectoSelected, setProspectoSelected] = useState(null);
   const [deudas, setDeudas] = useState([]);
   const [protestos, setProtestos] = useState([]);
-  const [capitalPendienteFicsullana, setCapitalPendienteFicsullana] = useState(0);
-  const [capitalLoading, setCapitalLoading] = useState(false);
+
+  const submitAdmision = useCallback(async (payload, solicitudExcepcion = null) => {
+    const payloadFinal = solicitudExcepcion
+      ? { ...payload, solicitud_excepcion: solicitudExcepcion }
+      : payload;
+
+    const response = await createAdmision(payloadFinal);
+    setAlert({ type: 'success', message: response.message || ADMISION_COPY_ALERTS.STORE.RESULTADO_OK });
+    setTimeout(() => navigate('/gestion/listar-admisiones'), 2000);
+  }, [navigate]);
+
+  const {
+    showExceptionModal,
+    setShowExceptionModal,
+    exceptionReason,
+    setExceptionReason,
+    exceptionRules,
+    exceptionSelectionMap,
+    openExceptionFlow,
+    resetExceptionFlow,
+    handleConfirmException,
+    handleToggleExceptionRule,
+  } = useAdmisionExceptionFlow({
+    setAlert,
+    setLoading,
+    submitAction: submitAdmision,
+    submitErrorMessage: ADMISION_COPY_ALERTS.STORE.ERR_REGISTRO,
+  });
+
+  const {
+    capitalPendienteFicsullana,
+    capitalLoading,
+    loadCapitalPendiente,
+    resetCapitalPendiente,
+  } = useCapitalPendienteFicsullana({
+    setAlert,
+    errorMessage: ADMISION_COPY_ALERTS.STORE.ERR_CARGA_CAPITAL,
+  });
 
   const isSolicitanteSelected = Boolean(header.cliente_id || header.prospecto_id);
 
-  const handleTipoSolicitanteChange = (e) => {
+  const handleTipoSolicitanteChange = useCallback((e) => {
     const nuevoTipo = e.target.value;
 
     setHeader((prev) => ({
@@ -58,16 +90,14 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
 
     setClienteSelected(null);
     setProspectoSelected(null);
-    setCapitalPendienteFicsullana(0);
-    setCapitalLoading(false);
-  };
+    resetCapitalPendiente();
+  }, [resetCapitalPendiente]);
 
-  const onSelectCliente = async (cliente) => {
+  const onSelectCliente = useCallback(async (cliente) => {
     if (!cliente) {
       setHeader((prev) => ({ ...prev, cliente_id: null, tipo_prestamo: '', motivo_bloqueo: null }));
       setClienteSelected(null);
-      setCapitalPendienteFicsullana(0);
-      setCapitalLoading(false);
+      resetCapitalPendiente();
       return;
     }
 
@@ -84,7 +114,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
 
     setClienteSelected(cliente);
     setProspectoSelected(null);
-    setCapitalPendienteFicsullana(0);
+    resetCapitalPendiente();
 
     let mensajeTipo = '';
     if (tipoSugerido === 'RCS') mensajeTipo = 'Deuda vigente detectada (RCS).';
@@ -98,33 +128,15 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     });
 
     if (tipoSugerido === 'RCS') {
-      setCapitalLoading(true);
-      try {
-        const response = await getCapitalPendienteFicsullana(cliente.id);
-        const capitalPendiente = Number(response?.data?.capital_pendiente_ficsullana ?? 0);
-        setCapitalPendienteFicsullana(Number.isFinite(capitalPendiente) ? capitalPendiente : 0);
-
-        if (capitalPendiente <= 0) {
-          setAlert({
-            type: 'info',
-            message: ADMISION_COPY_ALERTS.CAPITAL_RCS_SIN_SALDO,
-          });
-        }
-      } catch (error) {
-        setCapitalPendienteFicsullana(0);
-        setAlert(handleApiError(error, ADMISION_COPY_ALERTS.STORE.ERR_CARGA_CAPITAL));
-      } finally {
-        setCapitalLoading(false);
-      }
+      await loadCapitalPendiente(cliente.id);
     }
-  };
+  }, [loadCapitalPendiente, resetCapitalPendiente]);
 
-  const onSelectProspecto = (prospecto) => {
+  const onSelectProspecto = useCallback((prospecto) => {
     if (!prospecto) {
       setHeader((prev) => ({ ...prev, prospecto_id: null, tipo_prestamo: '', motivo_bloqueo: null }));
       setProspectoSelected(null);
-      setCapitalPendienteFicsullana(0);
-      setCapitalLoading(false);
+      resetCapitalPendiente();
       return;
     }
 
@@ -137,12 +149,11 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     }));
     setProspectoSelected(prospecto);
     setClienteSelected(null);
-    setCapitalPendienteFicsullana(0);
-    setCapitalLoading(false);
+    resetCapitalPendiente();
     setAlert({ type: 'info', message: ADMISION_COPY_ALERTS.STORE.PROSPECTO_SELECCIONADO });
-  };
+  }, [resetCapitalPendiente]);
 
-  const handleProspectoCreado = (prospectoData) => {
+  const handleProspectoCreado = useCallback((prospectoData) => {
     const nombreCompleto = `${prospectoData.nombres} ${prospectoData.apellido_paterno} ${prospectoData.apellido_materno}`;
     const prospectoObj = {
       id: prospectoData.id,
@@ -151,156 +162,78 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     };
     onSelectProspecto(prospectoObj);
     setAlert({ type: 'success', message: ADMISION_COPY_ALERTS.STORE.PROSPECTO_CREADO });
-  };
+  }, [onSelectProspecto]);
 
-  const submitAdmision = async (payload, solicitudExcepcion = null) => {
-    const payloadFinal = solicitudExcepcion
-      ? { ...payload, solicitud_excepcion: solicitudExcepcion }
-      : payload;
-
-    const response = await createAdmision(payloadFinal);
-    setAlert({ type: 'success', message: response.message || ADMISION_COPY_ALERTS.STORE.RESULTADO_OK });
-    setTimeout(() => navigate('/gestion/listar-admisiones'), 2000);
-  };
-
-  const handleConfirmException = async () => {
-    if (!pendingPayload) return;
-
-    const motivo = exceptionReason.trim();
-    if (!motivo) {
-      setAlert({ type: 'error', message: ADMISION_COPY_ALERTS.EXCEPCION.MOTIVO_REQUERIDO });
-      return;
-    }
-
-    const missingRules = getMissingExceptionRules(exceptionRules, exceptionSelectionMap);
-    if (missingRules.length > 0) {
-      setAlert({
-        type: 'error',
-        message: ADMISION_COPY_ALERTS.EXCEPCION.REGLAS_INCOMPLETAS,
-        details: missingRules.map((rule) => getExceptionRuleName(rule)),
-      });
-      return;
-    }
-
-    const selectedCodes = getSelectedExceptionCodes(exceptionRules, exceptionSelectionMap);
-
-    setShowExceptionModal(false);
-    setLoading(true);
-    try {
-      await submitAdmision(pendingPayload, {
-        motivo,
-        codigos: selectedCodes,
-      });
-      setPendingPayload(null);
-    } catch (error) {
-      setAlert(handleApiError(error, ADMISION_COPY_ALERTS.STORE.ERR_REGISTRO));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleExceptionRule = (code) => {
-    const normalizedCode = normalizeRuleCode(code);
-    if (!normalizedCode) return;
-
-    setExceptionSelectionMap((prev) => ({
-      ...prev,
-      [normalizedCode]: !prev[normalizedCode],
-    }));
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
     setAlert(null);
 
-    if (header.tipo_solicitante === 'CLIENTE' && !header.cliente_id) {
-      setAlert({ type: 'error', message: 'Debe buscar y seleccionar un Cliente.' });
+    const validationError = validateStoreAdmisionHeader(header);
+    if (validationError) {
+      setAlert({ type: 'error', message: validationError });
       setLoading(false);
       return;
     }
 
-    if (header.tipo_solicitante === 'PROSPECTO' && !header.prospecto_id) {
-      setAlert({ type: 'error', message: 'Debe buscar o crear un Prospecto.' });
-      setLoading(false);
-      return;
-    }
-
-    if (!header.tipo_prestamo) {
-      setAlert({ type: 'error', message: 'Error: No se ha determinado el tipo de préstamo.' });
-      setLoading(false);
-      return;
-    }
-
-    // Limpiamos las filas vacías antes de enviarlas
-    // Si la entidad acreedora está vacía, ignoramos ese protesto
-    const protestosLimpios = protestos.filter(
-      (p) => p.entidad_acreedora && p.entidad_acreedora.trim() !== ''
-    );
-    
-    const deudasLimpias = deudas.filter(
-      (d) => d.nombre_entidad && d.nombre_entidad.trim() !== ''
-    );
-
-    const payload = {
-      cliente_id: header.tipo_solicitante === 'CLIENTE' ? header.cliente_id : null,
-      prospecto_id: header.tipo_solicitante === 'PROSPECTO' ? header.prospecto_id : null,
-      tipo_prestamo: header.tipo_prestamo,
-      observaciones: header.observaciones,
-      deudas: deudasLimpias,
-      protestos: protestosLimpios,
-    };
+    const payload = buildAdmisionPayload({ header, deudas, protestos });
 
     try {
       const evalResponse = await evaluarAdmision(payload);
       const evalData = evalResponse.data || evalResponse;
+      const evaluationAction = resolveAdmisionEvaluationAction({ evalData, checkPermission });
 
-      if (evalData.decision === 'BLOQUEANTE') {
+      if (evaluationAction.status === ADMISION_EVALUATION_STATUS.BLOQUEANTE) {
         setAlert({
           type: 'error',
           message: ADMISION_COPY_ALERTS.STORE.ERR_REGLAS_BLOQUEANTES,
-          details: (evalData.rules || [])
-            .filter((rule) => rule.severity === 'BLOQUEANTE')
-            .map((rule) => rule.message),
+          details: evaluationAction.blockingMessages,
         });
         return;
       }
 
-      if (evalData.decision === 'REQUIERE_EXCEPCION') {
-        if (!checkPermission('admisiones.excepciones.solicitar')) {
-          setAlert({
-            type: 'error',
-            message: ADMISION_COPY_ALERTS.STORE.ERR_PERMISO_EXCEPCION,
-          });
-          return;
-        }
-
-        const detectedExceptionRules = getExceptionRules(evalData);
-        setExceptionRules(detectedExceptionRules);
-        setExceptionSelectionMap(buildExceptionSelectionMap(detectedExceptionRules, { defaultSelected: true }));
-        setPendingPayload(payload);
-        setShowExceptionModal(true);
+      if (evaluationAction.status === ADMISION_EVALUATION_STATUS.SIN_PERMISO_EXCEPCION) {
+        setAlert({
+          type: 'error',
+          message: ADMISION_COPY_ALERTS.STORE.ERR_PERMISO_EXCEPCION,
+        });
         return;
       }
 
-      setExceptionRules([]);
-      setExceptionSelectionMap({});
+      if (evaluationAction.status === ADMISION_EVALUATION_STATUS.REQUIERE_EXCEPCION) {
+        openExceptionFlow({
+          payload,
+          rules: evaluationAction.rules,
+          selectionMap: evaluationAction.selectionMap,
+        });
+        return;
+      }
+
+      resetExceptionFlow();
       await submitAdmision(payload);
     } catch (error) {
       setAlert(handleApiError(error, ADMISION_COPY_ALERTS.STORE.ERR_REGISTRO));
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    checkPermission,
+    deudas,
+    header,
+    openExceptionFlow,
+    protestos,
+    resetExceptionFlow,
+    submitAdmision,
+  ]);
 
-  const getTipoPrestamoLabel = () => {
+  const getTipoPrestamoLabel = useCallback(() => {
     if (!header.tipo_prestamo) return '';
     if (header.tipo_prestamo === 'NUEVO') return 'NUEVO (Primer Crédito)';
     if (header.tipo_prestamo === 'RCS') return 'RCS (Recurrente con Saldo)';
     if (header.tipo_prestamo === 'RSS') return 'RSS (Recurrente sin Saldo)';
     if (header.tipo_prestamo === 'NO APLICA') return 'NO APLICA';
     return header.tipo_prestamo;
-  };
+  }, [header.tipo_prestamo]);
 
   return {
     loading,

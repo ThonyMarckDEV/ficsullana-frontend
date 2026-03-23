@@ -1,20 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   evaluarAdmision,
-  getCapitalPendienteFicsullana,
   showAdmision,
   updateAdmision,
 } from 'services/admisionService';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import {
-  buildExceptionSelectionMap,
-  getExceptionRuleName,
-  getExceptionRules,
-  getMissingExceptionRules,
-  getSelectedExceptionCodes,
-  normalizeRuleCode,
-} from 'utilities/pages/admision/exceptionRules';
 import { ADMISION_COPY_ALERTS } from 'utilities/pages/admision/copy';
+import {
+  ADMISION_EVALUATION_STATUS,
+  resolveAdmisionEvaluationAction,
+} from 'utilities/pages/admision/evaluation';
+import { buildAdmisionPayload } from 'utilities/pages/admision/payload';
 import {
   ESTADOS,
   mapDeudasFromAdmision,
@@ -22,6 +18,8 @@ import {
   mapProtestosFromAdmision,
   normalizeEstado,
 } from '../../../utilities/pages/admision/updateTransformers';
+import useAdmisionExceptionFlow from './useAdmisionExceptionFlow';
+import useCapitalPendienteFicsullana from './useCapitalPendienteFicsullana';
 
 const buildInitialHeader = () => ({
   cliente_id: null,
@@ -39,17 +37,52 @@ const buildInitialHeader = () => ({
 const useUpdateAdmisionForm = ({ id, navigate, checkPermission }) => {
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
-  const [showExceptionModal, setShowExceptionModal] = useState(false);
-  const [exceptionReason, setExceptionReason] = useState('');
-  const [exceptionRules, setExceptionRules] = useState([]);
-  const [exceptionSelectionMap, setExceptionSelectionMap] = useState({});
-  const [pendingPayload, setPendingPayload] = useState(null);
-
   const [header, setHeader] = useState(buildInitialHeader);
   const [deudas, setDeudas] = useState([]);
   const [protestos, setProtestos] = useState([]);
-  const [capitalPendienteFicsullana, setCapitalPendienteFicsullana] = useState(0);
-  const [capitalLoading, setCapitalLoading] = useState(false);
+
+  const submitUpdate = useCallback(async (payload, solicitudExcepcion = null) => {
+    const payloadFinal = solicitudExcepcion
+      ? { ...payload, solicitud_excepcion: solicitudExcepcion }
+      : payload;
+
+    const response = await updateAdmision(id, payloadFinal);
+    setAlert({ type: 'success', message: response.message || ADMISION_COPY_ALERTS.UPDATE.RESULTADO_OK });
+
+    if (response.data) {
+      setHeader((prev) => ({ ...prev, estado: normalizeEstado(response.data.estado) }));
+    }
+
+    setTimeout(() => navigate('/gestion/listar-admisiones'), 1500);
+  }, [id, navigate]);
+
+  const {
+    showExceptionModal,
+    setShowExceptionModal,
+    exceptionReason,
+    setExceptionReason,
+    exceptionRules,
+    exceptionSelectionMap,
+    openExceptionFlow,
+    resetExceptionFlow,
+    handleConfirmException,
+    handleToggleExceptionRule,
+  } = useAdmisionExceptionFlow({
+    setAlert,
+    setLoading,
+    submitAction: submitUpdate,
+    submitErrorMessage: ADMISION_COPY_ALERTS.UPDATE.ERR_ACTUALIZACION,
+  });
+
+  const {
+    capitalPendienteFicsullana,
+    capitalLoading,
+    loadCapitalPendiente,
+    resetCapitalPendiente,
+  } = useCapitalPendienteFicsullana({
+    setAlert,
+    errorMessage: ADMISION_COPY_ALERTS.UPDATE.ERR_CARGA_CAPITAL,
+  });
 
   useEffect(() => {
     const fetchAdmision = async () => {
@@ -69,103 +102,24 @@ const useUpdateAdmisionForm = ({ id, navigate, checkPermission }) => {
     };
 
     fetchAdmision();
-  }, [id]);
+  }, [id, setExceptionReason]);
 
   useEffect(() => {
     const fetchCapitalPendiente = async () => {
       if (header.tipo_prestamo !== 'RCS' || !header.cliente_id) {
-        setCapitalPendienteFicsullana(0);
-        setCapitalLoading(false);
+        resetCapitalPendiente();
         return;
       }
 
-      setCapitalLoading(true);
-      try {
-        const response = await getCapitalPendienteFicsullana(header.cliente_id);
-        const capitalPendiente = Number(response?.data?.capital_pendiente_ficsullana ?? 0);
-        setCapitalPendienteFicsullana(Number.isFinite(capitalPendiente) ? capitalPendiente : 0);
-
-        if (capitalPendiente <= 0) {
-          setAlert({
-            type: 'info',
-            message: ADMISION_COPY_ALERTS.CAPITAL_RCS_SIN_SALDO,
-          });
-        }
-      } catch (error) {
-        setCapitalPendienteFicsullana(0);
-        setAlert(handleApiError(error, ADMISION_COPY_ALERTS.UPDATE.ERR_CARGA_CAPITAL));
-      } finally {
-        setCapitalLoading(false);
-      }
+      await loadCapitalPendiente(header.cliente_id);
     };
 
     fetchCapitalPendiente();
-  }, [header.cliente_id, header.tipo_prestamo]);
+  }, [header.cliente_id, header.tipo_prestamo, loadCapitalPendiente, resetCapitalPendiente]);
 
   const handleHeaderChange = useCallback((e) => {
     const { name, value } = e.target;
     setHeader((prev) => ({ ...prev, [name]: name === 'estado' ? Number(value) : value }));
-  }, []);
-
-  const submitUpdate = useCallback(async (payload, solicitudExcepcion = null) => {
-    const payloadFinal = solicitudExcepcion
-      ? { ...payload, solicitud_excepcion: solicitudExcepcion }
-      : payload;
-
-    const response = await updateAdmision(id, payloadFinal);
-    setAlert({ type: 'success', message: response.message || ADMISION_COPY_ALERTS.UPDATE.RESULTADO_OK });
-
-    if (response.data) {
-      setHeader((prev) => ({ ...prev, estado: normalizeEstado(response.data.estado) }));
-    }
-
-    setTimeout(() => navigate('/gestion/listar-admisiones'), 1500);
-  }, [id, navigate]);
-
-  const handleConfirmException = useCallback(async () => {
-    if (!pendingPayload) return;
-
-    const motivo = exceptionReason.trim();
-    if (!motivo) {
-      setAlert({ type: 'error', message: ADMISION_COPY_ALERTS.EXCEPCION.MOTIVO_REQUERIDO });
-      return;
-    }
-
-    const missingRules = getMissingExceptionRules(exceptionRules, exceptionSelectionMap);
-    if (missingRules.length > 0) {
-      setAlert({
-        type: 'error',
-        message: ADMISION_COPY_ALERTS.EXCEPCION.REGLAS_INCOMPLETAS,
-        details: missingRules.map((rule) => getExceptionRuleName(rule)),
-      });
-      return;
-    }
-
-    const selectedCodes = getSelectedExceptionCodes(exceptionRules, exceptionSelectionMap);
-
-    setShowExceptionModal(false);
-    setLoading(true);
-    try {
-      await submitUpdate(pendingPayload, {
-        motivo,
-        codigos: selectedCodes,
-      });
-      setPendingPayload(null);
-    } catch (error) {
-      setAlert(handleApiError(error, ADMISION_COPY_ALERTS.UPDATE.ERR_ACTUALIZACION));
-    } finally {
-      setLoading(false);
-    }
-  }, [exceptionReason, exceptionRules, exceptionSelectionMap, pendingPayload, submitUpdate]);
-
-  const handleToggleExceptionRule = useCallback((code) => {
-    const normalizedCode = normalizeRuleCode(code);
-    if (!normalizedCode) return;
-
-    setExceptionSelectionMap((prev) => ({
-      ...prev,
-      [normalizedCode]: !prev[normalizedCode],
-    }));
   }, []);
 
   const handleSubmit = useCallback(async (e) => {
@@ -173,57 +127,62 @@ const useUpdateAdmisionForm = ({ id, navigate, checkPermission }) => {
     setLoading(true);
     setAlert(null);
 
-    const payload = {
-      cliente_id: header.cliente_id,
-      prospecto_id: header.prospecto_id,
-      tipo_prestamo: header.tipo_prestamo,
-      estado: Number(header.estado),
-      observaciones: header.observaciones,
+    const payload = buildAdmisionPayload({
+      header,
       deudas,
       protestos,
-    };
+      includeEstado: true,
+    });
 
     try {
       const evalResponse = await evaluarAdmision(payload);
       const evalData = evalResponse.data || evalResponse;
+      const evaluationAction = resolveAdmisionEvaluationAction({ evalData, checkPermission });
 
-      if (evalData.decision === 'BLOQUEANTE') {
+      if (evaluationAction.status === ADMISION_EVALUATION_STATUS.BLOQUEANTE) {
         setAlert({
           type: 'error',
           message: ADMISION_COPY_ALERTS.UPDATE.ERR_REGLAS_BLOQUEANTES,
-          details: (evalData.rules || [])
-            .filter((rule) => rule.severity === 'BLOQUEANTE')
-            .map((rule) => rule.message),
+          details: evaluationAction.blockingMessages,
         });
         return;
       }
 
-      if (evalData.decision === 'REQUIERE_EXCEPCION') {
-        if (!checkPermission('admisiones.excepciones.solicitar')) {
-          setAlert({
-            type: 'error',
-            message: ADMISION_COPY_ALERTS.UPDATE.ERR_PERMISO_EXCEPCION,
-          });
-          return;
-        }
-
-        const detectedExceptionRules = getExceptionRules(evalData);
-        setExceptionRules(detectedExceptionRules);
-        setExceptionSelectionMap(buildExceptionSelectionMap(detectedExceptionRules, { defaultSelected: true }));
-        setPendingPayload(payload);
-        setShowExceptionModal(true);
+      if (evaluationAction.status === ADMISION_EVALUATION_STATUS.SIN_PERMISO_EXCEPCION) {
+        setAlert({
+          type: 'error',
+          message: ADMISION_COPY_ALERTS.UPDATE.ERR_PERMISO_EXCEPCION,
+        });
         return;
       }
 
-      setExceptionRules([]);
-      setExceptionSelectionMap({});
+      if (evaluationAction.status === ADMISION_EVALUATION_STATUS.REQUIERE_EXCEPCION) {
+        openExceptionFlow({
+          payload,
+          rules: evaluationAction.rules,
+          selectionMap: evaluationAction.selectionMap,
+          reason: exceptionReason,
+        });
+        return;
+      }
+
+      resetExceptionFlow({ keepReason: true });
       await submitUpdate(payload);
     } catch (error) {
       setAlert(handleApiError(error, ADMISION_COPY_ALERTS.UPDATE.ERR_ACTUALIZACION));
     } finally {
       setLoading(false);
     }
-  }, [checkPermission, deudas, header, protestos, submitUpdate]);
+  }, [
+    checkPermission,
+    deudas,
+    exceptionReason,
+    header,
+    openExceptionFlow,
+    protestos,
+    resetExceptionFlow,
+    submitUpdate,
+  ]);
 
   return {
     loading,

@@ -1,7 +1,15 @@
 import React from 'react';
 import { isTextOnly } from 'utilities/Validations/validations';
+import ProductoConfiguracionesEditor from './ProductoConfiguracionesEditor';
+import { PRODUCTO_TIPO_OPTIONS } from 'utilities/productos';
 
-const ProductoForm = ({ data, handleChange }) => {
+const ProductoForm = ({
+  data,
+  handleChange,
+  onConfigChange,
+  onAddConfig,
+  onRemoveConfig,
+}) => {
   const baseInputClass = "w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-fic-red focus:border-fic-red outline-none transition-all text-sm font-medium text-slate-700 placeholder:font-normal";
 
   const handleInputValidation = (e) => {
@@ -13,19 +21,13 @@ const ProductoForm = ({ data, handleChange }) => {
        if (!isTextOnly(value)) return;
     }
 
-    // Validación para RANGO DE TASA
-    if (name === 'rango_tasa') {
-        if (!/^[0-9%\-\s]*$/.test(value)) return;
-    }
-
     handleChange(e);
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* NOMBRE */}
         <div>
           <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Nombre del Producto</label>
           <input 
@@ -39,27 +41,53 @@ const ProductoForm = ({ data, handleChange }) => {
           <p className="text-[10px] text-slate-400 mt-1">Nombre comercial (solo letras).</p>
         </div>
 
-        {/* RANGO DE TASA */}
         <div>
-          <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Rango de Tasa</label>
-          <input 
-            name="rango_tasa" 
-            value={data.rango_tasa} 
+          <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Tipo de Evaluación</label>
+          <select
+            name="tipo_evaluacion"
+            value={data.tipo_evaluacion}
             onChange={handleInputValidation}
-            className={baseInputClass} 
-            placeholder="Ej: 10% - 15%"
+            className={baseInputClass}
             required 
-          />
-          <p className="text-[10px] text-slate-400 mt-1">Formato sugerido: Min% - Max%</p>
+          >
+            <option value="">Seleccione...</option>
+            {PRODUCTO_TIPO_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-[10px] text-slate-400 mt-1">Define en qué módulo se podrá usar este producto.</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Estado</label>
+          <select
+            name="activo"
+            value={data.activo ? '1' : '0'}
+            onChange={handleInputValidation}
+            className={baseInputClass}
+            required
+          >
+            <option value="1">Activo</option>
+            <option value="0">Inactivo</option>
+          </select>
+          <p className="text-[10px] text-slate-400 mt-1">Solo los productos activos deberían quedar disponibles en operación.</p>
         </div>
       </div>
+
+      <ProductoConfiguracionesEditor
+        configuraciones={data.configuraciones || []}
+        onConfigChange={onConfigChange}
+        onAddConfig={onAddConfig}
+        onRemoveConfig={onRemoveConfig}
+      />
       
-      {/* NOTA INFORMATIVA */}
       <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3 items-start">
         <span className="text-xl">ℹ️</span>
         <p className="text-xs text-blue-800 leading-relaxed">
-          <strong>Nota Importante:</strong> El rango de tasa ingresado es meramente referencial para la etapa de evaluación. 
-          La tasa final se definirá y confirmará al momento del desembolso según el perfil del cliente.
+          <strong>Nota Importante:</strong> La tasa permitida en evaluación se resolverá según la periodicidad, el monto y el número de cuotas
+          configurados para el producto.
         </p>
       </div>
     </div>

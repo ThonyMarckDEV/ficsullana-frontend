@@ -5,18 +5,17 @@ import {
     ChevronDownIcon, 
     ArrowRightOnRectangleIcon,
     DocumentTextIcon,
-    UserGroupIcon,
-    ClipboardDocumentListIcon,
-    IdentificationIcon,
-    Squares2X2Icon,
-    BuildingLibraryIcon
 } from '@heroicons/react/24/outline'; 
 import { logout } from 'js/logout';
 import logoImg from 'assets/img/Logo_FICSULLANA.png'; 
 import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
-import { Building2, House, ListChecksIcon, UserCog, UserPlus, Users } from 'lucide-react';
+import { UserPlus, Users } from 'lucide-react';
 import SidebarSkeleton from './Skeletons/SidebarSkeleton';
 import { useAuth } from 'context/AuthContext';
+import {
+    buildSidebarMenuConfig,
+    filterSidebarMenuByPermissions,
+} from 'config/sidebarMenu';
 
 const Sidebar = () => {
     const { user, roles, loading } = useAuth();
@@ -31,146 +30,12 @@ const Sidebar = () => {
         return user.rol.permisos.map(p => (typeof p === 'object' ? p.nombre : p));
     }, [user]);
 
+    const menuConfig = useMemo(() => buildSidebarMenuConfig(roles), [roles]);
+
     const allowedMenu = useMemo(() => {
         if (loading) return [];
-
-        // ---------------------------------------------------------
-        // CREAR SECCIONES DINÁMICAS POR ROL
-        // ---------------------------------------------------------
-        const dynamicRoleSections = (roles || []).map(rol => {
-            const rawName = rol.nombre.replace(/_/g, ' ').toLowerCase();
-            const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-            
-            const roleSlug = rol.nombre.toLowerCase(); 
-
-            return {
-                section: displayName, 
-                icon: UserCog,   
-                subs: [
-                    { 
-                        name: 'Agregar Nuevo',
-                        link: `/personal/agregar/${rol.id}`, 
-                        permission: `empleados.crear.${roleSlug}` 
-                    },
-                    { 
-                        name: 'Listar Todos', 
-                        link: `/personal/listar/${rol.id}`, 
-                        permission: `empleados.listar.${roleSlug}` 
-                    }
-                ]
-            };
-        });
-
-        // ---------------------------------------------------------
-        // CONFIGURACIÓN DEL MENÚ PRINCIPAL
-        // ---------------------------------------------------------
-        const config = [
-            { section: 'Home', icon: House, link: '/home' },
-            
-            // Módulo Sedes
-            {
-                section: 'Sedes',
-                icon: Building2,
-                subs: [
-                    { name: 'Agregar Sede', link: '/sedes/agregar', permission: 'sedes.crear' },
-                    { name: 'Listar Sedes', link: '/sedes/listar', permission: 'sedes.listar' },
-                ]
-            },
-
-            // Módulo Áreas
-            {
-                section: 'Áreas',
-                icon: Squares2X2Icon,
-                subs: [
-                    { name: 'Agregar Área', link: '/areas/agregar', permission: 'areas.crear' },
-                    { name: 'Listar Áreas', link: '/areas/listar', permission: 'areas.listar' },
-                ]
-            },
-
-            // Módulo Entidades Financieras
-            {
-                section: 'Entidades Financieras',
-                icon: BuildingLibraryIcon,
-                subs: [
-                    { name: 'Agregar Entidad', link: '/entidades-financieras/agregar', permission: 'entidades_financieras.crear' },
-                    { name: 'Listar Entidades', link: '/entidades-financieras/listar', permission: 'entidades_financieras.listar' },
-                ]
-            },
-
-            // Módulo Productos
-            {
-                section: 'Productos',
-                icon: ListChecksIcon,
-                subs: [
-                    { name: 'Agregar Producto', link: '/productos/agregar', permission: 'productos.crear' },
-                    { name: 'Listar Productos', link: '/productos/listar', permission: 'productos.listar' },
-                ]
-            },
-
-            // --- AQUÍ INYECTAMOS LOS ROLES DINÁMICOS ---
-            ...dynamicRoleSections, 
-
-            // Módulo Clientes
-            {
-                section: 'Clientes',
-                icon: IdentificationIcon,
-                subs: [
-                    { name: 'Agregar Cliente', link: '/clientes/agregar', permission: 'clientes.crear' },
-                    { name: 'Listar Clientes', link: '/clientes/listar', permission: 'clientes.listar' },
-                ]
-            },
-
-            // Módulo Admisiones
-            {
-                section: 'Admisiones',
-                icon: ClipboardDocumentListIcon,
-                subs: [
-                    { name: 'Nueva Admisión', link: '/gestion/nueva-admision', permission: 'admisiones.crear' },
-                    { name: 'Listar Admisiones', link: '/gestion/listar-admisiones', permission: 'admisiones.listar' },
-                ]
-            },
-
-            // Módulo Configuración de Roles (Sistema)
-            {
-                section: 'Configuración Roles',
-                icon: UserGroupIcon,
-                subs: [
-                    { name: 'Nuevo Rol', link: '/roles/agregar', permission: 'roles.crear' },
-                    { name: 'Listar Roles', link: '/roles/listar', permission: 'roles.listar' },
-                ]
-            },
-        ];
-
-        // ---------------------------------------------------------
-        // FILTRADO POR PERMISOS
-        // ---------------------------------------------------------
-        return config.map(item => {
-            if (item.subs) {
-                // Filtramos los sub-items según permisos
-                const visibleSubs = item.subs.filter(sub => {
-                    // Verificamos coincidencia exacta O prefijo (wildcard)
-                    return userPermisos.some(permisoUsuario => 
-                        permisoUsuario === sub.permission || 
-                        permisoUsuario.startsWith(`${sub.permission}.`)
-                    );
-                });
-                
-                if (visibleSubs.length > 0) return { ...item, subs: visibleSubs };
-                return null;
-            }
-            
-            // Items directos (sin subs)
-            if (!item.permission) return item; // Si no pide permiso, pasa (ej: Home)
-            
-            const hasPermission = userPermisos.some(permisoUsuario => 
-                permisoUsuario === item.permission || 
-                permisoUsuario.startsWith(`${item.permission}.`)
-            );
-            
-            return hasPermission ? item : null;
-        }).filter(Boolean);
-
-    }, [userPermisos, loading, roles]);
+        return filterSidebarMenuByPermissions(menuConfig, userPermisos);
+    }, [loading, menuConfig, userPermisos]);
 
     const isExpanded = isOpen || isHovered;
 
