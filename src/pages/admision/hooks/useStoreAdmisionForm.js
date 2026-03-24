@@ -35,12 +35,6 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
   const [prospectoSelected, setProspectoSelected] = useState(null);
   const [deudas, setDeudas] = useState([]);
   const [protestos, setProtestos] = useState([]);
-<<<<<<< HEAD
-  const [capitalPendienteFicsullana, setCapitalPendienteFicsullana] = useState(0);
-  const [capitalLoading, setCapitalLoading] = useState(false);
-  
-  const [isManualTipo, setIsManualTipo] = useState(false);
-=======
 
   const submitAdmision = useCallback(async (payload, solicitudExcepcion = null) => {
     const payloadFinal = solicitudExcepcion
@@ -79,7 +73,6 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     setAlert,
     errorMessage: ADMISION_COPY_ALERTS.STORE.ERR_CARGA_CAPITAL,
   });
->>>>>>> ef09c7eb43d8e56c80e24be7840ed10eb9fcf004
 
   const isSolicitanteSelected = Boolean(header.cliente_id || header.prospecto_id);
 
@@ -97,21 +90,10 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
 
     setClienteSelected(null);
     setProspectoSelected(null);
-<<<<<<< HEAD
-    setCapitalPendienteFicsullana(0);
-    setCapitalLoading(false);
-    setIsManualTipo(false);
-  };
-
-  const onSelectCliente = async (cliente) => {
-    setIsManualTipo(false);
-    
-=======
     resetCapitalPendiente();
   }, [resetCapitalPendiente]);
 
   const onSelectCliente = useCallback(async (cliente) => {
->>>>>>> ef09c7eb43d8e56c80e24be7840ed10eb9fcf004
     if (!cliente) {
       setHeader((prev) => ({ ...prev, cliente_id: null, tipo_prestamo: '', motivo_bloqueo: null }));
       setClienteSelected(null);
@@ -150,13 +132,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     }
   }, [loadCapitalPendiente, resetCapitalPendiente]);
 
-<<<<<<< HEAD
-  const onSelectProspecto = (prospecto) => {
-    setIsManualTipo(false);
-    
-=======
   const onSelectProspecto = useCallback((prospecto) => {
->>>>>>> ef09c7eb43d8e56c80e24be7840ed10eb9fcf004
     if (!prospecto) {
       setHeader((prev) => ({ ...prev, prospecto_id: null, tipo_prestamo: '', motivo_bloqueo: null }));
       setProspectoSelected(null);
@@ -188,78 +164,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     setAlert({ type: 'success', message: ADMISION_COPY_ALERTS.STORE.PROSPECTO_CREADO });
   }, [onSelectProspecto]);
 
-<<<<<<< HEAD
-  const handleToggleManualTipo = () => {
-    setIsManualTipo(!isManualTipo);
-  };
-
-  const handleTipoPrestamoChange = (nuevoTipo) => {
-    setHeader((prev) => ({
-      ...prev,
-      tipo_prestamo: nuevoTipo
-    }));
-  };
-
-  const submitAdmision = async (payload, solicitudExcepcion = null) => {
-    const payloadFinal = solicitudExcepcion
-      ? { ...payload, solicitud_excepcion: solicitudExcepcion }
-      : payload;
-
-    const response = await createAdmision(payloadFinal);
-    setAlert({ type: 'success', message: response.message || ADMISION_COPY_ALERTS.STORE.RESULTADO_OK });
-    setTimeout(() => navigate('/gestion/listar-admisiones'), 2000);
-  };
-
-  const handleConfirmException = async () => {
-    if (!pendingPayload) return;
-
-    const motivo = exceptionReason.trim();
-    if (!motivo) {
-      setAlert({ type: 'error', message: ADMISION_COPY_ALERTS.EXCEPCION.MOTIVO_REQUERIDO });
-      return;
-    }
-
-    const missingRules = getMissingExceptionRules(exceptionRules, exceptionSelectionMap);
-    if (missingRules.length > 0) {
-      setAlert({
-        type: 'error',
-        message: ADMISION_COPY_ALERTS.EXCEPCION.REGLAS_INCOMPLETAS,
-        details: missingRules.map((rule) => getExceptionRuleName(rule)),
-      });
-      return;
-    }
-
-    const selectedCodes = getSelectedExceptionCodes(exceptionRules, exceptionSelectionMap);
-
-    setShowExceptionModal(false);
-    setLoading(true);
-    try {
-      await submitAdmision(pendingPayload, {
-        motivo,
-        codigos: selectedCodes,
-      });
-      setPendingPayload(null);
-    } catch (error) {
-      setAlert(handleApiError(error, ADMISION_COPY_ALERTS.STORE.ERR_REGISTRO));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleExceptionRule = (code) => {
-    const normalizedCode = normalizeRuleCode(code);
-    if (!normalizedCode) return;
-
-    setExceptionSelectionMap((prev) => ({
-      ...prev,
-      [normalizedCode]: !prev[normalizedCode],
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-=======
   const handleSubmit = useCallback(async (e) => {
->>>>>>> ef09c7eb43d8e56c80e24be7840ed10eb9fcf004
     e.preventDefault();
     setLoading(true);
     setAlert(null);
@@ -271,38 +176,7 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
       return;
     }
 
-<<<<<<< HEAD
-    if (header.tipo_solicitante === 'PROSPECTO' && !header.prospecto_id) {
-      setAlert({ type: 'error', message: 'Debe buscar o crear un Prospecto.' });
-      setLoading(false);
-      return;
-    }
-
-    if (!header.tipo_prestamo) {
-      setAlert({ type: 'error', message: 'Error: No se ha determinado el tipo de préstamo.' });
-      setLoading(false);
-      return;
-    }
-
-    const protestosLimpios = protestos.filter(
-      (p) => p.entidad_acreedora && p.entidad_acreedora.trim() !== ''
-    );
-    
-    const deudasLimpias = deudas.filter(
-      (d) => d.nombre_entidad && d.nombre_entidad.trim() !== ''
-    );
-
-    const payload = {
-      cliente_id: header.tipo_solicitante === 'CLIENTE' ? header.cliente_id : null,
-      prospecto_id: header.tipo_solicitante === 'PROSPECTO' ? header.prospecto_id : null,
-      tipo_prestamo: header.tipo_prestamo,
-      observaciones: header.observaciones,
-      deudas: deudasLimpias,
-      protestos: protestosLimpios,
-    };
-=======
     const payload = buildAdmisionPayload({ header, deudas, protestos });
->>>>>>> ef09c7eb43d8e56c80e24be7840ed10eb9fcf004
 
     try {
       const evalResponse = await evaluarAdmision(payload);
@@ -384,9 +258,6 @@ const useStoreAdmisionForm = ({ navigate, checkPermission }) => {
     capitalPendienteFicsullana,
     capitalLoading,
     isSolicitanteSelected,
-    isManualTipo,
-    handleToggleManualTipo,
-    handleTipoPrestamoChange,
     handleTipoSolicitanteChange,
     onSelectCliente,
     onSelectProspecto,
