@@ -13,10 +13,13 @@ const ProtectedRoute = ({ element, requiredPermission }) => {
     if (!user) return <Navigate to="/" state={{ from: location }} replace />;
 
     if (requiredPermission) {
-        const hasAccess = checkPermission(requiredPermission, idRol);
+        const requiredPermissions = Array.isArray(requiredPermission)
+            ? requiredPermission
+            : [requiredPermission];
+        const hasAccess = requiredPermissions.some((permission) => checkPermission(permission, idRol));
 
         if (!hasAccess) {
-            console.warn(`⛔ ACCESSO DENEGADO: ${location.pathname}`);
+            console.warn(`ACCESSO DENEGADO: ${location.pathname}`);
             return <Navigate to="/401" replace />;
         }
     }

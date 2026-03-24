@@ -4,19 +4,18 @@ import { UserPlusIcon, CheckIcon, ChevronRightIcon } from '@heroicons/react/24/o
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { createEmpleado } from 'services/empleadoService';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import { buildAddressLine } from 'utilities/addressFormatter';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { useAuth } from 'context/AuthContext';
+import {
+    applyEmpleadoChange,
+    buildEmpleadoPayload,
+    createInitialEmpleadoForm,
+    mapEmpleadoEmails,
+} from 'utilities/pages/empleados/form';
 
 import DatosForm from 'components/Shared/Formularios/Empleado/DatosForm';
 import CuentasBancariasMultiples from 'components/Shared/Formularios/CuentasBancariasMultiples';
 import CuentaForm from 'components/Shared/Formularios/Empleado/CuentaForm';
-
-const EMPTY_BANK_ACCOUNT = {
-    entidad_financiera_id: '',
-    numero_cuenta: '',
-    cci: ''
-};
 
 const Store = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
     const navigate = useNavigate();
@@ -31,30 +30,7 @@ const Store = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
     const [dynamicRoleName, setDynamicRoleName] = useState("");
     const [isCuentaAccesoValida, setIsCuentaAccesoValida] = useState(false);
 
-    const [formData, setFormData] = useState({
-        rol_id: parseInt(rolId),
-        // 1. Datos Personales 
-        datos_empleado: { 
-            nombre: '', apellidoPaterno: '', apellidoMaterno: '', dni: '', 
-            fechaNacimiento: '', fechaIngreso: '', sexo: '', estadoCivil: '',
-            tipoVia: '', nombreVia: '', numeroMzLt: '', urbanizacion: '',
-            direccion: '', departamento: '', provincia: '', distrito: '',
-            area_id: '',
-            esCarnetExtranjeria: false,
-        },
-        // 2. Contacto 
-        empleado_datos_contacto: {
-            telefono: '',
-            correo: '',
-            correos: ['']
-        },
-        // 3. Login
-        username: '', 
-        password: '', 
-        password_confirmation: '',
-        // 4. Banco
-        empleado_cuentas_bancarias: [{ ...EMPTY_BANK_ACCOUNT }]
-    });
+    const [formData, setFormData] = useState(() => createInitialEmpleadoForm({ rolId }));
 
     useEffect(() => {
         if (!propRolNombre && roles && rolId) {
@@ -63,39 +39,9 @@ const Store = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         }
     }, [rolId, propRolNombre, roles]);
 
-    const normalizeValue = (name, value, section) => {
-        if (typeof value !== 'string') return value;
-        if (name === 'correo' || name === 'email') return value.toLowerCase();
-        if (!section && ['username', 'password', 'password_confirmation'].includes(name)) return value;
-        return value.toUpperCase();
-    };
-
     const handleChange = (e, section) => {
         const { name, value, type, checked } = e.target;
-        const nextValue = type === 'checkbox' ? checked : normalizeValue(name, value, section);
-        
-        if (name === 'telefono' && section === 'datos_empleado') {
-             setFormData(prev => ({ 
-                ...prev, 
-                empleado_datos_contacto: { ...prev.empleado_datos_contacto, telefono: nextValue } 
-            }));
-            return;
-        }
-
-        if (name === 'email' || name === 'correo') {
-            const correoValue = String(nextValue || '').toLowerCase();
-            setFormData(prev => ({ 
-               ...prev, 
-               empleado_datos_contacto: { ...prev.empleado_datos_contacto, correo: correoValue, correos: [correoValue] }
-           }));
-           return;
-       }
-
-        if (section) {
-            setFormData(prev => ({ ...prev, [section]: { ...prev[section], [name]: nextValue } }));
-        } else {
-            setFormData(prev => ({ ...prev, [name]: nextValue }));
-        }
+        setFormData((prev) => applyEmpleadoChange(prev, { section, name, value, type, checked }));
     };
 
     const handleCuentasBancariasChange = (cuentas) => {
@@ -116,35 +62,10 @@ const Store = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
         setLoading(true);
         
         try {
-            const payload = { ...formData };
-            payload.datos_empleado = {
-                ...payload.datos_empleado,
-                direccion: buildAddressLine(payload.datos_empleado)
-            };
-            const correosLimpios = (payload.empleado_datos_contacto?.correos || [])
-                .map(correo => String(correo || '').trim().toLowerCase())
-                .filter(Boolean);
-
-            payload.empleado_datos_contacto = {
-                ...payload.empleado_datos_contacto,
-                correos: correosLimpios,
-                correo: correosLimpios[0] || ''
-            };
-
-            const cuentasLimpias = (payload.empleado_cuentas_bancarias || [])
-                .map(cuenta => ({
-                    entidad_financiera_id: cuenta.entidad_financiera_id,
-                    numero_cuenta: cuenta.numero_cuenta,
-                    cci: cuenta.cci || ''
-                }))
-                .filter(cuenta => cuenta.entidad_financiera_id || cuenta.numero_cuenta || cuenta.cci);
-
-            if (cuentasLimpias.length === 0) {
-                delete payload.empleado_cuentas_bancarias; 
-            } else {
-                payload.empleado_cuentas_bancarias = cuentasLimpias;
-            }
-
+            const payload = buildEmpleadoPayload(formData, {
+                includeRolId: true,
+                includePassword: true,
+            });
             const response = await createEmpleado(payload);
             setAlert({ type: 'success', message: response.message });
             setTimeout(() => {
@@ -175,8 +96,7 @@ const Store = ({ rolId: propRolId, rolNombre: propRolNombre }) => {
                                 ...prev,
                                 empleado_datos_contacto: {
                                     ...prev.empleado_datos_contacto,
-                                    correos: nextEmails.map((email) => String(email || '').toLowerCase()),
-                                    correo: String(nextEmails[0] || '').toLowerCase()
+                                    ...mapEmpleadoEmails(nextEmails),
                                 }
                             }))
                         }

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdmisiones, showAdmision } from 'services/admisionService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import Table from 'components/Shared/Tables/Table';
+import usePaginatedIndex from 'hooks/usePaginatedIndex';
 import AdmisionDetailModal from '../components/Modals/AdmisionDetailModal';
 import {
     PencilSquareIcon,
@@ -14,6 +15,11 @@ import {
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import { useAuth } from 'context/AuthContext';
+
+const INITIAL_FILTERS = {
+    search: '',
+    estado: '',
+};
 
 const buildFullName = (persona, type) => {
     if (!persona) return 'Sin nombre';
@@ -50,26 +56,25 @@ const normalizeEstado = (estado) => {
 
 const Index = () => {
     const { checkPermission } = useAuth(); 
-
-    const [loading, setLoading] = useState(true);
-    const [alert, setAlert] = useState(null);
-    const [admisiones, setAdmisiones] = useState([]);
-
-    const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
-
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailData, setDetailData] = useState(null);
-
-    const [filters, setFilters] = useState({
-        search: '',
-        estado: '',
+    const {
+        loading,
+        alert,
+        setAlert,
+        rows: admisiones,
+        paginationInfo,
+        filters,
+        fetchRows: fetchAdmisiones,
+        handleFilterChange,
+        handleFilterSubmit,
+        handleFilterClear,
+    } = usePaginatedIndex({
+        initialFilters: INITIAL_FILTERS,
+        fetcher: getAdmisiones,
+        onError: (error) => handleApiError(error, 'Error al cargar las admisiones.'),
     });
-
-    const filtersRef = useRef(filters);
-    useEffect(() => {
-        filtersRef.current = filters;
-    }, [filters]);
 
     const filterConfig = useMemo(() => [
         {
@@ -94,62 +99,19 @@ const Index = () => {
         },
     ], []);
 
-    const fetchAdmisiones = useCallback(async (page = 1) => {
-        setLoading(true);
-        try {
-            const currentFilters = filtersRef.current;
-            const response = await getAdmisiones(page, currentFilters);
-
-            setAdmisiones(response.data || []);
-            setPaginationInfo({
-                currentPage: response.current_page,
-                totalPages: response.last_page,
-                totalItems: response.total,
-            });
-        } catch (err) {
-            setAlert(handleApiError(err, 'Error al cargar las admisiones.'));
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchAdmisiones(1);
-    }, [fetchAdmisiones]);
-
-    const fetchAdmisionDetail = useCallback(async (id) => {
-        const response = await showAdmision(id);
-        return response.data;
-    }, []);
-
-    const handleFilterChange = useCallback((name, value) => {
-        setFilters((prev) => ({ ...prev, [name]: value }));
-    }, []);
-
-    const handleFilterSubmit = useCallback(() => {
-        fetchAdmisiones(1);
-    }, [fetchAdmisiones]);
-
-    const handleFilterClear = useCallback(() => {
-        const cleanFilters = { search: '', estado: '' };
-        setFilters(cleanFilters);
-        filtersRef.current = cleanFilters;
-        fetchAdmisiones(1);
-    }, [fetchAdmisiones]);
-
     const handleViewAdmision = useCallback(async (id) => {
         setIsDetailOpen(true);
         setDetailLoading(true);
         try {
-            const data = await fetchAdmisionDetail(id);
-            setDetailData(data);
-        } catch (err) {
-            setAlert(handleApiError(err, 'No se pudo cargar el detalle de la admisión.'));
+            const response = await showAdmision(id);
+            setDetailData(response.data);
+        } catch (error) {
+            setAlert(handleApiError(error, 'No se pudo cargar el detalle de la admisión.'));
             setIsDetailOpen(false);
         } finally {
             setDetailLoading(false);
         }
-    }, [fetchAdmisionDetail]);
+    }, [setAlert]);
 
     const hasAnyActionPermission = checkPermission('admisiones.mostrar') || checkPermission('admisiones.editar');
 
@@ -247,8 +209,8 @@ const Index = () => {
                     ) : null}
                 </div>
             ),
-        } : null 
-    ].filter(Boolean), [handleViewAdmision, checkPermission, hasAnyActionPermission]);
+        } : null
+    ].filter(Boolean), [checkPermission, handleViewAdmision, hasAnyActionPermission]);
 
     if (loading && admisiones.length === 0) return <LoadingScreen />;
 
@@ -269,7 +231,7 @@ const Index = () => {
                 onClose={() => setIsDetailOpen(false)}
                 loading={detailLoading}
                 data={detailData}
-                onUpdateSuccess={() => fetchAdmisiones(paginationInfo.currentPage)} // Recargar lista
+                onUpdateSuccess={() => fetchAdmisiones(paginationInfo.currentPage).catch(() => {})}
             />
 
             <div className="rounded-xl overflow-hidden">
@@ -285,7 +247,7 @@ const Index = () => {
                     pagination={{
                         currentPage: paginationInfo.currentPage,
                         totalPages: paginationInfo.totalPages,
-                        onPageChange: (page) => fetchAdmisiones(page),
+                        onPageChange: (page) => fetchAdmisiones(page).catch(() => {}),
                     }}
                 />
             </div>

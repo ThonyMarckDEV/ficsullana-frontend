@@ -1,101 +1,56 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { getEntidadesFinancierasCombobox } from 'services/entidadFinancieraService';
 import { MagnifyingGlassIcon, CheckCircleIcon, BuildingLibraryIcon } from '@heroicons/react/24/outline';
+import useRemoteSearchSelect from 'hooks/useRemoteSearchSelect';
 
 const EntidadFinancieraSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
-    const [inputValue, setInputValue] = useState(initialName);
-    const [suggestions, setSuggestions] = useState([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [loading, setLoading] = useState(false);
-
-    const wrapperRef = useRef(null);
-    const isManualSelection = useRef(false);
-
-    useEffect(() => {
-        if (!selectedId) {
-            setInputValue('');
-            return;
-        }
-
-        if (isManualSelection.current) {
-            isManualSelection.current = false;
-            return;
-        }
-
-        if (initialName) {
-            setInputValue(initialName);
-        }
-    }, [selectedId, initialName]);
-
-    useEffect(() => {
-        if (selectedId && !inputValue && !initialName && !isManualSelection.current) {
-            const recoverName = async () => {
-                try {
-                    setLoading(true);
-                    const response = await getEntidadesFinancierasCombobox();
-                    const data = response.data || response;
-                    const found = data.find(e => e.id === parseInt(selectedId));
-                    if (found) {
-                        setInputValue(found.nombre);
-                    }
-                } catch (error) {
-                    console.error("No se pudo recuperar el nombre de la entidad", error);
-                } finally {
-                    setLoading(false);
-                }
-            };
-            recoverName();
-        }
-    }, [selectedId, inputValue, initialName]);
-
-
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setShowSuggestions(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [wrapperRef]);
-
-    const fetchEntidades = async (searchTerm = '') => {
-        setLoading(true);
-        try {
+    const searchEntidades = useCallback(async (searchTerm = '') => {
             const response = await getEntidadesFinancierasCombobox();
             const data = response.data || response;
 
             const filtered = searchTerm 
-                ? data.filter(e => e.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
+                ? data.filter((entidad) => entidad.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
                 : data;
 
-            setSuggestions(Array.isArray(filtered) ? filtered : []);
-            setShowSuggestions(true);
-        } catch (error) {
-            console.error("Error buscando entidades", error);
-            setSuggestions([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+            return Array.isArray(filtered) ? filtered : [];
+    }, []);
+
+    const recoverSelectedLabel = useCallback(async (currentSelectedId) => {
+        const response = await getEntidadesFinancierasCombobox();
+        const data = response.data || response;
+        const found = (Array.isArray(data) ? data : []).find(
+            (entidad) => entidad.id === parseInt(currentSelectedId, 10)
+        );
+
+        return found?.nombre || '';
+    }, []);
+
+    const {
+        wrapperRef,
+        inputValue,
+        setInputValue,
+        suggestions,
+        showSuggestions,
+        loading,
+        runSearch,
+        markSelectionClearedInternally,
+    } = useRemoteSearchSelect({
+        selectedId,
+        initialValue: initialName,
+        searchFn: searchEntidades,
+        mapResults: (results) => results,
+        recoverSelectedLabel,
+    });
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            fetchEntidades(inputValue);
-        }
-    };
-
-    const handleInputClick = () => {
-        if (!showSuggestions) {
-            fetchEntidades(inputValue);
+            runSearch(inputValue);
         }
     };
 
     const handleSelect = (entidad) => {
-        isManualSelection.current = true;
         setInputValue(entidad.nombre);
-        setShowSuggestions(false);
         
         onSelect(entidad); 
     };
@@ -108,10 +63,17 @@ const EntidadFinancieraSearchSelect = ({ onSelect, selectedId, initialName = '' 
                     value={inputValue}
                     onChange={(e) => {
                         setInputValue(e.target.value);
-                        if (selectedId) onSelect(null); 
+                        if (selectedId) {
+                            markSelectionClearedInternally();
+                            onSelect(null);
+                        }
                     }}
                     onKeyDown={handleKeyDown}
-                    onClick={handleInputClick}
+                    onClick={() => {
+                        if (!showSuggestions) {
+                            runSearch(inputValue);
+                        }
+                    }}
                     placeholder="Buscar Banco..."
                     className={`w-full border rounded-md shadow-sm py-2 pl-3 pr-10 outline-none text-sm transition-colors ${
                         selectedId
@@ -123,7 +85,7 @@ const EntidadFinancieraSearchSelect = ({ onSelect, selectedId, initialName = '' 
 
                 <button
                     type="button"
-                    onClick={() => fetchEntidades(inputValue)}
+                    onClick={() => runSearch(inputValue)}
                     disabled={loading}
                     className="absolute right-2 text-gray-400 hover:text-fic-red p-1"
                 >

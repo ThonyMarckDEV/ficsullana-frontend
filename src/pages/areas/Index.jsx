@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getAreas, showArea } from 'services/areaService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
@@ -6,32 +6,32 @@ import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import InfoModal from 'components/Shared/Modals/InfoModal';
 import Table from 'components/Shared/Tables/Table';
 import PageHeader from 'components/Shared/Headers/PageHeader';
+import useInfoModal from 'hooks/useInfoModal';
+import usePaginatedIndex from 'hooks/usePaginatedIndex';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import { Squares2X2Icon, PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 
+const INITIAL_FILTERS = { search: '' };
+
 const Index = () => {
-  const [loading, setLoading] = useState(true);
-  const [alert, setAlert] = useState(null);
-  const [areas, setAreas] = useState([]);
-  
-  // Estado para paginación
-  const [paginationInfo, setPaginationInfo] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
+  const {
+    loading,
+    alert,
+    setAlert,
+    rows: areas,
+    paginationInfo,
+    filters,
+    fetchRows: fetchAreas,
+    handleFilterChange,
+    handleFilterSubmit,
+    handleFilterClear,
+  } = usePaginatedIndex({
+    initialFilters: INITIAL_FILTERS,
+    fetcher: getAreas,
+    onError: (error) => handleApiError(error, 'Error al cargar las áreas.'),
+  });
+  const { modalProps, openInfoModal } = useInfoModal({ setAlert });
 
-  // Estado para filtros
-  const [filters, setFilters] = useState({ search: '' });
-  
-  // Referencia para filtros
-  const filtersRef = useRef(filters);
-  useEffect(() => {
-    filtersRef.current = filters;
-  }, [filters]);
-
-  // Estados del Modal
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [infoLoading, setInfoLoading] = useState(false);
-  const [modalData, setModalData] = useState({ title: '', subtitle: '', sections: [] });
-
-  // Configuración de campos de filtro
   const filterConfig = useMemo(() => [
     { 
       name: 'search', 
@@ -42,59 +42,13 @@ const Index = () => {
     }
   ], []);
 
-  // Función de carga de datos (Server-Side)
-  const fetchAreas = useCallback(async (page = 1) => {
-    setLoading(true);
-    try {
-      const currentFilters = filtersRef.current;
-      const response = await getAreas(page, currentFilters);
-      
-      setAreas(response.data || []);
-      setPaginationInfo({
-        currentPage: response.current_page,
-        totalPages: response.last_page,
-        totalItems: response.total,
-      });
-    } catch (err) {
-      setAlert(handleApiError(err, 'Error al cargar las áreas.'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Carga inicial
-  useEffect(() => {
-    fetchAreas(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Manejadores de filtros
-  const handleFilterChange = useCallback((name, value) => {
-    setFilters(prev => ({ ...prev, [name]: value }));
-  }, []);
-
-  const handleFilterSubmit = useCallback(() => {
-    fetchAreas(1);
-  }, [fetchAreas]);
-
-  const handleFilterClear = useCallback(() => {
-    const cleanFilters = { search: '' };
-    setFilters(cleanFilters);
-    filtersRef.current = cleanFilters;
-    fetchAreas(1);
-  }, [fetchAreas]);
-
   // Ver Detalle
-  const handleViewArea = async (id) => {
-    setIsInfoOpen(true);
-    setInfoLoading(true);
-    setModalData({ title: 'Cargando...', sections: [] });
-
-    try {
-      const response = await showArea(id);
+  const handleViewArea = useCallback((id) => openInfoModal({
+    fetcher: () => showArea(id),
+    mapData: (response) => {
       const area = response.data || response;
 
-      setModalData({
+      return {
         title: 'Detalle del Área',
         subtitle: area.nombre_area,
         sections: [
@@ -109,14 +63,10 @@ const Index = () => {
             ]
           }
         ]
-      });
-    } catch (err) {
-      setAlert(handleApiError(err, 'No se pudo cargar el detalle del área.'));
-      setIsInfoOpen(false);
-    } finally {
-      setInfoLoading(false);
-    }
-  };
+      };
+    },
+    onError: (error) => handleApiError(error, 'No se pudo cargar el detalle del área.'),
+  }), [openInfoModal]);
 
   const columns = useMemo(() => [
     {
@@ -163,7 +113,7 @@ const Index = () => {
         </div>
       )
     }
-  ], []);
+  ], [handleViewArea]);
 
   if (loading && areas.length === 0) return <LoadingScreen />;
 
@@ -179,14 +129,7 @@ const Index = () => {
 
       <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details}  onClose={() => setAlert(null)} />
 
-      <InfoModal
-        isOpen={isInfoOpen}
-        onClose={() => setIsInfoOpen(false)}
-        title={modalData.title}
-        subtitle={modalData.subtitle}
-        sections={modalData.sections}
-        loading={infoLoading}
-      />
+      <InfoModal {...modalProps} />
 
       <div className="rounded-xl overflow-hidden">
         <Table
@@ -205,7 +148,7 @@ const Index = () => {
           pagination={{
             currentPage: paginationInfo.currentPage,
             totalPages: paginationInfo.totalPages,
-            onPageChange: (page) => fetchAreas(page)
+            onPageChange: (page) => fetchAreas(page).catch(() => {})
           }}
         />
       </div>

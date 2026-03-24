@@ -4,39 +4,17 @@ import { UserPlusIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/o
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { createCliente } from 'services/clienteService';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
-import { buildAddressLine } from 'utilities/addressFormatter';
 import PageHeader from 'components/Shared/Headers/PageHeader';
+import {
+  applyClienteDireccionChange,
+  applyClienteSectionChange,
+  buildClientePayload,
+  createInitialClienteForm,
+} from 'utilities/pages/clientes/form';
 //Formularios
 import ClienteForm from 'components/Shared/Formularios/Cliente/ClienteForm';
 import ContactosForm from 'components/Shared/Formularios/Cliente/ContactosForm';
 import CuentasBancarias from 'components/Shared/Formularios/CuentasBancarias';
-
-const EMPTY_DIRECCION = {
-  tipoVia: '',
-  nombreVia: '',
-  numeroMzLt: '',
-  urbanizacion: '',
-  direccion: '',
-  departamento: '',
-  provincia: '',
-  distrito: '',
-};
-
-const initialFormData = {
-  datos_cliente: {
-    nombre: '', apellidoPaterno: '', apellidoMaterno: '', apellidoConyuge: '',
-    estadoCivil: '', sexo: '', dni: '', fechaNacimiento: '', fechaCaducidadDni: '',
-    nacionalidad: 'Peruana', residePeru: true, nivelEducativo: '', profesion: '',
-    enfermedadesPreexistentes: false, ruc: '', expuestaPoliticamente: false,
-    esCarnetExtranjeria: false,
-  },
-  direcciones_cliente: {
-    fiscal: { ...EMPTY_DIRECCION },
-    correspondencia: { ...EMPTY_DIRECCION }
-  },
-  contactos: { telefono: '', telefonoFijo: '', correo: '' },
-  banco: { entidad_financiera_id: '', numero_cuenta: '', cci: '' }
-};
 
 const STEPS = [
   { id: 1, name: 'Datos Personales' },
@@ -47,65 +25,21 @@ const STEPS = [
 const Store = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState(initialFormData);
+  const [formData, setFormData] = useState(createInitialClienteForm);
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState(null);
 
   const handleNext = () => setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   const handleBack = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
-  const normalizeStringValue = (name, value) => {
-    if (typeof value !== 'string') return value;
-    if (name === 'correo') return value.toLowerCase();
-    return value.toUpperCase();
-  };
-
   const handleChange = (e, section) => {
       const { name, value, type, checked } = e.target;
-      const normalizedValue = type === 'checkbox' ? checked : normalizeStringValue(name, value);
-      setFormData(prev => ({
-          ...prev,
-          [section]: {
-              ...prev[section],
-              [name]: normalizedValue,
-          }
-      }));
+      setFormData((prev) => applyClienteSectionChange(prev, { section, name, value, type, checked }));
   };
 
   const handleDireccionChange = (tipo, e) => {
     const { name, value } = e.target;
-    const normalizedValue = normalizeStringValue(name, value);
-    setFormData(prev => ({
-      ...prev,
-      direcciones_cliente: {
-        ...prev.direcciones_cliente,
-        [tipo]: {
-          ...prev.direcciones_cliente[tipo],
-          [name]: normalizedValue
-        }
-      }
-    }));
-  };
-
-  const buildDireccionPayload = (direccionData) => ({
-    ...direccionData,
-    direccion: buildAddressLine(direccionData)
-  });
-
-  const sanitizeDatosClientePayload = (datosCliente) => {
-    const {
-      tipoVia,
-      nombreVia,
-      numeroMzLt,
-      urbanizacion,
-      direccion,
-      departamento,
-      provincia,
-      distrito,
-      ...datosPersonales
-    } = datosCliente;
-
-    return datosPersonales;
+    setFormData((prev) => applyClienteDireccionChange(prev, { tipo, name, value }));
   };
 
   const handleSubmit = async (e) => {
@@ -114,35 +48,7 @@ const Store = () => {
     setAlert(null); 
     
     try {
-      const payload = {
-          datos_cliente: {
-              ...sanitizeDatosClientePayload(formData.datos_cliente)
-          },
-
-          direcciones_cliente: {
-              fiscal: buildDireccionPayload(formData.direcciones_cliente.fiscal),
-              correspondencia: buildDireccionPayload(formData.direcciones_cliente.correspondencia)
-          },
-          
-          cliente_datos_contacto: {
-              telefono: formData.contactos.telefono,
-              telefonoFijo: formData.contactos.telefonoFijo,
-              correo: String(formData.contactos.correo || '').toLowerCase()
-          },
-
-          cliente_cuentas_bancarias: {
-              entidad_financiera_id: formData.banco.entidad_financiera_id,
-              numero_cuenta: formData.banco.numero_cuenta,
-              cci: formData.banco.cci
-          },
-
-          rol_id: 8
-      };
-
-      if (!payload.cliente_cuentas_bancarias.entidad_financiera_id) {
-          delete payload.cliente_cuentas_bancarias;
-      }
-
+      const payload = buildClientePayload(formData);
       const response = await createCliente(payload);
       setAlert({ type: 'success', message: response.message || 'Cliente registrado exitosamente.' });
       

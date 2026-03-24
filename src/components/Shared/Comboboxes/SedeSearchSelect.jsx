@@ -1,75 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { getSedesCombobox } from 'services/sedeService'; 
 import { MagnifyingGlassIcon, BuildingOfficeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import useRemoteSearchSelect from 'hooks/useRemoteSearchSelect';
 
 const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
-    const [inputValue, setInputValue] = useState(initialName);
-    const [suggestions, setSuggestions] = useState([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const searchSedes = useCallback(
+        (searchTerm = '') => getSedesCombobox(1, searchTerm),
+        []
+    );
 
-    const wrapperRef = useRef(null);
-    const isManualSelection = useRef(false);
-
-    useEffect(() => {
-        if (!selectedId) {
-            setInputValue('');
-            return;
-        }
-
-        if (isManualSelection.current) {
-            isManualSelection.current = false;
-            return;
-        }
-
-        if (initialName) {
-            setInputValue(initialName);
-        }
-    }, [selectedId, initialName]);
-
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setShowSuggestions(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [wrapperRef]);
-
-    const fetchSedes = async (searchTerm = '') => {
-        setLoading(true);
-        try {
-            const response = await getSedesCombobox(1, searchTerm); 
-            const data = response.data || response;
-            setSuggestions(Array.isArray(data) ? data : []);
-            setShowSuggestions(true);
-        } catch (error) {
-            console.error("Error buscando sedes", error);
-            setSuggestions([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const {
+        wrapperRef,
+        inputValue,
+        setInputValue,
+        suggestions,
+        showSuggestions,
+        loading,
+        runSearch,
+        markSelectionClearedInternally,
+    } = useRemoteSearchSelect({
+        selectedId,
+        initialValue: initialName,
+        searchFn: searchSedes,
+    });
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            fetchSedes(inputValue);
-        }
-    };
-
-    const handleInputClick = () => {
-        if (!showSuggestions) {
-            fetchSedes(inputValue);
+            runSearch(inputValue);
         }
     };
 
     const handleSelect = (sede) => {
-        isManualSelection.current = true;
-        
         setInputValue(sede.nombre);
-        setShowSuggestions(false);
         
         onSelect({ 
             id: sede.id, 
@@ -90,10 +53,17 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                     value={inputValue}
                     onChange={(e) => {
                         setInputValue(e.target.value);
-                        if (selectedId) onSelect(null); 
+                        if (selectedId) {
+                            markSelectionClearedInternally();
+                            onSelect(null);
+                        }
                     }}
                     onKeyDown={handleKeyDown}
-                    onClick={handleInputClick}
+                    onClick={() => {
+                        if (!showSuggestions) {
+                            runSearch(inputValue);
+                        }
+                    }}
                     placeholder="Buscar Sede..."
                     className={`w-full border rounded-md shadow-sm py-2 pl-3 pr-10 outline-none text-sm transition-colors ${
                         selectedId 
@@ -105,7 +75,7 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
 
                 <button
                     type="button"
-                    onClick={() => fetchSedes(inputValue)}
+                    onClick={() => runSearch(inputValue)}
                     disabled={loading}
                     className="absolute right-2 text-gray-400 hover:text-fic-red p-1"
                 >

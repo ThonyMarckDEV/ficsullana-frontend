@@ -7,6 +7,13 @@ import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import { CubeIcon } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
+import {
+  buildProductoPayload,
+  createEmptyProductoConfiguracion,
+  getPeriodicidadOptionById,
+  normalizeProducto,
+  validateProductoForm,
+} from 'utilities/productos';
 
 const Update = () => {
   const { id } = useParams();
@@ -19,9 +26,12 @@ const Update = () => {
     const load = async () => {
       try {
         const { data } = await showProducto(id);
+        const normalized = normalizeProducto(data);
         setFormData({
-            nombre: data.nombre,
-            rango_tasa: data.rango_tasa
+          ...normalized,
+          configuraciones: (normalized.configuraciones || []).length > 0
+            ? normalized.configuraciones
+            : [createEmptyProductoConfiguracion()],
         });
       } catch (err) { 
         setAlert(handleApiError(err , 'No se pudo cargar la información del producto.')); 
@@ -34,16 +44,77 @@ const Update = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'activo' ? value === '1' : value,
+    }));
+  };
+
+  const handleConfigChange = (index, field, value) => {
+    setFormData((prev) => {
+      const configuraciones = [...(prev.configuraciones || [])];
+      const current = configuraciones[index];
+      if (!current) return prev;
+
+      if (field === 'periodicidad_id') {
+        const periodicidad = getPeriodicidadOptionById(value);
+        configuraciones[index] = {
+          ...current,
+          periodicidad_id: value,
+          periodicidad_nombre: periodicidad.nombre,
+          periodicidad_key: periodicidad.key,
+          periodicidad_label: periodicidad.label,
+          periodicidad_dias: periodicidad.dias,
+        };
+      } else {
+        configuraciones[index] = {
+          ...current,
+          [field]: value,
+        };
+      }
+
+      return {
+        ...prev,
+        configuraciones,
+      };
+    });
+  };
+
+  const handleAddConfig = () => {
+    setFormData((prev) => ({
+      ...prev,
+      configuraciones: [...(prev.configuraciones || []), createEmptyProductoConfiguracion()],
+    }));
+  };
+
+  const handleRemoveConfig = (index) => {
+    setFormData((prev) => {
+      const configuraciones = (prev.configuraciones || []).filter((_, currentIndex) => currentIndex !== index);
+      return {
+        ...prev,
+        configuraciones: configuraciones.length > 0 ? configuraciones : [createEmptyProductoConfiguracion()],
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
       e.preventDefault();
+      const errors = validateProductoForm(formData);
+      if (errors.length > 0) {
+        setAlert({
+          type: 'error',
+          message: 'Complete la configuración del producto.',
+          details: errors,
+        });
+        return;
+      }
+
       setLoading(true);
       setAlert(null);
 
       try {
-        const response = await updateProducto(id, formData);
+        const payload = buildProductoPayload(formData);
+        const response = await updateProducto(id, payload);
         setAlert({ 
             type: 'success', 
             message: response.message || 'Producto actualizado correctamente.' 
@@ -82,7 +153,13 @@ const Update = () => {
             <h2 className="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2 border-b pb-2">
                 💳 Datos del Producto
             </h2>
-            <ProductoForm data={formData} handleChange={handleChange} />
+            <ProductoForm
+              data={formData}
+              handleChange={handleChange}
+              onConfigChange={handleConfigChange}
+              onAddConfig={handleAddConfig}
+              onRemoveConfig={handleRemoveConfig}
+            />
 
             <div className="flex justify-end gap-4 mt-6">
                 <button 

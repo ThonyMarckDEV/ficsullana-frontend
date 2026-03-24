@@ -41,9 +41,13 @@ const AdmisionExportContent = ({ exportContainerId, currentData, viewModel }) =>
             <th className="border border-slate-200 p-1 text-left">Persona</th>
             <th className="border border-slate-200 p-1 text-left">DNI</th>
             <th className="border border-slate-200 p-1 text-left">Entidad</th>
+            <th className="border border-slate-200 p-1 text-left">Línea créd.</th>
+            <th className="border border-slate-200 p-1 text-left">Días atraso</th>
             <th className="border border-slate-200 p-1 text-left">Saldo</th>
+            <th className="border border-slate-200 p-1 text-left">Monto línea créd.</th>
             <th className="border border-slate-200 p-1 text-left">Cuota</th>
-            <th className="border border-slate-200 p-1 text-left">Vencimiento</th>
+            <th className="border border-slate-200 p-1 text-left">Amortización</th>
+            <th className="border border-slate-200 p-1 text-left">Fecha vencimiento</th>
             {!viewModel.isProspecto && <th className="border border-slate-200 p-1 text-left">% Canc.</th>}
           </tr>
         </thead>
@@ -53,8 +57,12 @@ const AdmisionExportContent = ({ exportContainerId, currentData, viewModel }) =>
               <td className="border border-slate-200 p-1">{deuda.persona_tipo || 'N/A'}</td>
               <td className="border border-slate-200 p-1">{deuda.dni_relacionado || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
               <td className="border border-slate-200 p-1">{deuda.nombre_entidad || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
+              <td className="border border-slate-200 p-1">{deuda.es_tienda_departamento ? 'Sí' : 'No'}</td>
+              <td className="border border-slate-200 p-1">{deuda.dias_atraso ?? ADMISION_COPY_COMMON.FALLBACK.NA}</td>
               <td className="border border-slate-200 p-1">S/ {formatMoney(deuda.saldo_capital)}</td>
+              <td className="border border-slate-200 p-1">S/ {formatMoney(deuda.linea_credito)}</td>
               <td className="border border-slate-200 p-1">S/ {formatMoney(deuda.monto_cuota)}</td>
+              <td className="border border-slate-200 p-1">{deuda.frecuencia_pago || ADMISION_COPY_COMMON.FALLBACK.NA}</td>
               <td className="border border-slate-200 p-1">{formatDateOnly(deuda.fecha_pago)}</td>
               {!viewModel.isProspecto && (
                 <td className="border border-slate-200 p-1">

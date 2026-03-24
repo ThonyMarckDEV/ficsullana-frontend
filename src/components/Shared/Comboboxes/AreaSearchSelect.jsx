@@ -1,77 +1,45 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { getAreasCombobox } from 'services/areaService'; 
 import { MagnifyingGlassIcon, CheckCircleIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import useRemoteSearchSelect from 'hooks/useRemoteSearchSelect';
 
 const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
-    const [inputValue, setInputValue] = useState(initialName);
-    const [suggestions, setSuggestions] = useState([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [loading, setLoading] = useState(false);
-
-    const wrapperRef = useRef(null);
-    const isManualSelection = useRef(false);
-
-    useEffect(() => {
-        if (!selectedId) {
-            setInputValue('');
-            return;
-        }
-        if (isManualSelection.current) {
-            isManualSelection.current = false;
-            return;
-        }
-        if (initialName) {
-            setInputValue(initialName);
-        }
-    }, [selectedId, initialName]);
-
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setShowSuggestions(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [wrapperRef]);
-
-    const fetchAreas = async (searchTerm = '') => {
-        setLoading(true);
-        try {
+    const searchAreas = useCallback(async (searchTerm = '') => {
             const response = await getAreasCombobox(); 
             const data = response.data || response;
             
             const filtered = searchTerm 
-                ? data.filter(a => a.nombre_area.toLowerCase().includes(searchTerm.toLowerCase()))
+                ? data.filter((area) => area.nombre_area.toLowerCase().includes(searchTerm.toLowerCase()))
                 : data;
 
-            setSuggestions(Array.isArray(filtered) ? filtered : []);
-            setShowSuggestions(true);
-        } catch (error) {
-            console.error("Error buscando áreas", error);
-            setSuggestions([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+            return Array.isArray(filtered) ? filtered : [];
+    }, []);
+
+    const {
+        wrapperRef,
+        inputValue,
+        setInputValue,
+        suggestions,
+        showSuggestions,
+        loading,
+        runSearch,
+        markSelectionClearedInternally,
+    } = useRemoteSearchSelect({
+        selectedId,
+        initialValue: initialName,
+        searchFn: searchAreas,
+        mapResults: (results) => results,
+    });
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            fetchAreas(inputValue);
-        }
-    };
-
-    const handleInputClick = () => {
-        if (!showSuggestions) {
-            fetchAreas(inputValue);
+            runSearch(inputValue);
         }
     };
 
     const handleSelect = (area) => {
-        isManualSelection.current = true;
         setInputValue(area.nombre_area);
-        setShowSuggestions(false);
         onSelect(area);
     };
 
@@ -87,10 +55,17 @@ const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                     value={inputValue}
                     onChange={(e) => {
                         setInputValue(e.target.value);
-                        if (selectedId) onSelect(null);
+                        if (selectedId) {
+                            markSelectionClearedInternally();
+                            onSelect(null);
+                        }
                     }}
                     onKeyDown={handleKeyDown}
-                    onClick={handleInputClick}
+                    onClick={() => {
+                        if (!showSuggestions) {
+                            runSearch(inputValue);
+                        }
+                    }}
                     placeholder="Buscar Área..."
                     className={`w-full px-3 py-2.5 border rounded-lg shadow-sm pr-10 outline-none text-sm font-medium transition-all ${
                         selectedId
@@ -102,7 +77,7 @@ const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
 
                 <button
                     type="button"
-                    onClick={() => fetchAreas(inputValue)}
+                    onClick={() => runSearch(inputValue)}
                     disabled={loading}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-fic-red p-1"
                 >
