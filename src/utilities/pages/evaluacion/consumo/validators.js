@@ -1,4 +1,8 @@
-import { hasCatalogOtrosIngresosFlow } from './calculations';
+import {
+  evaluateOtrosIngresosUtilidadLimit,
+  hasCatalogOtrosIngresosFlow,
+  OTROS_INGRESOS_UTILIDAD_LIMIT_EXCEEDED_MESSAGE,
+} from './calculations';
 
 export const validateEvaluacionConsumoForm = (form, options = {}) => {
   const errors = [];
@@ -72,6 +76,18 @@ export const validateEvaluacionConsumoForm = (form, options = {}) => {
       && Number(form.otros_ingresos_utilidad) < 0
     ) {
       errors.push('Otros ingresos: la utilidad no puede ser negativa.');
+    }
+
+    const otrosIngresosLimit = evaluateOtrosIngresosUtilidadLimit({
+      ingresoTotalPrincipal: (form.ingresos || []).reduce((sum, row) => {
+        const ingreso = Number(row?.ingreso);
+        return Number.isFinite(ingreso) ? sum + ingreso : sum;
+      }, 0),
+      utilidad: form.otros_ingresos_utilidad,
+    });
+
+    if (otrosIngresosLimit.excedeLimiteUtilidadOtrosIngresos) {
+      errors.push(OTROS_INGRESOS_UTILIDAD_LIMIT_EXCEEDED_MESSAGE);
     }
   }
 

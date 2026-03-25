@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import {
+  evaluateOtrosIngresosUtilidadLimit,
   recalculateIngresos,
   resolveNivelDiscrecionalidad,
 } from 'utilities/pages/evaluacion/consumo/calculations';
@@ -60,6 +61,11 @@ const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones }) => {
     };
   }, [form.ingresos]);
 
+  const otrosIngresosLimit = useMemo(() => evaluateOtrosIngresosUtilidadLimit({
+    ingresoTotalPrincipal: totals.ingresoTotal,
+    utilidad: form.otros_ingresos_utilidad,
+  }), [form.otros_ingresos_utilidad, totals.ingresoTotal]);
+
   return {
     selectedAdmision,
     selectedProducto,
@@ -68,6 +74,7 @@ const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones }) => {
     dependienteFormalTipoIngresoIds,
     showBoletasSection,
     totals,
+    otrosIngresosLimit,
   };
 };
 

@@ -1,14 +1,20 @@
 import React from 'react';
 import ActividadNoSensibleSearchSelect from 'components/Shared/Comboboxes/ActividadNoSensibleSearchSelect';
 import { formatSectionTitle } from './sectionTitle';
+import { OTROS_INGRESOS_UTILIDAD_LIMIT_EXCEEDED_MESSAGE } from 'utilities/pages/evaluacion/consumo/calculations';
 
 const baseInputClass = 'w-full px-3 py-2 border border-slate-300 rounded-md text-sm outline-none focus:border-fic-red';
+const money = (value) => Number(value || 0).toLocaleString('es-PE', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 const OtrosIngresosSection = ({
   form,
   disabled,
   setField,
   onActividadSelect,
+  otrosIngresosLimit,
   sectionNumber,
 }) => {
   const hasSelectedActividad = Boolean(form.actividad_no_sensible_id);
@@ -24,6 +30,16 @@ const OtrosIngresosSection = ({
       {legacyTipoNegocio ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-[11px] text-amber-900">
           Registro histórico detectado: <strong>{legacyTipoNegocio}</strong>. Para recalcular con el nuevo catálogo, seleccione una actividad no sensible.
+        </div>
+      ) : null}
+
+      {otrosIngresosLimit?.excedeLimiteUtilidadOtrosIngresos ? (
+        <div className="rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-[11px] text-red-900">
+          <p className="font-bold">{OTROS_INGRESOS_UTILIDAD_LIMIT_EXCEEDED_MESSAGE}</p>
+          <p className="mt-1">
+            Utilidad calculada: <strong>S/ {money(otrosIngresosLimit.utilidadOtrosIngresos)}</strong>. Máximo permitido:{' '}
+            <strong>S/ {money(otrosIngresosLimit.limiteUtilidadOtrosIngresos)}</strong>.
+          </p>
         </div>
       ) : null}
 

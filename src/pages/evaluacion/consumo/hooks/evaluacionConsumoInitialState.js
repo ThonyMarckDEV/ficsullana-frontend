@@ -46,7 +46,7 @@ export const initialEvaluacionConsumoForm = {
   gasto_educacion: '',
   gasto_movilidad: '',
   gasto_imprevistos: '',
-  gasto_subtotal: '',
+  total_gasto_unidad: '',
   gasto_obligaciones: '',
   gasto_otros_egresos: '',
   criterio_entorno: '',

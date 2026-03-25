@@ -62,6 +62,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     handleSubmit,
     handleDecision,
     totals,
+    otrosIngresosLimit,
   } = useEvaluacionConsumoForm({
     id: mode === 'update' ? id : null,
     navigate,
@@ -177,13 +178,12 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
           disabled={isReadonly}
           setField={setField}
           onActividadSelect={handleActividadNoSensibleSelect}
+          otrosIngresosLimit={otrosIngresosLimit}
           sectionNumber={sectionNumbers.otrosIngresos}
         />
 
         <ResumenDatosSection
           form={form}
-          disabled={isReadonly}
-          setField={setField}
           sectionNumber={sectionNumbers.resumenDatos}
         />
 

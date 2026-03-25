@@ -57,6 +57,7 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
     dependienteFormalTipoIngresoIds,
     showBoletasSection,
     totals,
+    otrosIngresosLimit,
   } = useEvaluacionConsumoSelectors({
     form,
     catalogos,
@@ -131,6 +132,7 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
     handleSubmit,
     handleDecision,
     totals,
+    otrosIngresosLimit,
   };
 };
 

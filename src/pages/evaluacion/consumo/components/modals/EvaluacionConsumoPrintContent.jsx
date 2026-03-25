@@ -112,7 +112,7 @@ const EvaluacionConsumoPrintContent = ({ data, containerId = 'evaluacion-consumo
           <p><strong>Educación:</strong> {money(vm.gastoEducacion)}</p>
           <p><strong>Movilidad:</strong> {money(vm.gastoMovilidad)}</p>
           <p><strong>Imprevistos:</strong> {money(vm.gastoImprevistos)}</p>
-          <p><strong>Subtotal:</strong> {money(vm.gastoSubtotal)}</p>
+          <p><strong>Total de gastos:</strong> {money(vm.totalGastoUnidad)}</p>
           <p><strong>Obligaciones:</strong> {money(vm.gastoObligaciones)}</p>
           <p><strong>Otros egresos:</strong> {money(vm.gastoOtrosEgresos)}</p>
         </div>

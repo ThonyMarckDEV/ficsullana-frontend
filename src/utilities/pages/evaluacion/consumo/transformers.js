@@ -108,7 +108,7 @@ export const mapApiToForm = (record) => {
     gasto_educacion: toStringValue(record.gasto_educacion),
     gasto_movilidad: toStringValue(record.gasto_movilidad),
     gasto_imprevistos: toStringValue(record.gasto_imprevistos),
-    gasto_subtotal: toStringValue(record.gasto_subtotal),
+    total_gasto_unidad: toStringValue(record.total_gasto_unidad),
     gasto_obligaciones: toStringValue(record.gasto_obligaciones),
     gasto_otros_egresos: toStringValue(record.gasto_otros_egresos),
     criterio_entorno: record.criterio_entorno || '',
