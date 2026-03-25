@@ -114,6 +114,10 @@ const Index = () => {
     }, [setAlert]);
 
     const hasAnyActionPermission = checkPermission('admisiones.mostrar') || checkPermission('admisiones.editar');
+    const canSeeAllAdmisiones = checkPermission('admisiones.gestionar.estado')
+        || checkPermission('admisiones.excepciones.ver')
+        || checkPermission('admisiones.excepciones.aprobar')
+        || checkPermission('admisiones.excepciones.rechazar');
 
     const columns = useMemo(() => [
         {
@@ -217,8 +221,10 @@ const Index = () => {
     return (
         <div className="container mx-auto p-6">
             <PageHeader
-                title="Admisiones"
-                subtitle="Evaluación crediticia de clientes y prospectos"
+                title={canSeeAllAdmisiones ? 'Admisiones' : 'Mis Admisiones'}
+                subtitle={canSeeAllAdmisiones
+                    ? 'Evaluación crediticia de clientes y prospectos'
+                    : 'Solo se muestran las admisiones registradas por su usuario'}
                 icon={ClipboardDocumentCheckIcon}
                 buttonText={checkPermission('admisiones.crear') ? "+ Nueva Admisión" : undefined}
                 buttonLink="/gestion/nueva-admision"

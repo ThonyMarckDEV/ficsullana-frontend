@@ -49,7 +49,7 @@ const EvaluacionConsumoPrintContent = ({ data, containerId = 'evaluacion-consumo
           <p><strong>Producto:</strong> {vm.producto}</p>
           <p><strong>Expuesto RCC:</strong> {vm.expuestoRcc}</p>
           <p><strong>Tasa solicitada:</strong> {vm.tasaSolicitada}%</p>
-          <p><strong>Rol autorizador resuelto:</strong> {vm.discrecionalidad}</p>
+          <p><strong>Nivel de discrecionalidad:</strong> {vm.discrecionalidad}</p>
           <p><strong>Motivos:</strong> {vm.motivos}</p>
           <p><strong>Comentario decisión:</strong> {vm.decisionComentario}</p>
         </div>

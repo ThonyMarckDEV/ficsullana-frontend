@@ -35,7 +35,7 @@ const PlanInversionSection = ({ form, disabled, setField, catalogos, selectedPro
           onChange={(e) => setField('moneda_id', e.target.value)}
           disabled={disabled}
         >
-          <option value="">Seleccione...</option>
+          <option value="">SELECCIONE...</option>
           {(catalogos.monedas || []).map((item) => (
             <option key={item.id} value={item.id}>{item.nombre}</option>
           ))}

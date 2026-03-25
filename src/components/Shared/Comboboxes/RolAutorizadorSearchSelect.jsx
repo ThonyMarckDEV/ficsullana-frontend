@@ -57,6 +57,7 @@ const RolAutorizadorSearchSelect = ({
             const nextValue = event.target.value;
             setInputValue(nextValue);
             setSearchError('');
+            setShowSuggestions(false);
             if (selectedId) {
               markSelectionClearedInternally();
               onSelect?.(null);
@@ -69,6 +70,11 @@ const RolAutorizadorSearchSelect = ({
             }
           }}
           onClick={() => {
+            if (!showSuggestions) {
+              runSearch(inputValue);
+              return;
+            }
+
             reopenSuggestions();
           }}
           disabled={disabled}

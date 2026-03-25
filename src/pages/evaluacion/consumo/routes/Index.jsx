@@ -38,6 +38,7 @@ const Index = () => {
   const canEditRecords = checkPermission('evaluaciones_consumo.editar');
   const canApproveRecords = checkPermission('evaluaciones_consumo.aprobar');
   const canRejectRecords = checkPermission('evaluaciones_consumo.rechazar');
+  const canSeeAllEvaluaciones = canApproveRecords || canRejectRecords;
 
   const columns = useMemo(() => [
     {
@@ -125,8 +126,10 @@ const Index = () => {
   return (
     <div className="container mx-auto p-6">
       <PageHeader
-        title="Evaluación Consumo"
-        subtitle="Registro y gestión operativa"
+        title={canSeeAllEvaluaciones ? 'Evaluación Consumo' : 'Mis Evaluaciones'}
+        subtitle={canSeeAllEvaluaciones
+          ? 'Registro y gestión operativa'
+          : 'Solo se muestran las evaluaciones registradas por su usuario'}
         icon={ClipboardDocumentCheckIcon}
         buttonText={checkPermission('evaluaciones_consumo.crear') ? '+ Nueva Evaluación' : undefined}
         buttonLink="/evaluacion/consumo/agregar"
