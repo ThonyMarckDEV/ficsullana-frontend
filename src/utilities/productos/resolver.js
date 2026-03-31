@@ -37,7 +37,7 @@ export const resolveProductoConfiguracion = (productoRaw, {
       configuracion: null,
       exactMatch: false,
       hasConfiguraciones: true,
-      helperText: 'Complete periodicidad, monto y cuotas para resolver la tasa aplicable.',
+      helperText: 'Complete periodicidad, monto y cuotas para resolver la tasa permitida. Luego ingrese una tasa propuesta dentro de ese rango.',
     };
   }
 

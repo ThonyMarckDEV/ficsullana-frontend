@@ -6,7 +6,12 @@ import {
 } from 'services/evaluacionConsumoService';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import { normalizeEvaluacionContext } from 'utilities/pages/evaluacion/consumo/context';
-import { createIngresoRow, mapApiToForm, mapFormToPayload } from 'utilities/pages/evaluacion/consumo/transformers';
+import {
+  createGarantiaRow,
+  createIngresoRow,
+  mapApiToForm,
+  mapFormToPayload,
+} from 'utilities/pages/evaluacion/consumo/transformers';
 import { validateEvaluacionConsumoForm } from 'utilities/pages/evaluacion/consumo/validators';
 import { updateEvaluacionConsumoForm } from 'utilities/pages/evaluacion/consumo/formState';
 import { normalizeEvaluacionConsumoState } from 'utilities/pages/evaluacion/consumo/status';
@@ -52,6 +57,8 @@ const useEvaluacionConsumoActions = ({
     const admision = admisiones.find((item) => Number(item.id) === Number(admisionId));
     if (!admision) return false;
 
+    const direccionSolicitante = admision.direccion || '';
+
     updateForm((previousForm) => ({
       ...previousForm,
       admision_id: admision.id,
@@ -68,10 +75,15 @@ const useEvaluacionConsumoActions = ({
       numero_ifis: admision.numero_ifis !== null && admision.numero_ifis !== undefined ? String(admision.numero_ifis) : '',
       solicitante_nombre_snapshot: admision.solicitante_nombre || '',
       solicitante_dni_snapshot: admision.solicitante_dni || '',
-      direccion_snapshot: admision.direccion || '',
+      direccion_snapshot: direccionSolicitante,
       distrito_snapshot: admision.distrito || '',
       provincia_snapshot: admision.provincia || '',
       departamento_snapshot: admision.departamento || '',
+      garantias: (previousForm.garantias || [createGarantiaRow()]).map((row) => (
+        row.usar_direccion_solicitante
+          ? { ...row, direccion: direccionSolicitante }
+          : row
+      )),
     }));
 
     try {
@@ -94,6 +106,65 @@ const useEvaluacionConsumoActions = ({
       return {
         ...previousForm,
         ingresos: nextRows,
+      };
+    });
+  }, [updateForm]);
+
+  const handleGarantiaChange = useCallback((index, field, value) => {
+    updateForm((previousForm) => {
+      const nextRows = [...(previousForm.garantias || [createGarantiaRow()])];
+      nextRows[index] = {
+        ...nextRows[index],
+        [field]: value,
+      };
+
+      return {
+        ...previousForm,
+        garantias: nextRows,
+      };
+    });
+  }, [updateForm]);
+
+  const addGarantiaRow = useCallback(() => {
+    updateForm((previousForm) => {
+      const currentRows = previousForm.garantias || [createGarantiaRow()];
+      if (currentRows.length >= 2) {
+        return previousForm;
+      }
+
+      return {
+        ...previousForm,
+        garantias: [...currentRows, createGarantiaRow()],
+      };
+    });
+  }, [updateForm]);
+
+  const removeGarantiaRow = useCallback((index) => {
+    updateForm((previousForm) => {
+      const currentRows = previousForm.garantias || [createGarantiaRow()];
+      const nextRows = currentRows.filter((_, idx) => idx !== index);
+
+      return {
+        ...previousForm,
+        garantias: nextRows.length > 0 ? nextRows : [createGarantiaRow()],
+      };
+    });
+  }, [updateForm]);
+
+  const toggleGarantiaDireccionSolicitante = useCallback((index, checked) => {
+    updateForm((previousForm) => {
+      const nextRows = [...(previousForm.garantias || [createGarantiaRow()])];
+      const currentRow = nextRows[index] || createGarantiaRow();
+
+      nextRows[index] = {
+        ...currentRow,
+        usar_direccion_solicitante: checked,
+        direccion: checked ? (previousForm.direccion_snapshot || '') : '',
+      };
+
+      return {
+        ...previousForm,
+        garantias: nextRows,
       };
     });
   }, [updateForm]);
@@ -158,7 +229,10 @@ const useEvaluacionConsumoActions = ({
       if (isEditMode) {
         const response = await updateEvaluacionConsumo(id, payload);
         const source = response.data || response;
-        setForm(deriveForm(mapApiToForm(source)));
+        setForm(deriveForm({
+          ...mapApiToForm(source),
+          garantias: form.garantias || [createGarantiaRow()],
+        }));
         setContexto(normalizeEvaluacionContext(source.contexto));
         setAlert({ type: 'success', message: response.message || 'Evaluación consumo actualizada correctamente.' });
       } else {
@@ -225,6 +299,10 @@ const useEvaluacionConsumoActions = ({
     setField,
     handleActividadNoSensibleSelect,
     handleSelectAdmision,
+    handleGarantiaChange,
+    addGarantiaRow,
+    removeGarantiaRow,
+    toggleGarantiaDireccionSolicitante,
     handleIngresoChange,
     addIngresoRow,
     removeIngresoRow,

@@ -1,4 +1,5 @@
 import React from 'react';
+import MonedaSelect from 'components/Shared/Comboboxes/MonedaSelect';
 import { formatSectionTitle } from './sectionTitle';
 
 const baseInputClass = 'w-full px-3 py-2 border border-slate-300 rounded-md text-sm outline-none focus:border-fic-red';
@@ -26,21 +27,14 @@ const PlanInversionSection = ({ form, disabled, setField, catalogos, selectedPro
         />
       </div>
 
-      <div>
-        <label htmlFor="evaluacion-moneda" className="block text-xs font-bold text-slate-500 mb-1 uppercase">Moneda</label>
-        <select
-          id="evaluacion-moneda"
-          className={baseInputClass}
-          value={form.moneda_id}
-          onChange={(e) => setField('moneda_id', e.target.value)}
-          disabled={disabled}
-        >
-          <option value="">SELECCIONE...</option>
-          {(catalogos.monedas || []).map((item) => (
-            <option key={item.id} value={item.id}>{item.nombre}</option>
-          ))}
-        </select>
-      </div>
+      <MonedaSelect
+        id="evaluacion-moneda"
+        monedas={catalogos.monedas}
+        value={form.moneda_id}
+        onChange={(value) => setField('moneda_id', value)}
+        disabled={disabled}
+        selectClassName={baseInputClass}
+      />
 
       <div>
         <label htmlFor="evaluacion-monto" className="block text-xs font-bold text-slate-500 mb-1 uppercase">Monto</label>

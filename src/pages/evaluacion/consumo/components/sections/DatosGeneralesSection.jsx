@@ -2,6 +2,7 @@ import React from 'react';
 import { formatSectionTitle } from './sectionTitle';
 
 const baseInputClass = 'w-full px-3 py-2 border border-slate-300 rounded-md text-sm outline-none focus:border-fic-red';
+const selectClass = `${baseInputClass} uppercase`;
 
 const DatosGeneralesSection = ({
   form,
@@ -43,14 +44,14 @@ const DatosGeneralesSection = ({
         <label htmlFor="evaluacion-categoria" className="block text-xs font-bold text-slate-500 mb-1 uppercase">Categoría</label>
         <select
           id="evaluacion-categoria"
-          className={baseInputClass}
+          className={selectClass}
           value={form.categoria_id}
           onChange={(e) => setField('categoria_id', e.target.value)}
           disabled={disabled}
         >
-          <option value="">Seleccione...</option>
+          <option value="">SELECCIONE...</option>
           {(catalogos.categorias || []).map((item) => (
-            <option key={item.id} value={item.id}>{item.nombre}</option>
+            <option key={item.id} value={item.id}>{String(item.nombre || '').toUpperCase()}</option>
           ))}
         </select>
       </div>

@@ -9,6 +9,7 @@ import SelectAdmisionModal from './modals/SelectAdmisionModal';
 import EncabezadoSection from './sections/EncabezadoSection';
 import DatosGeneralesSection from './sections/DatosGeneralesSection';
 import PlanInversionSection from './sections/PlanInversionSection';
+import GarantiasSolicitanteSection from './sections/GarantiasSolicitanteSection';
 import ProductoSection from './sections/ProductoSection';
 import DiscrecionalidadSection from './sections/DiscrecionalidadSection';
 import IngresosPrincipalesSection from './sections/IngresosPrincipalesSection';
@@ -39,6 +40,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     form,
     setField,
     handleActividadNoSensibleSelect,
+    handleGarantiaChange,
     catalogos,
     admisiones,
     selectedProductoRange,
@@ -55,6 +57,9 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     canReject,
     handleSelectAdmision,
     handleIngresoChange,
+    addGarantiaRow,
+    removeGarantiaRow,
+    toggleGarantiaDireccionSolicitante,
     addIngresoRow,
     removeIngresoRow,
     showBoletasSection,
@@ -91,6 +96,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     analisisSobreendeudamiento: currentSection++,
     gastosUnidadFamiliar: currentSection++,
     criterios: currentSection++,
+    garantias: currentSection++,
     historialInterno: contexto?.historial_interno?.visible ? currentSection++ : null,
     historialExterno: currentSection++,
     excepciones: (contexto?.excepciones?.length ?? 0) > 0 ? currentSection++ : null,
@@ -201,6 +207,17 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
           disabled={isReadonly}
           setField={setField}
           sectionNumber={sectionNumbers.criterios}
+        />
+
+        <GarantiasSolicitanteSection
+          form={form}
+          disabled={isReadonly}
+          catalogos={catalogos}
+          onGarantiaChange={handleGarantiaChange}
+          onAddGarantia={addGarantiaRow}
+          onRemoveGarantia={removeGarantiaRow}
+          onToggleDireccionSolicitante={toggleGarantiaDireccionSolicitante}
+          sectionNumber={sectionNumbers.garantias}
         />
 
         <HistorialInternoSection contexto={contexto} loading={contextLoading} sectionNumber={sectionNumbers.historialInterno} />

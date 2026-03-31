@@ -41,6 +41,22 @@ export const createIngresoRow = () => ({
   monto_maximo_otorgar: 0,
 });
 
+export const createGarantiaRow = (overrides = {}) => ({
+  moneda_id: '',
+  clase_garantia: '',
+  documento_garantia: '',
+  tipo_garantia: '',
+  descripcion: '',
+  direccion: '',
+  usar_direccion_solicitante: false,
+  monto_garantias: '',
+  valor_comercial: '',
+  valor_realizacion: '',
+  ficha_registral: '',
+  fecha_ultima_evaluacion: '',
+  ...overrides,
+});
+
 export const mapApiToForm = (record) => {
   const normalizedState = normalizeEvaluacionConsumoState(record.estado);
   const tipoFrecuencia = record.tipo_frecuencia || '';
@@ -50,6 +66,22 @@ export const mapApiToForm = (record) => {
     veces_sueldo: row.veces_sueldo !== null && row.veces_sueldo !== undefined ? String(row.veces_sueldo) : '',
     monto_maximo_otorgar: Number(row.monto_maximo_otorgar || 0),
   }));
+  const garantias = Array.isArray(record.garantias) && record.garantias.length > 0
+    ? record.garantias.map((row) => createGarantiaRow({
+      moneda_id: row.moneda_id ? String(row.moneda_id) : '',
+      clase_garantia: row.clase_garantia || '',
+      documento_garantia: row.documento_garantia || '',
+      tipo_garantia: row.tipo_garantia || '',
+      descripcion: row.descripcion || '',
+      direccion: row.direccion || '',
+      usar_direccion_solicitante: Boolean(row.usar_direccion_solicitante),
+      monto_garantias: toStringValue(row.monto_garantias),
+      valor_comercial: toStringValue(row.valor_comercial),
+      valor_realizacion: toStringValue(row.valor_realizacion),
+      ficha_registral: row.ficha_registral || '',
+      fecha_ultima_evaluacion: row.fecha_ultima_evaluacion || '',
+    }))
+    : [createGarantiaRow()];
 
   return {
     id: record.id,
@@ -58,6 +90,7 @@ export const mapApiToForm = (record) => {
     antiguedad_laboral_texto: record.antiguedad_laboral_texto || '',
     plan_inversion: record.plan_inversion || '',
     moneda_id: record.moneda_id ? String(record.moneda_id) : '',
+    garantias,
     monto: record.monto !== null && record.monto !== undefined ? String(record.monto) : '',
     clase_prestamo_snapshot: record.clase_prestamo_snapshot || '',
     tipo_frecuencia: tipoFrecuencia,

@@ -2,7 +2,8 @@ import React from 'react';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { formatSectionTitle } from './sectionTitle';
 
-const baseInputClass = 'w-full px-2 py-1.5 border border-slate-300 rounded text-xs outline-none focus:border-fic-red';
+const baseInputClass = 'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 outline-none transition focus:border-fic-red disabled:bg-slate-100 disabled:text-slate-500';
+const selectClass = `${baseInputClass} uppercase`;
 
 const IngresosPrincipalesSection = ({
   form,
@@ -65,14 +66,14 @@ const IngresosPrincipalesSection = ({
                 <td className="p-2">
                   <select
                     id={`evaluacion-ingresos-tipo-${index}`}
-                    className={baseInputClass}
+                    className={selectClass}
                     value={row.tipo_ingreso_id}
                     onChange={(e) => onIngresoChange(index, 'tipo_ingreso_id', e.target.value)}
                     disabled={disabled}
                   >
-                    <option value="">Seleccione...</option>
+                    <option value="">SELECCIONE...</option>
                     {(catalogos.tipos_ingreso || []).map((item) => (
-                      <option key={item.id} value={item.id}>{item.nombre}</option>
+                      <option key={item.id} value={item.id}>{String(item.nombre || '').toUpperCase()}</option>
                     ))}
                   </select>
                 </td>

@@ -1,4 +1,4 @@
-import { createIngresoRow } from 'utilities/pages/evaluacion/consumo/transformers';
+import { createGarantiaRow, createIngresoRow } from 'utilities/pages/evaluacion/consumo/transformers';
 
 export const initialEvaluacionConsumoForm = {
   id: null,
@@ -7,6 +7,7 @@ export const initialEvaluacionConsumoForm = {
   antiguedad_laboral_texto: '',
   plan_inversion: '',
   moneda_id: '',
+  garantias: [createGarantiaRow()],
   monto: '',
   clase_prestamo_snapshot: '',
   tipo_frecuencia: '',
