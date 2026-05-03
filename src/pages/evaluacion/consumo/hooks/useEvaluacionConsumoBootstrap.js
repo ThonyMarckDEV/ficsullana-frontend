@@ -26,32 +26,53 @@ const useEvaluacionConsumoBootstrap = ({
   const [loading, setLoading] = useState(true);
   const [catalogos, setCatalogos] = useState(createInitialEvaluacionCatalogos);
   const [admisiones, setAdmisiones] = useState([]);
+  const [admisionesLoading, setAdmisionesLoading] = useState(false);
+  const [admisionesLoaded, setAdmisionesLoaded] = useState(false);
+  const [admisionesError, setAdmisionesError] = useState(null);
   const [contexto, setContexto] = useState(createEmptyEvaluacionContext());
   const [contextLoading, setContextLoading] = useState(false);
 
-  const loadCatalogos = useCallback(async () => {
+  const loadCatalogos = useCallback(async ({ applyToCurrentForm = true } = {}) => {
     const response = await getCatalogosEvaluacionConsumo();
     const nextCatalogos = normalizeEvaluacionCatalogos(response.data || {});
 
     setCatalogos(nextCatalogos);
-    setForm((previousForm) => applyEvaluacionConsumoDerivedFields(previousForm, nextCatalogos));
+    if (applyToCurrentForm) {
+      setForm((previousForm) => applyEvaluacionConsumoDerivedFields(previousForm, nextCatalogos));
+    }
 
     return nextCatalogos;
   }, [setForm]);
 
-  const loadAdmisionesElegibles = useCallback(async () => {
-    const response = await getAdmisionesElegiblesConsumo();
-    setAdmisiones(response.data || []);
-  }, []);
+  const loadAdmisionesElegibles = useCallback(async ({ force = false } = {}) => {
+    if (admisionesLoading) {
+      return admisiones;
+    }
 
-  const loadById = useCallback(async (recordId, currentCatalogos) => {
-    const response = await showEvaluacionConsumo(recordId);
-    const source = response.data || response;
-    const mapped = mapApiToForm(source);
+    if (admisionesLoaded && !force) {
+      return admisiones;
+    }
 
-    setForm(applyEvaluacionConsumoDerivedFields(mapped, currentCatalogos));
-    setContexto(normalizeEvaluacionContext(source.contexto));
-  }, [setForm]);
+    setAdmisionesLoading(true);
+    setAdmisionesError(null);
+
+    try {
+      const response = await getAdmisionesElegiblesConsumo();
+      const nextAdmisiones = response.data || [];
+
+      setAdmisiones(nextAdmisiones);
+      setAdmisionesLoaded(true);
+
+      return nextAdmisiones;
+    } catch (error) {
+      const nextAlert = handleApiError(error, 'No se pudieron cargar las admisiones elegibles.');
+      setAdmisionesError(nextAlert.message);
+      setAlert(nextAlert);
+      throw error;
+    } finally {
+      setAdmisionesLoading(false);
+    }
+  }, [admisiones, admisionesLoaded, admisionesLoading, setAlert]);
 
   const loadAdmisionContext = useCallback(async (admisionId) => {
     if (!admisionId) {
@@ -73,11 +94,18 @@ const useEvaluacionConsumoBootstrap = ({
     const init = async () => {
       setLoading(true);
       try {
-        const nextCatalogos = await loadCatalogos();
         if (isEditMode) {
-          await loadById(id, nextCatalogos);
+          const [nextCatalogos, detail] = await Promise.all([
+            loadCatalogos({ applyToCurrentForm: false }),
+            showEvaluacionConsumo(id),
+          ]);
+          const source = detail.data || detail;
+          const mapped = mapApiToForm(source);
+
+          setForm(applyEvaluacionConsumoDerivedFields(mapped, nextCatalogos));
+          setContexto(normalizeEvaluacionContext(source.contexto));
         } else {
-          await loadAdmisionesElegibles();
+          await loadCatalogos();
         }
       } catch (error) {
         setAlert(handleApiError(error, 'No se pudo cargar el formulario de evaluación consumo.'));
@@ -87,16 +115,19 @@ const useEvaluacionConsumoBootstrap = ({
     };
 
     init();
-  }, [id, isEditMode, loadAdmisionesElegibles, loadById, loadCatalogos, setAlert]);
+  }, [id, isEditMode, loadCatalogos, setAlert, setForm]);
 
   return {
     loading,
     catalogos,
     admisiones,
+    admisionesLoading,
+    admisionesError,
     contexto,
     setContexto,
     contextLoading,
     loadAdmisionContext,
+    loadAdmisionesElegibles,
   };
 };
 

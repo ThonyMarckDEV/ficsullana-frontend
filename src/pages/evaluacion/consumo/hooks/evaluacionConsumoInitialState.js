@@ -1,4 +1,7 @@
-import { createGarantiaRow, createIngresoRow } from 'utilities/pages/evaluacion/consumo/transformers';
+import {
+  createGarantiaRow,
+  createIngresoRow,
+} from 'utilities/pages/evaluacion/consumo/transformers';
 
 export const initialEvaluacionConsumoForm = {
   id: null,
@@ -58,6 +61,8 @@ export const initialEvaluacionConsumoForm = {
   criterio_plan_inversion: '',
   criterio_colaterales: '',
   criterio_condiciones: '',
+  requiere_aval: false,
+  avales: [],
   estado: 'PENDIENTE',
   decision_comentario: '',
   solicitante_nombre_snapshot: '',

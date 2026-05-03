@@ -1,9 +1,34 @@
 import React from 'react';
 import {
   baseFieldClass,
+  sanitizeEntityNameInput,
   sectionCardClass,
 } from 'utilities/pages/admision/debtGrid';
 import DeudaCardField from './DeudaCardField';
+
+const isAllowedEntityText = (value = '') => /^[\p{L} ]*$/u.test(value);
+
+const EntidadFinancieraInput = ({
+  id,
+  value,
+  disabled,
+  onChange,
+}) => (
+  <input
+    id={id}
+    value={value}
+    onBeforeInput={(event) => {
+      if (event.data && !isAllowedEntityText(event.data)) {
+        event.preventDefault();
+      }
+    }}
+    onChange={(event) => onChange(sanitizeEntityNameInput(event.target.value))}
+    className={baseFieldClass}
+    placeholder="Entidad financiera"
+    disabled={disabled}
+    autoComplete="off"
+  />
+);
 
 const DeudaParticipanteSection = ({
   index,
@@ -49,12 +74,10 @@ const DeudaParticipanteSection = ({
 
       <div className="mt-4 grid gap-4">
         <DeudaCardField id={`deuda-entidad-${index}`} label="Entidad">
-          <input
+          <EntidadFinancieraInput
             id={`deuda-entidad-${index}`}
             value={row.nombre_entidad}
-            onChange={(event) => onChangeField(index, 'nombre_entidad', event.target.value)}
-            className={baseFieldClass}
-            placeholder="Entidad financiera"
+            onChange={(value) => onChangeField(index, 'nombre_entidad', value)}
             disabled={isProtectedRow}
           />
         </DeudaCardField>

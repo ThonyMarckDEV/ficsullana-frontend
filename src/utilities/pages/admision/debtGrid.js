@@ -31,8 +31,15 @@ export const calificacionToneClassMap = {
   4: 'border-slate-400 focus:border-slate-600 focus:ring-slate-200',
 };
 
+export const sanitizeEntityNameInput = (value = '') => (
+  String(value)
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L} ]/gu, '')
+    .toUpperCase()
+);
+
 export const normalizeEntityName = (value = '') => (
-  String(value).trim().replace(/\s+/g, ' ').toUpperCase()
+  sanitizeEntityNameInput(value).trim().replace(/\s+/g, ' ')
 );
 
 const toNumberOrZero = (value) => {
@@ -82,6 +89,7 @@ export const sanitizeDebtRow = (row) => {
     ...buildBaseRow(),
     ...row,
     __rowKey: ensureDebtRowKey(row),
+    nombre_entidad: sanitizeEntityNameInput(row?.nombre_entidad ?? ''),
     calificacion_banco: normalizeCalificacion(row?.calificacion_banco),
     es_tienda_departamento: Boolean(row?.es_tienda_departamento),
   };

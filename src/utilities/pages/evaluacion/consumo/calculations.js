@@ -6,6 +6,11 @@ export const FREQUENCY_VALUE_MAP = {
   MENSUAL: 1,
 };
 
+export const FINANCIAL_LIMITS = {
+  APALANCAMIENTO_MAX: 10,
+  CAPACIDAD_ENDEUDAMIENTO_MAX: 87,
+};
+
 export const OTROS_INGRESOS_UTILIDAD_MAX_SHARE = 0.6;
 export const OTROS_INGRESOS_UTILIDAD_LIMIT_EXCEEDED_MESSAGE = 'Otros ingresos: la utilidad calculada supera el 60% permitido del ingreso total en ingresos principales. Debe elegir otro tipo de evaluación.';
 
@@ -183,18 +188,44 @@ export const calculateHouseholdSubtotal = (form = {}) => {
   return round2(total).toFixed(2);
 };
 
-export const calculateIngresoNeto = (ingresoTotalPrincipal, otrosIngresosUtilidad) => {
+export const calculateIngresoNeto = (
+  ingresoTotalPrincipal,
+  otrosIngresosUtilidad,
+  totalGastoUnidad
+) => {
   const ingresoTotalNumero = isBlank(ingresoTotalPrincipal) ? null : Number(ingresoTotalPrincipal);
   const utilidadNumero = isBlank(otrosIngresosUtilidad) ? 0 : Number(otrosIngresosUtilidad);
+  const gastoNumero = isBlank(totalGastoUnidad) ? 0 : Number(totalGastoUnidad);
   const hasIngresoTotal = Number.isFinite(ingresoTotalNumero) && ingresoTotalNumero > 0;
   const hasUtilidad = !isBlank(otrosIngresosUtilidad) && Number.isFinite(utilidadNumero);
+  const hasGasto = !isBlank(totalGastoUnidad) && Number.isFinite(gastoNumero);
 
-  if (!hasIngresoTotal && !hasUtilidad) {
+  if (!hasIngresoTotal && !hasUtilidad && !hasGasto) {
     return '';
   }
 
-  const total = (hasIngresoTotal ? ingresoTotalNumero : 0) + (hasUtilidad ? utilidadNumero : 0);
+  const total = (hasIngresoTotal ? ingresoTotalNumero : 0)
+    + (hasUtilidad ? utilidadNumero : 0)
+    - (hasGasto ? gastoNumero : 0);
   return round2(total).toFixed(2);
+};
+
+export const calculateApalancamiento = (monto, deudaTotal, ingresoNeto) => {
+  const ingreso = isBlank(ingresoNeto) ? null : Number(ingresoNeto);
+  if (!Number.isFinite(ingreso) || ingreso <= 0) {
+    return '';
+  }
+
+  return round2((toNumber(monto) + toNumber(deudaTotal)) / ingreso).toFixed(2);
+};
+
+export const calculateCapacidadEndeudamiento = (cuota, sumatoriaCuotas, ingresoNeto) => {
+  const ingreso = isBlank(ingresoNeto) ? null : Number(ingresoNeto);
+  if (!Number.isFinite(ingreso) || ingreso <= 0) {
+    return '';
+  }
+
+  return round2(((toNumber(cuota) + toNumber(sumatoriaCuotas)) / ingreso) * 100).toFixed(2);
 };
 
 export const calculateDependienteFormalIngreso = (form = {}) => {
@@ -284,6 +315,23 @@ export const evaluateOtrosIngresosUtilidadLimit = ({
   };
 };
 
+export const evaluateFinancialLimits = (form = {}) => {
+  const ingresoNeto = Number(form.ingreso_neto);
+  const apalancamiento = Number(form.apalancamiento);
+  const capacidadEndeudamiento = Number(form.capacidad_endeudamiento);
+
+  return {
+    ingresoNetoInvalido: !isBlank(form.ingreso_neto)
+      && (!Number.isFinite(ingresoNeto) || ingresoNeto <= 0),
+    apalancamientoExcedido: !isBlank(form.apalancamiento)
+      && Number.isFinite(apalancamiento)
+      && apalancamiento > FINANCIAL_LIMITS.APALANCAMIENTO_MAX,
+    capacidadEndeudamientoExcedida: !isBlank(form.capacidad_endeudamiento)
+      && Number.isFinite(capacidadEndeudamiento)
+      && capacidadEndeudamiento > FINANCIAL_LIMITS.CAPACIDAD_ENDEUDAMIENTO_MAX,
+  };
+};
+
 export const deriveEvaluacionConsumoFields = (
   form,
   { tiposIngreso = [], maxVecesSueldo = 0 } = {}
@@ -344,18 +392,28 @@ export const deriveEvaluacionConsumoFields = (
   }));
   const ingresoNeto = calculateIngresoNeto(
     ingresosDerivados.ingresoTotal,
-    otrosIngresosUtilidad
+    otrosIngresosUtilidad,
+    totalGastoUnidad
+  );
+  const apalancamiento = calculateApalancamiento(form?.monto, form?.deuda_total, ingresoNeto);
+  const capacidadEndeudamiento = calculateCapacidadEndeudamiento(
+    cuota,
+    form?.sumatoria_cuotas,
+    ingresoNeto
   );
 
   return {
     ...form,
     valor_frecuencia: tipoFrecuencia ? (FREQUENCY_VALUE_MAP[tipoFrecuencia] ?? '') : '',
     cuota,
+    tasa: hasPropuesta ? String(propuestaRaw) : '',
     tasa_interes_solicitada: hasPropuesta ? String(propuestaRaw) : '',
     ingresos: ingresosDerivados.rows,
     otros_ingresos_costo: otrosIngresosCosto,
     otros_ingresos_utilidad: otrosIngresosUtilidad,
     ingreso_neto: ingresoNeto,
+    apalancamiento,
+    capacidad_endeudamiento: capacidadEndeudamiento,
     total_gasto_unidad: totalGastoUnidad,
     gasto_obligaciones: gastoObligaciones,
     gasto_otros_egresos: gastoOtrosEgresos,

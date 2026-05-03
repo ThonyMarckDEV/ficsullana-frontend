@@ -1,10 +1,11 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 // Asegúrate de que tu servicio acepte (page, filters)
-import { getProductos, showProducto } from 'services/productoService';
+import { getProductos, showProducto, updateProducto } from 'services/productoService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import InfoModal from 'components/Shared/Modals/InfoModal';
+import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import Table from 'components/Shared/Tables/Table';
 import useInfoModal from 'hooks/useInfoModal';
 import usePaginatedIndex from 'hooks/usePaginatedIndex';
@@ -23,14 +24,17 @@ import {
     formatMontoRange,
     formatTasaRange,
     getTipoEvaluacionLabel,
+    buildProductoPayload,
     normalizeProducto,
 } from 'utilities/productos';
 
 const INITIAL_FILTERS = { search: '' };
 
 const Index = () => {
+    const [productoToToggle, setProductoToToggle] = useState(null);
     const {
         loading,
+        setLoading,
         alert,
         setAlert,
         rows: productos,
@@ -99,6 +103,31 @@ const Index = () => {
         onError: (error) => handleApiError(error, 'No se pudo cargar el detalle del producto.'),
     }), [openInfoModal]);
 
+    const handleToggleEstado = useCallback(async () => {
+        if (!productoToToggle) return;
+
+        const nuevoEstado = !Boolean(productoToToggle.activo);
+
+        setProductoToToggle(null);
+        setLoading(true);
+
+        try {
+            const response = await showProducto(productoToToggle.id);
+            const producto = normalizeProducto(response.data?.data || response.data || response);
+            const payload = buildProductoPayload({
+                ...producto,
+                activo: nuevoEstado,
+            });
+
+            await updateProducto(productoToToggle.id, payload);
+            setAlert({ type: 'success', message: 'Estado actualizado correctamente.' });
+            await fetchProductos(paginationInfo.currentPage).catch(() => {});
+        } catch (error) {
+            setAlert(handleApiError(error, 'Error al cambiar estado.'));
+            setLoading(false);
+        }
+    }, [fetchProductos, paginationInfo.currentPage, productoToToggle, setAlert, setLoading]);
+
     // --- COLUMNAS ---
     const columns = useMemo(() => [
         {
@@ -139,14 +168,25 @@ const Index = () => {
         {
             header: 'Tipo Evaluación',
             render: (row) => (
-                <div className="space-y-1">
-                    <span className="font-semibold text-xs text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                        {getTipoEvaluacionLabel(row.tipo_evaluacion)}
-                    </span>
-                    <p className={`text-[10px] font-black uppercase ${row.activo ? 'text-green-700' : 'text-slate-400'}`}>
-                        {row.activo ? 'Activo' : 'Inactivo'}
-                    </p>
-                </div>
+                <span className="font-semibold text-xs text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                    {getTipoEvaluacionLabel(row.tipo_evaluacion)}
+                </span>
+            )
+        },
+        {
+            header: 'Estado',
+            render: (row) => (
+                <button
+                    type="button"
+                    onClick={() => setProductoToToggle(row)}
+                    className={`px-3 py-1 text-[10px] font-black rounded border-b-2 transition-all active:translate-y-0.5 ${
+                        row.activo
+                            ? 'bg-green-600 border-green-800 text-white hover:bg-red-600 hover:border-red-800'
+                            : 'bg-red-600 border-red-800 text-white hover:bg-green-600 hover:border-green-800'
+                    }`}
+                >
+                    {row.activo ? 'ACTIVO' : 'INACTIVO'}
+                </button>
             )
         },
         {
@@ -193,6 +233,14 @@ const Index = () => {
             <AlertMessage type={alert?.type} message={alert?.message} details={alert?.details} onClose={() => setAlert(null)} />
 
             <InfoModal {...modalProps} />
+
+            {productoToToggle && (
+                <ConfirmModal
+                    message={`¿Deseas cambiar el estado a ${productoToToggle.activo ? 'INACTIVO' : 'ACTIVO'}?`}
+                    onConfirm={handleToggleEstado}
+                    onCancel={() => setProductoToToggle(null)}
+                />
+            )}
 
             <div className="rounded-xl overflow-hidden">
                 <Table 

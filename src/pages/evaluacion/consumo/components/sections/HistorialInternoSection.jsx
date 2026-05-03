@@ -1,5 +1,7 @@
 import React from 'react';
 import { formatDateOnly, formatMoney } from 'utilities/pages/admision/viewModel';
+import { EVAL_CONSUMO_COPY } from 'utilities/pages/evaluacion/consumo/copy';
+import { TableSkeletonRows } from '../shared/InlineSkeleton';
 import { formatSectionTitle } from './sectionTitle';
 
 const tableHeadClass = 'px-3 py-2 text-left';
@@ -13,14 +15,23 @@ const HistorialInternoSection = ({ contexto, loading = false, sectionNumber }) =
   return (
     <section className="bg-white border border-slate-200 rounded-xl p-5">
       <div className="flex items-center justify-between gap-3 mb-4">
-        <h3 className="text-sm font-black uppercase text-slate-700">{formatSectionTitle(sectionNumber, 'Historial Interno')}</h3>
+        <h3 className="text-sm font-black uppercase text-slate-700">
+          {formatSectionTitle(sectionNumber, EVAL_CONSUMO_COPY.HISTORY.INTERNAL_TITLE)}
+        </h3>
         <span className="text-[11px] font-bold uppercase text-slate-500">
           {rows.length} {rows.length === 1 ? 'crédito' : 'créditos'}
         </span>
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-500">Cargando historial interno...</p>
+        <div role="status" aria-live="polite" className="overflow-x-auto">
+          <p className="mb-3 text-sm text-slate-500">{EVAL_CONSUMO_COPY.HISTORY.LOADING_INTERNAL}</p>
+          <table className="min-w-full text-xs">
+            <tbody>
+              <TableSkeletonRows rows={3} columns={11} />
+            </tbody>
+          </table>
+        </div>
       ) : rows.length === 0 ? (
         <p className="text-sm text-slate-500 italic">Sin créditos internos registrados.</p>
       ) : (

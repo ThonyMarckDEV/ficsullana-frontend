@@ -1,52 +1,26 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
+import { EVAL_CONSUMO_COPY } from 'utilities/pages/evaluacion/consumo/copy';
+import useModalFocusTrap from '../../hooks/useModalFocusTrap';
+import { TableSkeletonRows } from '../shared/InlineSkeleton';
 
-const SelectAdmisionModal = ({ isOpen, onClose, admisiones = [], onSelect }) => {
+const SelectAdmisionModal = ({
+  isOpen,
+  onClose,
+  admisiones = [],
+  loading = false,
+  error = null,
+  onSelect,
+}) => {
   const dialogRef = useRef(null);
   const closeBtnRef = useRef(null);
+  const copy = EVAL_CONSUMO_COPY.MODALS.SELECT_ADMISION;
 
-  useEffect(() => {
-    if (!isOpen) return undefined;
-
-    const focusableSelector = [
-      'button:not([disabled])',
-      '[href]',
-      'input:not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
-      '[tabindex]:not([tabindex="-1"])',
-    ].join(',');
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose?.();
-        return;
-      }
-
-      if (event.key !== 'Tab' || !dialogRef.current) return;
-
-      const focusables = Array.from(dialogRef.current.querySelectorAll(focusableSelector));
-      if (focusables.length === 0) return;
-
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    closeBtnRef.current?.focus();
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
+  useModalFocusTrap({
+    isOpen,
+    dialogRef,
+    initialFocusRef: closeBtnRef,
+    onClose,
+  });
 
   if (!isOpen) return null;
 
@@ -57,22 +31,35 @@ const SelectAdmisionModal = ({ isOpen, onClose, admisiones = [], onSelect }) => 
         role="dialog"
         aria-modal="true"
         aria-labelledby="select-admision-title"
+        aria-describedby="select-admision-description"
         className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden border border-slate-200"
       >
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-          <h3 id="select-admision-title" className="text-sm font-black uppercase text-slate-700">Seleccionar admisión elegible</h3>
-          <button
-            ref={closeBtnRef}
-            type="button"
-            onClick={onClose}
-            className="text-sm font-bold text-slate-500 hover:text-slate-700"
-          >
-            Cerrar
-          </button>
+        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
+          <div>
+            <h3 id="select-admision-title" className="text-sm font-black uppercase text-slate-700">
+              {copy.TITLE}
+            </h3>
+            <p id="select-admision-description" className="mt-1 text-xs text-slate-500">
+              {copy.DESCRIPTION}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              ref={closeBtnRef}
+              type="button"
+              onClick={onClose}
+              aria-label={copy.CLOSE_LABEL}
+              className="text-sm font-bold text-slate-500 hover:text-slate-700"
+            >
+              {EVAL_CONSUMO_COPY.COMMON.CERRAR}
+            </button>
+          </div>
         </div>
 
         <div className="overflow-y-auto max-h-[60vh]">
           <table className="min-w-full text-xs">
+            <caption className="sr-only">{copy.TABLE_LABEL}</caption>
             <thead className="bg-slate-50 text-slate-500 uppercase">
               <tr>
                 <th className="p-3 text-left">ID</th>
@@ -84,9 +71,24 @@ const SelectAdmisionModal = ({ isOpen, onClose, admisiones = [], onSelect }) => 
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {admisiones.length === 0 && (
+              {loading && admisiones.length === 0 && (
+                <>
+                  <tr>
+                    <td className="p-4 text-slate-500" colSpan={6}>
+                      <span role="status" aria-live="polite">{copy.LOADING}</span>
+                    </td>
+                  </tr>
+                  <TableSkeletonRows rows={4} columns={6} />
+                </>
+              )}
+              {!loading && error && admisiones.length === 0 && (
                 <tr>
-                  <td className="p-4 text-slate-500 italic" colSpan={6}>No hay admisiones elegibles disponibles.</td>
+                  <td className="p-4 text-amber-700" colSpan={6} role="alert">{error}</td>
+                </tr>
+              )}
+              {!loading && !error && admisiones.length === 0 && (
+                <tr>
+                  <td className="p-4 text-slate-500 italic" colSpan={6}>{copy.EMPTY}</td>
                 </tr>
               )}
               {admisiones.map((item) => (
@@ -100,9 +102,10 @@ const SelectAdmisionModal = ({ isOpen, onClose, admisiones = [], onSelect }) => 
                     <button
                       type="button"
                       onClick={() => onSelect(item.id)}
+                      aria-label={copy.SELECT_LABEL(item.id)}
                       className="px-3 py-1.5 text-[11px] font-bold uppercase bg-fic-red text-white rounded-md hover:bg-red-700"
                     >
-                      Seleccionar
+                      {EVAL_CONSUMO_COPY.COMMON.SELECCIONAR}
                     </button>
                   </td>
                 </tr>

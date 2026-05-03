@@ -7,14 +7,63 @@ import {
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import { normalizeEvaluacionContext } from 'utilities/pages/evaluacion/consumo/context';
 import {
+  AVAL_GARANTIA_VALUE,
+  createAvalState,
+  createAvalGarantiaRow,
   createGarantiaRow,
   createIngresoRow,
+  buildAvalDireccion,
+  isAvalGuarantee,
   mapApiToForm,
+  mapAvalLookupToState,
   mapFormToPayload,
+  normalizeAvalSlot,
+  normalizeGarantiaClass,
 } from 'utilities/pages/evaluacion/consumo/transformers';
+import {
+  clearLinkedGarantiaSelections,
+  ensureAvalSlot,
+  getFirstAvailableAvalSlot,
+  mapGarantiaLookupToRow,
+  normalizeAvalCollections,
+  resolveGarantiaDireccion,
+  syncGarantiasWithAvalDireccion,
+} from 'utilities/pages/evaluacion/consumo/avalWorkflow';
 import { validateEvaluacionConsumoForm } from 'utilities/pages/evaluacion/consumo/validators';
 import { updateEvaluacionConsumoForm } from 'utilities/pages/evaluacion/consumo/formState';
 import { normalizeEvaluacionConsumoState } from 'utilities/pages/evaluacion/consumo/status';
+import {
+  buildDecisionPlanAdjustmentPayload,
+  validateDecisionPlanAdjustments,
+} from 'utilities/pages/evaluacion/consumo/decisionPayload';
+
+const updateGarantiaRow = (currentRow, overrides = {}) => createGarantiaRow({
+  ...currentRow,
+  ...overrides,
+});
+
+const normalizeAvalDraftGarantia = (garantia, avalSlot, aval) => {
+  const { formIndex, ...draftRow } = garantia || {};
+  const nextRow = createAvalGarantiaRow({
+    ...draftRow,
+    aval_slot: String(avalSlot),
+  });
+
+  return nextRow.usar_direccion_solicitante
+    ? { ...nextRow, direccion: buildAvalDireccion(aval) }
+    : nextRow;
+};
+
+export const applyGarantiaDireccionToggle = (form, garantia, checked) => ({
+  ...garantia,
+  usar_direccion_solicitante: checked,
+  direccion: checked
+    ? resolveGarantiaDireccion(form, {
+      ...garantia,
+      usar_direccion_solicitante: true,
+    })
+    : '',
+});
 
 const useEvaluacionConsumoActions = ({
   id,
@@ -32,14 +81,91 @@ const useEvaluacionConsumoActions = ({
   setContexto,
   canEdit,
   canMakeDecision,
+  onRequestAvalModalOpen,
 }) => {
   const updateForm = useCallback((updater) => {
     setForm((previousForm) => updateEvaluacionConsumoForm(previousForm, updater, catalogos));
   }, [catalogos, setForm]);
 
+  const buildFormWithAvalCollections = useCallback((previousForm, nextGarantias, nextAvales, extra = {}) => {
+    const normalized = normalizeAvalCollections(nextGarantias, nextAvales);
+
+    return {
+      ...previousForm,
+      ...extra,
+      garantias: normalized.garantias,
+      avales: normalized.avales,
+      requiere_aval: normalized.requiresAval,
+    };
+  }, []);
+
+  const updateAvalAtIndex = useCallback((previousForm, avalIndex, updater) => {
+    const nextAvales = ensureAvalSlot(previousForm.avales, avalIndex);
+    const currentAval = createAvalState(nextAvales[avalIndex]);
+    const rawNextAval = typeof updater === 'function' ? updater(currentAval) : updater;
+    const nextAvalPayload = {
+      ...currentAval,
+      ...(rawNextAval || {}),
+    };
+
+    if (!Object.prototype.hasOwnProperty.call(rawNextAval || {}, 'direccion')) {
+      nextAvalPayload.direccion = '';
+    }
+
+    const nextAval = createAvalState(nextAvalPayload);
+    nextAvales[avalIndex] = nextAval;
+
+    const avalSlot = avalIndex + 1;
+    const ownerChanged = String(currentAval?.aval_id || '') !== String(nextAval?.aval_id || '')
+      || Boolean(currentAval?.manual_mode) !== Boolean(nextAval?.manual_mode)
+      || Boolean(currentAval?.is_existing) !== Boolean(nextAval?.is_existing);
+    let nextGarantias = syncGarantiasWithAvalDireccion(previousForm.garantias, avalSlot, nextAval);
+
+    if (ownerChanged) {
+      nextGarantias = clearLinkedGarantiaSelections(nextGarantias, avalSlot);
+    }
+
+    return buildFormWithAvalCollections(previousForm, nextGarantias, nextAvales);
+  }, [buildFormWithAvalCollections]);
+
   const setField = useCallback((name, value) => {
     updateForm((previousForm) => ({ ...previousForm, [name]: value }));
   }, [updateForm]);
+
+  const setAvalField = useCallback((avalIndex, name, value) => {
+    updateForm((previousForm) => updateAvalAtIndex(previousForm, avalIndex, {
+      [name]: value,
+    }));
+  }, [updateAvalAtIndex, updateForm]);
+
+  const handleAvalSelect = useCallback((avalIndex, aval) => {
+    updateForm((previousForm) => updateAvalAtIndex(previousForm, avalIndex, (currentAval) => {
+      const mappedAval = aval
+        ? mapAvalLookupToState(aval)
+        : createAvalState({
+          client_id: currentAval.client_id,
+        });
+
+      return {
+        ...mappedAval,
+        client_id: currentAval.client_id,
+      };
+    }));
+  }, [updateAvalAtIndex, updateForm]);
+
+  const startManualAvalRegistration = useCallback((avalIndex) => {
+    updateForm((previousForm) => updateAvalAtIndex(previousForm, avalIndex, (currentAval) => createAvalState({
+      client_id: currentAval.client_id,
+      manual_mode: true,
+      tipo_documento: currentAval.tipo_documento || 'DNI',
+    })));
+  }, [updateAvalAtIndex, updateForm]);
+
+  const cancelManualAvalRegistration = useCallback((avalIndex) => {
+    updateForm((previousForm) => updateAvalAtIndex(previousForm, avalIndex, (currentAval) => createAvalState({
+      client_id: currentAval.client_id,
+    })));
+  }, [updateAvalAtIndex, updateForm]);
 
   const handleActividadNoSensibleSelect = useCallback((actividadNoSensible) => {
     updateForm((previousForm) => ({
@@ -80,7 +206,7 @@ const useEvaluacionConsumoActions = ({
       provincia_snapshot: admision.provincia || '',
       departamento_snapshot: admision.departamento || '',
       garantias: (previousForm.garantias || [createGarantiaRow()]).map((row) => (
-        row.usar_direccion_solicitante
+        row.usar_direccion_solicitante && !isAvalGuarantee(row)
           ? { ...row, direccion: direccionSolicitante }
           : row
       )),
@@ -111,63 +237,172 @@ const useEvaluacionConsumoActions = ({
   }, [updateForm]);
 
   const handleGarantiaChange = useCallback((index, field, value) => {
-    updateForm((previousForm) => {
-      const nextRows = [...(previousForm.garantias || [createGarantiaRow()])];
-      nextRows[index] = {
-        ...nextRows[index],
-        [field]: value,
-      };
+    let autoOpenSlot = null;
 
-      return {
-        ...previousForm,
-        garantias: nextRows,
-      };
-    });
-  }, [updateForm]);
-
-  const addGarantiaRow = useCallback(() => {
     updateForm((previousForm) => {
-      const currentRows = previousForm.garantias || [createGarantiaRow()];
-      if (currentRows.length >= 2) {
-        return previousForm;
+      const nextGarantias = [...(previousForm.garantias || [createGarantiaRow()])];
+      const currentRow = createGarantiaRow(nextGarantias[index]);
+      const wasAvalGuarantee = isAvalGuarantee(currentRow);
+      let nextAvales = [...(previousForm.avales || [])];
+      let nextRow = updateGarantiaRow(currentRow, { [field]: value });
+
+      if (field === 'clase_garantia') {
+        const nextClass = normalizeGarantiaClass(value);
+        const nextSlot = nextClass === AVAL_GARANTIA_VALUE
+          ? getFirstAvailableAvalSlot(previousForm.garantias)
+          : '';
+
+        nextRow = updateGarantiaRow(currentRow, {
+          clase_garantia: nextClass,
+          aval_slot: nextSlot === '' ? '' : String(nextSlot),
+        });
+
+        if (!wasAvalGuarantee && nextClass === AVAL_GARANTIA_VALUE) {
+          autoOpenSlot = nextSlot;
+        }
       }
 
-      return {
-        ...previousForm,
-        garantias: [...currentRows, createGarantiaRow()],
-      };
+      if (field === 'aval_slot') {
+        const nextSlot = getFirstAvailableAvalSlot(previousForm.garantias, value);
+
+        nextRow = updateGarantiaRow(currentRow, {
+          aval_slot: String(nextSlot),
+        });
+      }
+
+      if (!isAvalGuarantee(nextRow)) {
+        nextRow = updateGarantiaRow(nextRow, {
+          aval_slot: '',
+          garantia_id: '',
+        });
+      } else {
+        const avalSlot = normalizeAvalSlot(nextRow.aval_slot) || getFirstAvailableAvalSlot(previousForm.garantias);
+        nextRow = updateGarantiaRow(nextRow, { aval_slot: avalSlot });
+        nextAvales = ensureAvalSlot(nextAvales, avalSlot - 1);
+
+        const currentSlot = normalizeAvalSlot(currentRow.aval_slot);
+        if (String(currentRow.garantia_id || '').trim() !== '' && currentSlot !== avalSlot) {
+          nextRow = updateGarantiaRow(nextRow, { garantia_id: '' });
+        }
+      }
+
+      if (nextRow.usar_direccion_solicitante) {
+        nextRow = {
+          ...nextRow,
+          direccion: resolveGarantiaDireccion({
+            ...previousForm,
+            avales: nextAvales,
+          }, nextRow),
+        };
+      }
+
+      nextGarantias[index] = nextRow;
+
+      return buildFormWithAvalCollections(previousForm, nextGarantias, nextAvales);
     });
+
+    if (autoOpenSlot && canEdit) {
+      onRequestAvalModalOpen?.(autoOpenSlot, 'auto');
+    }
+  }, [buildFormWithAvalCollections, canEdit, onRequestAvalModalOpen, updateForm]);
+
+  const handleGarantiaLookupSelect = useCallback((index, garantia) => {
+    updateForm((previousForm) => {
+      const nextGarantias = [...(previousForm.garantias || [createGarantiaRow()])];
+      const currentRow = createGarantiaRow(nextGarantias[index]);
+      const nextRow = garantia
+        ? mapGarantiaLookupToRow(garantia, currentRow)
+        : createGarantiaRow({
+          ...currentRow,
+          garantia_id: '',
+        });
+
+      nextGarantias[index] = nextRow;
+
+      return buildFormWithAvalCollections(previousForm, nextGarantias, previousForm.avales);
+    });
+  }, [buildFormWithAvalCollections, updateForm]);
+
+  const addGarantiaRow = useCallback(() => {
+    updateForm((previousForm) => ({
+      ...previousForm,
+      garantias: [
+        ...(previousForm.garantias || [createGarantiaRow()]),
+        createGarantiaRow(),
+      ],
+    }));
   }, [updateForm]);
+
+  const addAvalGarantiaRow = useCallback((avalSlot) => {
+    updateForm((previousForm) => {
+      const normalizedSlot = normalizeAvalSlot(avalSlot) || getFirstAvailableAvalSlot(previousForm.garantias);
+      const nextAvales = ensureAvalSlot(previousForm.avales || [], normalizedSlot - 1);
+      const nextGarantias = [
+        ...(previousForm.garantias || [createGarantiaRow()]),
+        createAvalGarantiaRow({
+          aval_slot: String(normalizedSlot),
+        }),
+      ];
+
+      return buildFormWithAvalCollections(previousForm, nextGarantias, nextAvales);
+    });
+  }, [buildFormWithAvalCollections, updateForm]);
+
+  const applyAvalModalDraft = useCallback((avalSlot, avalDraft, garantiaDrafts = []) => {
+    const normalizedSlot = normalizeAvalSlot(avalSlot);
+    if (normalizedSlot === null) {
+      return;
+    }
+
+    updateForm((previousForm) => {
+      const avalIndex = normalizedSlot - 1;
+      const nextAvales = ensureAvalSlot(previousForm.avales || [], avalIndex);
+      const currentAval = createAvalState(nextAvales[avalIndex]);
+      const nextAval = createAvalState({
+        ...currentAval,
+        ...(avalDraft || {}),
+        client_id: currentAval.client_id || avalDraft?.client_id,
+      });
+      nextAvales[avalIndex] = nextAval;
+
+      const previousGarantias = previousForm.garantias || [];
+      const insertIndex = previousGarantias.findIndex((row) => (
+        isAvalGuarantee(row) && normalizeAvalSlot(row?.aval_slot) === normalizedSlot
+      ));
+      const nextAvalGarantias = (Array.isArray(garantiaDrafts) ? garantiaDrafts : [])
+        .map((row) => normalizeAvalDraftGarantia(row, normalizedSlot, nextAval));
+      const nextGarantias = previousGarantias.filter((row) => (
+        !isAvalGuarantee(row) || normalizeAvalSlot(row?.aval_slot) !== normalizedSlot
+      ));
+      const targetIndex = insertIndex === -1 ? nextGarantias.length : Math.min(insertIndex, nextGarantias.length);
+
+      nextGarantias.splice(targetIndex, 0, ...nextAvalGarantias);
+
+      return buildFormWithAvalCollections(previousForm, nextGarantias, nextAvales);
+    });
+  }, [buildFormWithAvalCollections, updateForm]);
 
   const removeGarantiaRow = useCallback((index) => {
     updateForm((previousForm) => {
-      const currentRows = previousForm.garantias || [createGarantiaRow()];
-      const nextRows = currentRows.filter((_, idx) => idx !== index);
+      const nextRows = (previousForm.garantias || [createGarantiaRow()])
+        .filter((_, rowIndex) => rowIndex !== index);
+      const nextGarantias = nextRows.length > 0 ? nextRows : [createGarantiaRow()];
 
-      return {
-        ...previousForm,
-        garantias: nextRows.length > 0 ? nextRows : [createGarantiaRow()],
-      };
+      return buildFormWithAvalCollections(previousForm, nextGarantias, previousForm.avales);
     });
-  }, [updateForm]);
+  }, [buildFormWithAvalCollections, updateForm]);
 
-  const toggleGarantiaDireccionSolicitante = useCallback((index, checked) => {
+  const toggleGarantiaDireccion = useCallback((index, checked) => {
     updateForm((previousForm) => {
       const nextRows = [...(previousForm.garantias || [createGarantiaRow()])];
-      const currentRow = nextRows[index] || createGarantiaRow();
+      const currentRow = createGarantiaRow(nextRows[index]);
+      const nextRow = applyGarantiaDireccionToggle(previousForm, currentRow, checked);
 
-      nextRows[index] = {
-        ...currentRow,
-        usar_direccion_solicitante: checked,
-        direccion: checked ? (previousForm.direccion_snapshot || '') : '',
-      };
+      nextRows[index] = nextRow;
 
-      return {
-        ...previousForm,
-        garantias: nextRows,
-      };
+      return buildFormWithAvalCollections(previousForm, nextRows, previousForm.avales);
     });
-  }, [updateForm]);
+  }, [buildFormWithAvalCollections, updateForm]);
 
   const addIngresoRow = useCallback(() => {
     updateForm((previousForm) => ({
@@ -178,7 +413,7 @@ const useEvaluacionConsumoActions = ({
 
   const removeIngresoRow = useCallback((index) => {
     updateForm((previousForm) => {
-      const nextRows = previousForm.ingresos.filter((_, idx) => idx !== index);
+      const nextRows = previousForm.ingresos.filter((_, rowIndex) => rowIndex !== index);
       return {
         ...previousForm,
         ingresos: nextRows.length > 0 ? nextRows : [createIngresoRow()],
@@ -229,10 +464,7 @@ const useEvaluacionConsumoActions = ({
       if (isEditMode) {
         const response = await updateEvaluacionConsumo(id, payload);
         const source = response.data || response;
-        setForm(deriveForm({
-          ...mapApiToForm(source),
-          garantias: form.garantias || [createGarantiaRow()],
-        }));
+        setForm(deriveForm(mapApiToForm(source)));
         setContexto(normalizeEvaluacionContext(source.contexto));
         setAlert({ type: 'success', message: response.message || 'Evaluación consumo actualizada correctamente.' });
       } else {
@@ -266,10 +498,20 @@ const useEvaluacionConsumoActions = ({
     const normalizedState = normalizeEvaluacionConsumoState(estado);
     const decisionComentario = String(form.decision_comentario || '').trim();
 
-    if ((normalizedState === 'OBSERVADO' || normalizedState === 'RECHAZADO') && decisionComentario === '') {
+    if (decisionComentario === '') {
       setAlert({
         type: 'error',
-        message: 'Debe registrar un comentario para observar o rechazar la evaluación.',
+        message: 'Debe registrar un comentario para la decisión.',
+      });
+      return;
+    }
+
+    const decisionPlanErrors = validateDecisionPlanAdjustments(form, selectedProductoRange);
+    if (decisionPlanErrors.length > 0) {
+      setAlert({
+        type: 'error',
+        message: 'Revise los ajustes de decisión.',
+        details: decisionPlanErrors,
       });
       return;
     }
@@ -280,9 +522,12 @@ const useEvaluacionConsumoActions = ({
       const response = await updateEstadoEvaluacionConsumo(id, {
         estado: normalizedState,
         decision_comentario: decisionComentario || null,
+        ...buildDecisionPlanAdjustmentPayload(form),
       });
       const source = response.data || response;
-      setForm(deriveForm(mapApiToForm(source)));
+      setForm(deriveForm({
+        ...mapApiToForm(source),
+      }));
       setContexto(normalizeEvaluacionContext(source.contexto));
       setAlert({
         type: 'success',
@@ -293,16 +538,23 @@ const useEvaluacionConsumoActions = ({
     } finally {
       setSaving(false);
     }
-  }, [canMakeDecision, deriveForm, form.decision_comentario, id, isEditMode, setAlert, setContexto, setForm, setSaving]);
+  }, [canMakeDecision, deriveForm, form, id, isEditMode, selectedProductoRange, setAlert, setContexto, setForm, setSaving]);
 
   return {
     setField,
+    setAvalField,
+    handleAvalSelect,
+    startManualAvalRegistration,
+    cancelManualAvalRegistration,
     handleActividadNoSensibleSelect,
     handleSelectAdmision,
     handleGarantiaChange,
+    handleGarantiaLookupSelect,
     addGarantiaRow,
+    addAvalGarantiaRow,
+    applyAvalModalDraft,
     removeGarantiaRow,
-    toggleGarantiaDireccionSolicitante,
+    toggleGarantiaDireccion,
     handleIngresoChange,
     addIngresoRow,
     removeIngresoRow,

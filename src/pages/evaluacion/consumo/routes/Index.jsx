@@ -32,6 +32,7 @@ const Index = () => {
     detailOpen,
     setDetailOpen,
     detailData,
+    setDetailData,
     handleView,
   } = useEvaluacionConsumoList();
 
@@ -74,10 +75,7 @@ const Index = () => {
       header: 'Acciones',
       render: (row) => {
         const isLocked = isEvaluacionConsumoLocked(row.estado);
-        const canOpenForm = !isLocked && (canEditRecords || canApproveRecords || canRejectRecords);
-        const actionLabel = canEditRecords
-          ? (canApproveRecords || canRejectRecords ? 'Gestionar' : 'Editar')
-          : 'Revisar';
+        const canOpenEditForm = !isLocked && canEditRecords;
 
         return (
           <div className="flex items-center gap-3">
@@ -90,19 +88,19 @@ const Index = () => {
                 <EyeIcon className="w-4 h-4" /> Ver
               </button>
             )}
-            {canOpenForm && (
+            {canOpenEditForm && (
               <Link
                 to={`/evaluacion/consumo/editar/${row.id}`}
                 className="inline-flex items-center gap-1 text-xs font-black uppercase text-fic-red hover:text-red-700"
               >
-                <PencilSquareIcon className="w-4 h-4" /> {actionLabel}
+                <PencilSquareIcon className="w-4 h-4" /> Editar
               </Link>
             )}
           </div>
         );
       },
     },
-  ], [canApproveRecords, canEditRecords, canRejectRecords, checkPermission, handleView]);
+  ], [canEditRecords, checkPermission, handleView]);
 
   const filterConfig = useMemo(() => [
     {
@@ -147,6 +145,10 @@ const Index = () => {
         onClose={() => setDetailOpen(false)}
         loading={detailLoading}
         data={detailData}
+        onDecisionSuccess={(nextData) => {
+          setDetailData(nextData);
+          fetchRows(pagination.currentPage).catch(() => {});
+        }}
       />
 
       <Table

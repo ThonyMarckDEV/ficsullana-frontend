@@ -104,7 +104,7 @@ const ClienteForm = ({ data, direcciones, handleChange, onDireccionChange }) => 
           </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
               <label htmlFor="fechaNacimiento" className={labelClass}>Fecha Nacimiento</label>
               <input id="fechaNacimiento" type="date" name="fechaNacimiento" value={data.fechaNacimiento} onChange={handleChange} className={inputClass} required />
@@ -127,15 +127,6 @@ const ClienteForm = ({ data, direcciones, handleChange, onDireccionChange }) => 
                   <option value="DIVORCIADO/A">DIVORCIADO/A</option>
                   <option value="CONVIVIENTE">CONVIVIENTE</option>
               </select>
-          </div>
-          <div>
-              <label htmlFor="apellidoConyuge" className={labelClass}>Apellido Cónyuge</label>
-              <input 
-                id="apellidoConyuge" name="apellidoConyuge" type="text" 
-                value={data.apellidoConyuge} onChange={handleChange} onInput={onlyLetters}
-                className={`${inputClass} disabled:bg-slate-100`} 
-                disabled={!['CASADO/A', 'CONVIVIENTE'].includes(data.estadoCivil)} 
-              />
           </div>
       </div>
 

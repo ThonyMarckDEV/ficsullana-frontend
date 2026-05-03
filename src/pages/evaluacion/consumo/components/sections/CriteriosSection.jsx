@@ -21,13 +21,16 @@ const CriteriosSection = ({ form, disabled, setField, sectionNumber }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {fields.map(([key, label]) => (
         <div key={key}>
-          <label htmlFor={`evaluacion-${key}`} className="block text-xs font-bold text-slate-500 mb-1 uppercase">{label}</label>
+          <label htmlFor={`evaluacion-${key}`} className="block text-xs font-bold text-slate-500 mb-1 uppercase">
+            {label} <span className="text-fic-red">*</span>
+          </label>
           <textarea
             id={`evaluacion-${key}`}
             className={`${baseInputClass} h-24 resize-none`}
             value={form[key]}
             onChange={(e) => setField(key, e.target.value)}
             disabled={disabled}
+            required={!disabled}
           />
         </div>
       ))}

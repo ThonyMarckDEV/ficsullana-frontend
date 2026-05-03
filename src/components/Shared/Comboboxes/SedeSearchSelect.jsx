@@ -121,9 +121,6 @@ const SedeSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                     </ul>
                 )}
             </div>
-            {selectedId && (
-                <p className="text-[10px] text-green-600 mt-1 font-bold animate-pulse">✓ Sede seleccionada correctamente</p>
-            )}
         </div>
     );
 };

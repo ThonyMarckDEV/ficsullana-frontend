@@ -7,6 +7,8 @@ import {
   getCalificacionTone,
   toNumeric,
 } from 'utilities/pages/admision/viewModel';
+import { EVAL_CONSUMO_COPY } from 'utilities/pages/evaluacion/consumo/copy';
+import { TableSkeletonRows } from '../shared/InlineSkeleton';
 import { formatSectionTitle } from './sectionTitle';
 
 const tableHeadClass = 'px-3 py-2 text-left';
@@ -19,14 +21,23 @@ const HistorialExternoSection = ({ contexto, loading = false, sectionNumber }) =
 
   return (
     <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
-      <h3 className="text-sm font-black uppercase text-slate-700">{formatSectionTitle(sectionNumber, 'Historial Externo')}</h3>
+      <h3 className="text-sm font-black uppercase text-slate-700">
+        {formatSectionTitle(sectionNumber, EVAL_CONSUMO_COPY.HISTORY.EXTERNAL_TITLE)}
+      </h3>
 
       <div className="rounded-xl border border-slate-200 overflow-hidden">
         <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
           <p className="text-xs font-black uppercase text-slate-700">Deudas</p>
         </div>
         {loading ? (
-          <p className="p-4 text-sm text-slate-500">Cargando historial externo...</p>
+          <div role="status" aria-live="polite" className="p-4">
+            <p className="mb-3 text-sm text-slate-500">{EVAL_CONSUMO_COPY.HISTORY.LOADING_EXTERNAL}</p>
+            <table className="min-w-full text-xs">
+              <tbody>
+                <TableSkeletonRows rows={3} columns={isProspecto ? 13 : 14} />
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-xs">
@@ -97,7 +108,14 @@ const HistorialExternoSection = ({ contexto, loading = false, sectionNumber }) =
           <p className="text-xs font-black uppercase text-slate-700">Protestos</p>
         </div>
         {loading ? (
-          <p className="p-4 text-sm text-slate-500">Cargando protestos...</p>
+          <div role="status" aria-live="polite" className="p-4">
+            <p className="mb-3 text-sm text-slate-500">{EVAL_CONSUMO_COPY.HISTORY.LOADING_PROTESTOS}</p>
+            <table className="min-w-full text-xs">
+              <tbody>
+                <TableSkeletonRows rows={2} columns={4} />
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-xs">
