@@ -22,7 +22,7 @@ const DiscrecionalidadSection = ({ form, disabled, setField, selectedNivelDiscre
         />
       </div>
       <div>
-        <label htmlFor="evaluacion-discrecionalidad" className="block text-xs font-bold text-slate-500 mb-1 uppercase">Rol autorizador resuelto</label>
+        <label htmlFor="evaluacion-discrecionalidad" className="block text-xs font-bold text-slate-500 mb-1 uppercase">Nivel de discrecionalidad</label>
         <input
           id="evaluacion-discrecionalidad"
           className={baseInputClass}

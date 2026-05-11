@@ -32,12 +32,14 @@ const Index = () => {
     detailOpen,
     setDetailOpen,
     detailData,
+    setDetailData,
     handleView,
   } = useEvaluacionConsumoList();
 
   const canEditRecords = checkPermission('evaluaciones_consumo.editar');
   const canApproveRecords = checkPermission('evaluaciones_consumo.aprobar');
   const canRejectRecords = checkPermission('evaluaciones_consumo.rechazar');
+  const canSeeAllEvaluaciones = canApproveRecords || canRejectRecords;
 
   const columns = useMemo(() => [
     {
@@ -73,10 +75,7 @@ const Index = () => {
       header: 'Acciones',
       render: (row) => {
         const isLocked = isEvaluacionConsumoLocked(row.estado);
-        const canOpenForm = !isLocked && (canEditRecords || canApproveRecords || canRejectRecords);
-        const actionLabel = canEditRecords
-          ? (canApproveRecords || canRejectRecords ? 'Gestionar' : 'Editar')
-          : 'Revisar';
+        const canOpenEditForm = !isLocked && canEditRecords;
 
         return (
           <div className="flex items-center gap-3">
@@ -89,19 +88,19 @@ const Index = () => {
                 <EyeIcon className="w-4 h-4" /> Ver
               </button>
             )}
-            {canOpenForm && (
+            {canOpenEditForm && (
               <Link
                 to={`/evaluacion/consumo/editar/${row.id}`}
                 className="inline-flex items-center gap-1 text-xs font-black uppercase text-fic-red hover:text-red-700"
               >
-                <PencilSquareIcon className="w-4 h-4" /> {actionLabel}
+                <PencilSquareIcon className="w-4 h-4" /> Editar
               </Link>
             )}
           </div>
         );
       },
     },
-  ], [canApproveRecords, canEditRecords, canRejectRecords, checkPermission, handleView]);
+  ], [canEditRecords, checkPermission, handleView]);
 
   const filterConfig = useMemo(() => [
     {
@@ -125,8 +124,10 @@ const Index = () => {
   return (
     <div className="container mx-auto p-6">
       <PageHeader
-        title="Evaluación Consumo"
-        subtitle="Registro y gestión operativa"
+        title={canSeeAllEvaluaciones ? 'Evaluación Consumo' : 'Mis Evaluaciones'}
+        subtitle={canSeeAllEvaluaciones
+          ? 'Registro y gestión operativa'
+          : 'Solo se muestran las evaluaciones registradas por su usuario'}
         icon={ClipboardDocumentCheckIcon}
         buttonText={checkPermission('evaluaciones_consumo.crear') ? '+ Nueva Evaluación' : undefined}
         buttonLink="/evaluacion/consumo/agregar"
@@ -144,6 +145,10 @@ const Index = () => {
         onClose={() => setDetailOpen(false)}
         loading={detailLoading}
         data={detailData}
+        onDecisionSuccess={(nextData) => {
+          setDetailData(nextData);
+          fetchRows(pagination.currentPage).catch(() => {});
+        }}
       />
 
       <Table

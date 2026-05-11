@@ -1,15 +1,17 @@
 import { useMemo } from 'react';
 import {
+  evaluateOtrosIngresosUtilidadLimit,
   recalculateIngresos,
   resolveNivelDiscrecionalidad,
 } from 'utilities/pages/evaluacion/consumo/calculations';
+import { buildAvalGroups } from 'utilities/pages/evaluacion/consumo/avalWorkflow';
 import {
   findTipoIngresoIdsByKey,
   TIPO_INGRESO_KEYS,
 } from 'utilities/pages/evaluacion/consumo/tipoIngreso';
 import { resolveProductoConfiguracion } from 'utilities/productos';
 
-const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones }) => {
+const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones, canEdit }) => {
   const selectedAdmision = useMemo(
     () => admisiones.find((item) => Number(item.id) === Number(form.admision_id)) || null,
     [admisiones, form.admision_id]
@@ -60,6 +62,17 @@ const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones }) => {
     };
   }, [form.ingresos]);
 
+  const otrosIngresosLimit = useMemo(() => evaluateOtrosIngresosUtilidadLimit({
+    ingresoTotalPrincipal: totals.ingresoTotal,
+    utilidad: form.otros_ingresos_utilidad,
+  }), [form.otros_ingresos_utilidad, totals.ingresoTotal]);
+
+  const avalGroups = useMemo(() => buildAvalGroups({
+    garantias: form.garantias || [],
+    avales: form.avales || [],
+    canEdit,
+  }), [canEdit, form.avales, form.garantias]);
+
   return {
     selectedAdmision,
     selectedProducto,
@@ -68,6 +81,8 @@ const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones }) => {
     dependienteFormalTipoIngresoIds,
     showBoletasSection,
     totals,
+    otrosIngresosLimit,
+    avalGroups,
   };
 };
 

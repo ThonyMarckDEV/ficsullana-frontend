@@ -74,12 +74,12 @@ const GastosUnidadFamiliarSection = ({ form, disabled, setField, sectionNumber }
         />
       </div>
       <div>
-        <label htmlFor="evaluacion-gasto-subtotal" className="block text-xs font-bold text-slate-500 mb-1 uppercase">Subtotal</label>
+        <label htmlFor="evaluacion-gasto-subtotal" className="block text-xs font-bold text-slate-500 mb-1 uppercase">Total de gastos</label>
         <input
           id="evaluacion-gasto-subtotal"
           type="number"
           className={baseInputClass}
-          value={form.gasto_subtotal}
+          value={form.total_gasto_unidad}
           disabled
           readOnly
         />

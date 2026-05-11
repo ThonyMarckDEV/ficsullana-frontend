@@ -38,7 +38,6 @@ const ProductoForm = ({
             placeholder="Ej: Crédito Consumo"
             required 
           />
-          <p className="text-[10px] text-slate-400 mt-1">Nombre comercial (solo letras).</p>
         </div>
 
         <div>
@@ -57,7 +56,6 @@ const ProductoForm = ({
               </option>
             ))}
           </select>
-          <p className="text-[10px] text-slate-400 mt-1">Define en qué módulo se podrá usar este producto.</p>
         </div>
 
         <div>
@@ -72,7 +70,6 @@ const ProductoForm = ({
             <option value="1">Activo</option>
             <option value="0">Inactivo</option>
           </select>
-          <p className="text-[10px] text-slate-400 mt-1">Solo los productos activos deberían quedar disponibles en operación.</p>
         </div>
       </div>
 
@@ -84,10 +81,9 @@ const ProductoForm = ({
       />
       
       <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3 items-start">
-        <span className="text-xl">ℹ️</span>
         <p className="text-xs text-blue-800 leading-relaxed">
           <strong>Nota Importante:</strong> La tasa permitida en evaluación se resolverá según la periodicidad, el monto y el número de cuotas
-          configurados para el producto.
+          configurados para el producto. La tasa propuesta deberá ubicarse dentro de ese rango.
         </p>
       </div>
     </div>

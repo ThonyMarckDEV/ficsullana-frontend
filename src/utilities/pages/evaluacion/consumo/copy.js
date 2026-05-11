@@ -4,6 +4,12 @@ export const EVAL_CONSUMO_COPY = {
     STORE: 'Nueva Evaluación Consumo',
     UPDATE: 'Gestionar Evaluación Consumo',
   },
+  COMMON: {
+    CANCELAR: 'Cancelar',
+    CERRAR: 'Cerrar',
+    SELECCIONAR: 'Seleccionar',
+    SIN_DATOS: 'Sin datos.',
+  },
   ACTIONS: {
     GUARDAR: 'GUARDAR EVALUACIÓN',
     ACTUALIZAR: 'ACTUALIZAR EVALUACIÓN',
@@ -18,5 +24,64 @@ export const EVAL_CONSUMO_COPY = {
     OBSERVADO: 'OBSERVADO',
     APROBADO: 'APROBADO',
     RECHAZADO: 'RECHAZADO',
+  },
+  FORM: {
+    SUBTITLE: 'Formulario operativo de evaluación consumo',
+    FINANCIAL_BLOCK: {
+      INGRESO_NETO: 'El ingreso neto debe ser mayor a 0.00 para guardar la evaluación.',
+      APALANCAMIENTO: 'El apalancamiento supera el máximo permitido de 10.00.',
+      CAPACIDAD_ENDEUDAMIENTO: 'La capacidad de endeudamiento supera el máximo permitido de 87.00%.',
+    },
+  },
+  MODALS: {
+    SELECT_ADMISION: {
+      TITLE: 'Seleccionar admisión elegible',
+      DESCRIPTION: 'Listado de admisiones aprobadas que todavía pueden iniciar evaluación consumo.',
+      LOADING: 'Cargando admisiones elegibles.',
+      EMPTY: 'No hay admisiones elegibles disponibles.',
+      TABLE_LABEL: 'Admisiones elegibles para evaluación consumo',
+      CLOSE_LABEL: 'Cerrar selector de admisión',
+      SELECT_LABEL: (id) => `Seleccionar admisión ${id}`,
+    },
+    DETAIL: {
+      TITLE: 'Detalle Evaluación Consumo',
+      LOADING: 'Cargando detalle de evaluación consumo.',
+      PRINTING: 'Generando...',
+    },
+    AVAL: {
+      DESCRIPTION: 'Modal para administrar datos y garantías del aval vinculado.',
+      CLOSE_LABEL: 'Cerrar modal de aval',
+      RETURN: 'Volver al formulario',
+      FOOTER_NOTE: 'Los cambios quedan en la evaluación actual y se guardan al enviar el formulario completo.',
+      EXIT_CONFIRM: {
+        TITLE: 'Salir del aval',
+        MESSAGE: 'Hay cambios recientes en este aval. Confirma la salida para volver al formulario o cambiar de aval.',
+        CANCEL: 'Seguir editando',
+        CONFIRM: 'Salir',
+      },
+    },
+  },
+  GUARANTEES: {
+    TITLE: 'Garantías',
+    ADD: 'Agregar garantía',
+    ITEM_LABEL: (index) => `Garantía ${index + 1}`,
+    DELETE_LABEL: (index) => `Eliminar garantía ${index + 1}`,
+    FIELD_LABELS: {
+      CLASE: 'Clase de garantía',
+      DOCUMENTO: 'Documento de garantía',
+      TIPO: 'Tipo de garantía',
+      FECHA_ULTIMA_EVALUACION: 'Fecha última evaluación',
+      DESCRIPCION: 'Descripción',
+      DIRECCION: 'Dirección',
+      MONTO: 'Monto de garantías',
+      VALOR_REALIZACION: 'Valor de realización',
+    },
+  },
+  HISTORY: {
+    INTERNAL_TITLE: 'Historial Interno',
+    EXTERNAL_TITLE: 'Historial Externo',
+    LOADING_INTERNAL: 'Cargando historial interno.',
+    LOADING_EXTERNAL: 'Cargando historial externo.',
+    LOADING_PROTESTOS: 'Cargando protestos.',
   },
 };

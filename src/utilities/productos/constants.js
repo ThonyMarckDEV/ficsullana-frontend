@@ -6,6 +6,7 @@ export const PRODUCTO_TIPO_OPTIONS = [
 
 export const PERIODICIDAD_OPTIONS = [
   { id: 1, key: 'SEMANAL', nombre: 'SEMANAL', label: 'Semanal', dias: 7 },
+  { id: 4, key: 'DECENAL', nombre: 'DECENAL', label: 'Decenal', dias: 10 },
   { id: 2, key: 'CATORCENAL', nombre: 'CATORCENAL', label: 'Catorcenal', dias: 14 },
   { id: 3, key: 'MENSUAL', nombre: 'MENSUAL', label: 'Mensual', dias: 30 },
 ];

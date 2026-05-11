@@ -6,6 +6,14 @@ export const FREQUENCY_VALUE_MAP = {
   MENSUAL: 1,
 };
 
+export const FINANCIAL_LIMITS = {
+  APALANCAMIENTO_MAX: 10,
+  CAPACIDAD_ENDEUDAMIENTO_MAX: 87,
+};
+
+export const OTROS_INGRESOS_UTILIDAD_MAX_SHARE = 0.6;
+export const OTROS_INGRESOS_UTILIDAD_LIMIT_EXCEEDED_MESSAGE = 'Otros ingresos: la utilidad calculada supera el 60% permitido del ingreso total en ingresos principales. Debe elegir otro tipo de evaluación.';
+
 const round2 = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 const isBlank = (value) => value === '' || value === null || value === undefined;
 
@@ -180,6 +188,46 @@ export const calculateHouseholdSubtotal = (form = {}) => {
   return round2(total).toFixed(2);
 };
 
+export const calculateIngresoNeto = (
+  ingresoTotalPrincipal,
+  otrosIngresosUtilidad,
+  totalGastoUnidad
+) => {
+  const ingresoTotalNumero = isBlank(ingresoTotalPrincipal) ? null : Number(ingresoTotalPrincipal);
+  const utilidadNumero = isBlank(otrosIngresosUtilidad) ? 0 : Number(otrosIngresosUtilidad);
+  const gastoNumero = isBlank(totalGastoUnidad) ? 0 : Number(totalGastoUnidad);
+  const hasIngresoTotal = Number.isFinite(ingresoTotalNumero) && ingresoTotalNumero > 0;
+  const hasUtilidad = !isBlank(otrosIngresosUtilidad) && Number.isFinite(utilidadNumero);
+  const hasGasto = !isBlank(totalGastoUnidad) && Number.isFinite(gastoNumero);
+
+  if (!hasIngresoTotal && !hasUtilidad && !hasGasto) {
+    return '';
+  }
+
+  const total = (hasIngresoTotal ? ingresoTotalNumero : 0)
+    + (hasUtilidad ? utilidadNumero : 0)
+    - (hasGasto ? gastoNumero : 0);
+  return round2(total).toFixed(2);
+};
+
+export const calculateApalancamiento = (monto, deudaTotal, ingresoNeto) => {
+  const ingreso = isBlank(ingresoNeto) ? null : Number(ingresoNeto);
+  if (!Number.isFinite(ingreso) || ingreso <= 0) {
+    return '';
+  }
+
+  return round2((toNumber(monto) + toNumber(deudaTotal)) / ingreso).toFixed(2);
+};
+
+export const calculateCapacidadEndeudamiento = (cuota, sumatoriaCuotas, ingresoNeto) => {
+  const ingreso = isBlank(ingresoNeto) ? null : Number(ingresoNeto);
+  if (!Number.isFinite(ingreso) || ingreso <= 0) {
+    return '';
+  }
+
+  return round2(((toNumber(cuota) + toNumber(sumatoriaCuotas)) / ingreso) * 100).toFixed(2);
+};
+
 export const calculateDependienteFormalIngreso = (form = {}) => {
   const boletaFields = [
     form?.boleta_basica,
@@ -232,6 +280,58 @@ export const calculateOtrosIngresosUtilidad = (ventas, costo, gasto) => {
   return round2(ventasNumero - costoNumero - gastoNumero).toFixed(2);
 };
 
+export const evaluateOtrosIngresosUtilidadLimit = ({
+  ingresoTotalPrincipal,
+  utilidad,
+} = {}) => {
+  const hasUtilidad = !isBlank(utilidad);
+  const utilidadNumero = hasUtilidad ? Number(utilidad) : null;
+  const ingresoTotalNumero = isBlank(ingresoTotalPrincipal) ? 0 : Number(ingresoTotalPrincipal);
+
+  if (!hasUtilidad || !Number.isFinite(utilidadNumero) || !Number.isFinite(ingresoTotalNumero)) {
+    return {
+      ingresoTotalPrincipal: Number.isFinite(ingresoTotalNumero) ? round2(ingresoTotalNumero) : 0,
+      limiteUtilidadOtrosIngresos: Number.isFinite(ingresoTotalNumero)
+        ? round2(ingresoTotalNumero * OTROS_INGRESOS_UTILIDAD_MAX_SHARE)
+        : 0,
+      utilidadOtrosIngresos: Number.isFinite(utilidadNumero) ? round2(utilidadNumero) : null,
+      hasUtilidadCalculable: false,
+      excedeLimiteUtilidadOtrosIngresos: false,
+    };
+  }
+
+  const ingresoTotalPrincipalNormalizado = round2(ingresoTotalNumero);
+  const limiteUtilidadOtrosIngresos = round2(
+    ingresoTotalPrincipalNormalizado * OTROS_INGRESOS_UTILIDAD_MAX_SHARE
+  );
+  const utilidadOtrosIngresos = round2(utilidadNumero);
+
+  return {
+    ingresoTotalPrincipal: ingresoTotalPrincipalNormalizado,
+    limiteUtilidadOtrosIngresos,
+    utilidadOtrosIngresos,
+    hasUtilidadCalculable: true,
+    excedeLimiteUtilidadOtrosIngresos: utilidadOtrosIngresos > limiteUtilidadOtrosIngresos,
+  };
+};
+
+export const evaluateFinancialLimits = (form = {}) => {
+  const ingresoNeto = Number(form.ingreso_neto);
+  const apalancamiento = Number(form.apalancamiento);
+  const capacidadEndeudamiento = Number(form.capacidad_endeudamiento);
+
+  return {
+    ingresoNetoInvalido: !isBlank(form.ingreso_neto)
+      && (!Number.isFinite(ingresoNeto) || ingresoNeto <= 0),
+    apalancamientoExcedido: !isBlank(form.apalancamiento)
+      && Number.isFinite(apalancamiento)
+      && apalancamiento > FINANCIAL_LIMITS.APALANCAMIENTO_MAX,
+    capacidadEndeudamientoExcedida: !isBlank(form.capacidad_endeudamiento)
+      && Number.isFinite(capacidadEndeudamiento)
+      && capacidadEndeudamiento > FINANCIAL_LIMITS.CAPACIDAD_ENDEUDAMIENTO_MAX,
+  };
+};
+
 export const deriveEvaluacionConsumoFields = (
   form,
   { tiposIngreso = [], maxVecesSueldo = 0 } = {}
@@ -240,7 +340,7 @@ export const deriveEvaluacionConsumoFields = (
   const propuestaRaw = form?.propuesta;
   const hasPropuesta = !(propuestaRaw === '' || propuestaRaw === null || propuestaRaw === undefined);
   const cuota = calculateLoan(form?.monto, propuestaRaw, form?.numero_cuotas).cuota;
-  const gastoSubtotal = calculateHouseholdSubtotal(form);
+  const totalGastoUnidad = calculateHouseholdSubtotal(form);
   const gastoObligaciones = !isBlank(form?.sumatoria_cuotas_consumo)
     ? String(form.sumatoria_cuotas_consumo)
     : (isBlank(form?.gasto_obligaciones) ? '' : String(form.gasto_obligaciones));
@@ -290,16 +390,31 @@ export const deriveEvaluacionConsumoFields = (
       veces_sueldo: nextVecesSueldo,
     };
   }));
+  const ingresoNeto = calculateIngresoNeto(
+    ingresosDerivados.ingresoTotal,
+    otrosIngresosUtilidad,
+    totalGastoUnidad
+  );
+  const apalancamiento = calculateApalancamiento(form?.monto, form?.deuda_total, ingresoNeto);
+  const capacidadEndeudamiento = calculateCapacidadEndeudamiento(
+    cuota,
+    form?.sumatoria_cuotas,
+    ingresoNeto
+  );
 
   return {
     ...form,
     valor_frecuencia: tipoFrecuencia ? (FREQUENCY_VALUE_MAP[tipoFrecuencia] ?? '') : '',
     cuota,
+    tasa: hasPropuesta ? String(propuestaRaw) : '',
     tasa_interes_solicitada: hasPropuesta ? String(propuestaRaw) : '',
     ingresos: ingresosDerivados.rows,
     otros_ingresos_costo: otrosIngresosCosto,
     otros_ingresos_utilidad: otrosIngresosUtilidad,
-    gasto_subtotal: gastoSubtotal,
+    ingreso_neto: ingresoNeto,
+    apalancamiento,
+    capacidad_endeudamiento: capacidadEndeudamiento,
+    total_gasto_unidad: totalGastoUnidad,
     gasto_obligaciones: gastoObligaciones,
     gasto_otros_egresos: gastoOtrosEgresos,
   };

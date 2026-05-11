@@ -16,7 +16,6 @@ export const createInitialClienteForm = () => ({
     nombre: '',
     apellidoPaterno: '',
     apellidoMaterno: '',
-    apellidoConyuge: '',
     estadoCivil: '',
     sexo: '',
     dni: '',

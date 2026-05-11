@@ -3,7 +3,7 @@ import { formatSectionTitle } from './sectionTitle';
 
 const baseInputClass = 'w-full px-3 py-2 border border-slate-300 rounded-md text-sm outline-none focus:border-fic-red';
 
-const ResumenDatosSection = ({ form, disabled, setField, sectionNumber }) => (
+const ResumenDatosSection = ({ form, sectionNumber }) => (
   <section className="bg-white border border-slate-200 rounded-xl p-5">
     <h3 className="text-sm font-black uppercase text-slate-700 mb-4">{formatSectionTitle(sectionNumber, 'Resumen de Datos')}</h3>
 
@@ -13,10 +13,10 @@ const ResumenDatosSection = ({ form, disabled, setField, sectionNumber }) => (
         <input
           id="evaluacion-ingreso-neto"
           type="number"
-          className={baseInputClass}
+          className={`${baseInputClass} bg-slate-100 text-slate-500`}
           value={form.ingreso_neto}
-          onChange={(e) => setField('ingreso_neto', e.target.value)}
-          disabled={disabled}
+          disabled
+          readOnly
           min="0"
           step="0.01"
         />

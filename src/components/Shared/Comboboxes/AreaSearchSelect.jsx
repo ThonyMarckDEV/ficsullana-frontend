@@ -123,9 +123,6 @@ const AreaSearchSelect = ({ onSelect, selectedId, initialName = '' }) => {
                 )}
             </div>
 
-            {selectedId && (
-                <p className="text-[10px] text-green-600 mt-1 font-bold animate-pulse">✓ Área seleccionada</p>
-            )}
         </div>
     );
 };

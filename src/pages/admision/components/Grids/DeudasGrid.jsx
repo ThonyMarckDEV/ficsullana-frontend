@@ -4,8 +4,8 @@ import DeudaRowCard from './DeudaRowCard';
 import {
   buildBaseRow,
   isProtectedDebtRow,
-  normalizeEntityName,
   normalizeRowsByRules,
+  sanitizeEntityNameInput,
   sanitizeDebtRow,
   shouldReplaceDebtRows,
 } from 'utilities/pages/admision/debtGrid';
@@ -84,7 +84,7 @@ const DeudasGrid = ({
       }
 
       if (field === 'nombre_entidad') {
-        currentRow.nombre_entidad = normalizeEntityName(value);
+        currentRow.nombre_entidad = sanitizeEntityNameInput(value);
       }
 
       if (field === 'es_tienda_departamento') {

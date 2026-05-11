@@ -17,7 +17,7 @@ const Store = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nombre: '', 
-    tipo_evaluacion: 'AMBOS',
+    tipo_evaluacion: '',
     activo: true,
     configuraciones: [createEmptyProductoConfiguracion()],
   });

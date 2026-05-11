@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { EyeIcon, PencilSquareIcon, PowerIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, PencilSquareIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import InfoModal from 'components/Shared/Modals/InfoModal';
+import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import Table from 'components/Shared/Tables/Table';
 import useInfoModal from 'hooks/useInfoModal';
@@ -30,9 +31,11 @@ const INITIAL_FILTERS = {
 };
 
 const Index = () => {
+  const [toggleData, setToggleData] = useState(null);
   const [rolesFilterOptions, setRolesFilterOptions] = useState([]);
   const {
     loading,
+    setLoading,
     alert,
     setAlert,
     rows: niveles,
@@ -95,10 +98,18 @@ const Index = () => {
   }), [openInfoModal]);
 
   const handleToggleEstado = useCallback(async (row) => {
-    const nextState = !row.estado;
+    setToggleData(row);
+  }, []);
+
+  const handleToggleExecute = useCallback(async () => {
+    if (!toggleData) return;
+
+    const nextState = !Boolean(toggleData.estado);
+    setToggleData(null);
+    setLoading(true);
 
     try {
-      await toggleEstadoNivelDiscrecionalidad(row.id, nextState);
+      await toggleEstadoNivelDiscrecionalidad(toggleData.id, nextState);
       await fetchNiveles(paginationInfo.currentPage).catch(() => {});
       setAlert({
         type: 'success',
@@ -108,8 +119,9 @@ const Index = () => {
       });
     } catch (error) {
       setAlert(handleApiError(error, 'No se pudo cambiar el estado del nivel de discrecionalidad.'));
+      setLoading(false);
     }
-  }, [fetchNiveles, paginationInfo.currentPage, setAlert]);
+  }, [fetchNiveles, paginationInfo.currentPage, setAlert, setLoading, toggleData]);
 
   const filterConfig = useMemo(() => [
     {
@@ -184,12 +196,17 @@ const Index = () => {
     {
       header: 'Estado',
       render: (row) => (
-        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-black uppercase ${
-          row.estado ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'
-        }`}
+        <button
+          type="button"
+          onClick={() => handleToggleEstado(row)}
+          className={`px-3 py-1 text-[10px] font-black rounded border-b-2 transition-all active:translate-y-0.5 ${
+            row.estado
+              ? 'bg-green-600 border-green-800 text-white hover:bg-green-700'
+              : 'bg-red-600 border-red-800 text-white hover:bg-red-700'
+          }`}
         >
           {formatNivelDiscrecionalidadEstado(row.estado)}
-        </span>
+        </button>
       ),
     },
     {
@@ -212,15 +229,6 @@ const Index = () => {
           >
             <PencilSquareIcon className="w-5 h-5" /> Editar
           </Link>
-          <button
-            onClick={() => handleToggleEstado(row)}
-            className={`flex items-center gap-1 font-black transition-colors uppercase text-xs tracking-tighter ${
-              row.estado ? 'text-amber-700 hover:text-amber-800' : 'text-green-700 hover:text-green-800'
-            }`}
-          >
-            <PowerIcon className="w-5 h-5" />
-            {row.estado ? 'Inactivar' : 'Activar'}
-          </button>
         </div>
       ),
     },
@@ -248,6 +256,15 @@ const Index = () => {
       />
 
       <InfoModal {...modalProps} />
+
+      {toggleData ? (
+        <ConfirmModal
+          title="Cambiar estado"
+          message={`¿Desea cambiar el estado del nivel de discrecionalidad para ${toggleData.rol_autorizador?.nombre || 'este registro'}?`}
+          onConfirm={handleToggleExecute}
+          onCancel={() => setToggleData(null)}
+        />
+      ) : null}
 
       <div className="rounded-xl overflow-hidden">
         <Table

@@ -58,6 +58,7 @@ const useEvaluacionConsumoList = () => {
     detailOpen,
     setDetailOpen,
     detailData,
+    setDetailData,
     handleView,
   };
 };

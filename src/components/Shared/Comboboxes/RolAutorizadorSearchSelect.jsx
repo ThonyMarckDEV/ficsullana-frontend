@@ -57,6 +57,7 @@ const RolAutorizadorSearchSelect = ({
             const nextValue = event.target.value;
             setInputValue(nextValue);
             setSearchError('');
+            setShowSuggestions(false);
             if (selectedId) {
               markSelectionClearedInternally();
               onSelect?.(null);
@@ -69,6 +70,11 @@ const RolAutorizadorSearchSelect = ({
             }
           }}
           onClick={() => {
+            if (!showSuggestions) {
+              runSearch(inputValue);
+              return;
+            }
+
             reopenSuggestions();
           }}
           disabled={disabled}
@@ -82,7 +88,7 @@ const RolAutorizadorSearchSelect = ({
         />
         <button
           type="button"
-          onClick={runSearch}
+          onClick={() => runSearch()}
           disabled={disabled || loading}
           className="absolute right-2 text-slate-400 hover:text-fic-red p-1"
         >
@@ -118,7 +124,7 @@ const RolAutorizadorSearchSelect = ({
                 <p className="text-xs text-red-700 mb-2">{searchError}</p>
                 <button
                   type="button"
-                  onClick={runSearch}
+                  onClick={() => runSearch()}
                   disabled={loading}
                   className="bg-fic-red text-white text-xs px-4 py-2 rounded-md font-bold shadow hover:bg-red-700 w-full"
                 >
@@ -135,9 +141,6 @@ const RolAutorizadorSearchSelect = ({
       </div>
       {searchError && !showSuggestions ? (
         <p className="text-[11px] text-red-600 mt-1">{searchError}</p>
-      ) : null}
-      {selectedId ? (
-        <p className="text-[10px] text-green-600 mt-1 font-bold">Rol autorizador seleccionado correctamente</p>
       ) : null}
     </div>
   );

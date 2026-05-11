@@ -82,7 +82,7 @@ export const normalizeProducto = (producto = {}) => {
   return {
     id: producto?.id ?? null,
     nombre: producto?.nombre || '',
-    tipo_evaluacion: producto?.tipo_evaluacion || 'AMBOS',
+    tipo_evaluacion: producto?.tipo_evaluacion ?? 'AMBOS',
     activo: toBoolean(producto?.activo, true),
     rango_tasa: producto?.rango_tasa || '',
     created_at: producto?.created_at || null,

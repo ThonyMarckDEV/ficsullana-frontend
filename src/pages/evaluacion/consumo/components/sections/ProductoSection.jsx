@@ -6,8 +6,7 @@ const baseInputClass = 'w-full px-3 py-2 border border-slate-300 rounded-md text
 
 const ProductoSection = ({ form, disabled, setField, catalogos, sectionNumber }) => (
   <section className="bg-white border border-slate-200 rounded-xl p-5">
-    <h3 className="text-sm font-black uppercase text-slate-700 mb-1">{formatSectionTitle(sectionNumber, 'Producto')}</h3>
-    <p className="text-[11px] text-slate-500 mb-4">Seleccione primero el producto para resolver la tasa aplicable según periodicidad, monto y cuotas.</p>
+    <h3 className="text-sm font-black uppercase text-slate-700 mb-4">{formatSectionTitle(sectionNumber, 'Producto')}</h3>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>

@@ -66,7 +66,7 @@ export const buildEvaluacionConsumoPrintView = (record) => {
     gastoEducacion: record.gasto_educacion,
     gastoMovilidad: record.gasto_movilidad,
     gastoImprevistos: record.gasto_imprevistos,
-    gastoSubtotal: record.gasto_subtotal,
+    totalGastoUnidad: record.total_gasto_unidad,
     gastoObligaciones: record.gasto_obligaciones,
     gastoOtrosEgresos: record.gasto_otros_egresos,
     criterioEntorno: record.criterio_entorno || 'N/A',
