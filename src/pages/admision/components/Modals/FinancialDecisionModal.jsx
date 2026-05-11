@@ -3,6 +3,7 @@ import {
   ADMISION_COPY_COMMON,
   ADMISION_COPY_EXCEPTION_MODAL,
 } from 'utilities/pages/admision/copy';
+import { ADMISION_STATES } from 'utilities/pages/admision/status';
 
 const FinancialDecisionModal = ({
   isOpen,
@@ -16,9 +17,24 @@ const FinancialDecisionModal = ({
 }) => {
   if (!isOpen) return null;
 
-  const isApprove = Number(decision) === 1;
+  const numericDecision = Number(decision);
+  const isApprove = numericDecision === ADMISION_STATES.APROBADO;
+  const isObserved = numericDecision === ADMISION_STATES.OBSERVADO;
   const isCommentEmpty = comment.trim() === '';
   const hasCommentError = Boolean(error);
+  const decisionTone = isApprove
+    ? 'green'
+    : (isObserved ? 'blue' : 'red');
+  const decisionText = isApprove
+    ? ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.DECISION_APROBAR
+    : (isObserved
+      ? ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.DECISION_OBSERVAR
+      : ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.DECISION_RECHAZAR);
+  const confirmText = isApprove
+    ? ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.CONFIRM_APROBAR
+    : (isObserved
+      ? ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.CONFIRM_OBSERVAR
+      : ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.CONFIRM_RECHAZAR);
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4">
@@ -30,14 +46,12 @@ const FinancialDecisionModal = ({
           <p className="text-xs text-slate-600 mt-1">
             {ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.SUBTITLE}
           </p>
-          <p className={`mt-2 text-xs font-black uppercase ${isApprove ? 'text-green-700' : 'text-red-700'}`}>
-            {isApprove
-              ? ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.DECISION_APROBAR
-              : ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.DECISION_RECHAZAR}
+          <p className={`mt-2 text-xs font-black uppercase ${decisionTone === 'green' ? 'text-green-700' : decisionTone === 'blue' ? 'text-blue-700' : 'text-red-700'}`}>
+            {decisionText}
           </p>
         </div>
 
-        <div className={`mt-4 rounded-lg border p-3 ${isApprove ? 'border-green-200 bg-green-50/40' : 'border-red-200 bg-red-50/40'}`}>
+        <div className={`mt-4 rounded-lg border p-3 ${decisionTone === 'green' ? 'border-green-200 bg-green-50/40' : decisionTone === 'blue' ? 'border-blue-200 bg-blue-50/40' : 'border-red-200 bg-red-50/40'}`}>
           <label htmlFor="financial-comment" className="block text-[11px] uppercase font-black text-slate-700">
             {ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.COMENTARIO_LABEL}
           </label>
@@ -74,13 +88,11 @@ const FinancialDecisionModal = ({
             type="button"
             onClick={onConfirm}
             disabled={loading || isCommentEmpty}
-            className={`px-3 py-2 text-xs font-bold uppercase text-white rounded disabled:opacity-50 disabled:cursor-not-allowed ${isApprove ? 'bg-green-700 hover:bg-green-800' : 'bg-red-700 hover:bg-red-800'}`}
+            className={`px-3 py-2 text-xs font-bold uppercase text-white rounded disabled:opacity-50 disabled:cursor-not-allowed ${decisionTone === 'green' ? 'bg-green-700 hover:bg-green-800' : decisionTone === 'blue' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-red-700 hover:bg-red-800'}`}
           >
             {loading
               ? ADMISION_COPY_COMMON.ACTIONS.PROCESANDO
-              : (isApprove
-                ? ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.CONFIRM_APROBAR
-                : ADMISION_COPY_EXCEPTION_MODAL.FINANCIAL.CONFIRM_RECHAZAR)}
+              : confirmText}
           </button>
         </div>
       </div>

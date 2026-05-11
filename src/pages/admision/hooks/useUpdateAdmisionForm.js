@@ -12,7 +12,6 @@ import {
 } from 'utilities/pages/admision/evaluation';
 import { buildAdmisionPayload } from 'utilities/pages/admision/payload';
 import {
-  ESTADOS,
   mapDeudasFromAdmision,
   mapHeaderFromAdmision,
   mapProtestosFromAdmision,
@@ -131,7 +130,6 @@ const useUpdateAdmisionForm = ({ id, navigate, checkPermission }) => {
       header,
       deudas,
       protestos,
-      includeEstado: true,
     });
 
     try {
@@ -205,7 +203,6 @@ const useUpdateAdmisionForm = ({ id, navigate, checkPermission }) => {
     handleSubmit,
     handleConfirmException,
     handleToggleExceptionRule,
-    estados: ESTADOS,
   };
 };
 

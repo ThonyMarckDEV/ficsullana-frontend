@@ -26,7 +26,7 @@ describe('decisionPayload', () => {
     expect(payload).not.toHaveProperty('cuota');
   });
 
-  it('validates missing fields and product range before sending decision payload', () => {
+  it('validates required and numeric fields without blocking product-policy exceptions', () => {
     const errors = validateDecisionPlanAdjustments({
       monto: '1200.00',
       tipo_frecuencia: 'SEMANAL',
@@ -40,10 +40,7 @@ describe('decisionPayload', () => {
       helperText: 'No existe una configuración activa.',
     });
 
-    expect(errors).toEqual([
-      'No existe una configuración activa.',
-      'La tasa debe estar entre 10% y 20% según el producto seleccionado.',
-    ]);
+    expect(errors).toEqual([]);
   });
 
   it('blocks invalid numeric decision adjustments before calling update-estado', () => {

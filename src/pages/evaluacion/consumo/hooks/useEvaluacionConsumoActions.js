@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import {
   createEvaluacionConsumo,
+  enviarRevisionEvaluacionConsumo,
   updateEstadoEvaluacionConsumo,
   updateEvaluacionConsumo,
 } from 'services/evaluacionConsumoService';
@@ -31,7 +32,10 @@ import {
 } from 'utilities/pages/evaluacion/consumo/avalWorkflow';
 import { validateEvaluacionConsumoForm } from 'utilities/pages/evaluacion/consumo/validators';
 import { updateEvaluacionConsumoForm } from 'utilities/pages/evaluacion/consumo/formState';
-import { normalizeEvaluacionConsumoState } from 'utilities/pages/evaluacion/consumo/status';
+import {
+  isEvaluacionConsumoEditable,
+  normalizeEvaluacionConsumoState,
+} from 'utilities/pages/evaluacion/consumo/status';
 import {
   buildDecisionPlanAdjustmentPayload,
   validateDecisionPlanAdjustments,
@@ -75,7 +79,7 @@ const useEvaluacionConsumoActions = ({
   setSaving,
   catalogos,
   admisiones,
-  selectedProductoRange,
+  selectedProductoPolicy,
   deriveForm,
   loadAdmisionContext,
   setContexto,
@@ -429,29 +433,8 @@ const useEvaluacionConsumoActions = ({
 
     const errors = validateEvaluacionConsumoForm(form, {
       maxVecesSueldo: catalogos.max_veces_sueldo_consumo,
+      requiereDiscrecionalidad: selectedProductoPolicy?.requiereDiscrecionalidad,
     });
-    const propuesta = Number(form.propuesta);
-
-    if (
-      selectedProductoRange.hasConfiguraciones
-      && form.tipo_frecuencia
-      && form.monto
-      && form.numero_cuotas
-      && !selectedProductoRange.exactMatch
-    ) {
-      errors.push(selectedProductoRange.helperText);
-    }
-
-    if (
-      Number.isFinite(propuesta)
-      && selectedProductoRange.min !== null
-      && selectedProductoRange.max !== null
-      && (propuesta < selectedProductoRange.min || propuesta > selectedProductoRange.max)
-    ) {
-      errors.push(
-        `La tasa propuesta debe estar entre ${selectedProductoRange.min}% y ${selectedProductoRange.max}% según el producto seleccionado.`
-      );
-    }
 
     if (errors.length > 0) {
       setAlert({ type: 'error', message: 'Complete los campos obligatorios.', details: errors });
@@ -467,6 +450,7 @@ const useEvaluacionConsumoActions = ({
         setForm(deriveForm(mapApiToForm(source)));
         setContexto(normalizeEvaluacionContext(source.contexto));
         setAlert({ type: 'success', message: response.message || 'Evaluación consumo actualizada correctamente.' });
+        navigate('/evaluacion/consumo/listar');
       } else {
         const response = await createEvaluacionConsumo(payload);
         setAlert({ type: 'success', message: response.message || 'Evaluación consumo creada correctamente.' });
@@ -485,7 +469,7 @@ const useEvaluacionConsumoActions = ({
     id,
     isEditMode,
     navigate,
-    selectedProductoRange,
+    selectedProductoPolicy?.requiereDiscrecionalidad,
     setAlert,
     setContexto,
     setForm,
@@ -501,12 +485,12 @@ const useEvaluacionConsumoActions = ({
     if (decisionComentario === '') {
       setAlert({
         type: 'error',
-        message: 'Debe registrar un comentario para la decisión.',
+        message: 'Debe registrar un comentario para la resolución.',
       });
       return;
     }
 
-    const decisionPlanErrors = validateDecisionPlanAdjustments(form, selectedProductoRange);
+    const decisionPlanErrors = validateDecisionPlanAdjustments(form);
     if (decisionPlanErrors.length > 0) {
       setAlert({
         type: 'error',
@@ -538,7 +522,38 @@ const useEvaluacionConsumoActions = ({
     } finally {
       setSaving(false);
     }
-  }, [canMakeDecision, deriveForm, form, id, isEditMode, selectedProductoRange, setAlert, setContexto, setForm, setSaving]);
+  }, [canMakeDecision, deriveForm, form, id, isEditMode, setAlert, setContexto, setForm, setSaving]);
+
+  const handleSendToReview = useCallback(async () => {
+    if (
+      !isEditMode
+      || !canEdit
+      || canMakeDecision
+      || !isEvaluacionConsumoEditable(form.estado)
+    ) {
+      return null;
+    }
+
+    setSaving(true);
+    setAlert(null);
+
+    try {
+      const response = await enviarRevisionEvaluacionConsumo(id);
+      const source = response.data || response;
+      setForm(deriveForm(mapApiToForm(source)));
+      setContexto(normalizeEvaluacionContext(source.contexto));
+      setAlert({
+        type: 'success',
+        message: response.message || 'Evaluación enviada a revisión correctamente.',
+      });
+      return source;
+    } catch (error) {
+      setAlert(handleApiError(error, 'No se pudo enviar la evaluación a revisión.'));
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  }, [canEdit, canMakeDecision, deriveForm, form.estado, id, isEditMode, setAlert, setContexto, setForm, setSaving]);
 
   return {
     setField,
@@ -560,6 +575,7 @@ const useEvaluacionConsumoActions = ({
     removeIngresoRow,
     handleSubmit,
     handleDecision,
+    handleSendToReview,
   };
 };
 

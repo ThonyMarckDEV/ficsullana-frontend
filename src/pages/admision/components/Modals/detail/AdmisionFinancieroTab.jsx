@@ -9,6 +9,7 @@ import {
   getCalificacionTone,
   toNumeric,
 } from '../../../../../utilities/pages/admision/viewModel';
+import { ADMISION_STATES } from 'utilities/pages/admision/status';
 
 const AdmisionFinancieroTab = ({
   viewModel,
@@ -38,8 +39,9 @@ const AdmisionFinancieroTab = ({
               className="w-full text-sm px-3 py-2.5 border border-slate-300 rounded-md outline-none focus:border-fic-red focus:ring-1 focus:ring-fic-red text-slate-700 font-bold transition-all bg-slate-50 hover:bg-white cursor-pointer"
             >
               <option value="" className="text-slate-500 font-normal">-- Seleccione la decisión final --</option>
-              <option value="1" className="text-green-700 font-bold">✓ Aprobar Admisión</option>
-              <option value="3" className="text-red-700 font-bold">✗ Rechazar Admisión</option>
+              <option value={ADMISION_STATES.OBSERVADO} className="text-blue-700 font-bold">Observar Admisión</option>
+              <option value={ADMISION_STATES.APROBADO} className="text-green-700 font-bold">Aprobar Admisión</option>
+              <option value={ADMISION_STATES.RECHAZADO} className="text-red-700 font-bold">Rechazar Admisión</option>
             </select>
           </div>
           <button

@@ -190,9 +190,13 @@ describe('apiMappers', () => {
     expect(payload.otros_ingresos_tipo_negocio).toBeNull();
     expect(payload.actividad_no_sensible_id).toBeNull();
     expect(payload.garantias_solicitante).toHaveLength(1);
+    expect(payload.garantias_solicitante[0].valor_realizacion).toBeNull();
+    expect(payload.garantias_solicitante[0].ficha_registral).toBeNull();
     expect(payload.avales).toHaveLength(1);
     expect(payload.avales[0].es_carnet_extranjeria).toBe(true);
     expect(payload.avales[0].garantias).toHaveLength(2);
+    expect(payload.avales[0].garantias[0].valor_realizacion).toBeNull();
+    expect(payload.avales[0].garantias[0].ficha_registral).toBeNull();
     expect(payload.avales[0].garantias.map((garantia) => garantia.descripcion)).toEqual([
       'Garantia aval',
       'Segunda garantia aval',

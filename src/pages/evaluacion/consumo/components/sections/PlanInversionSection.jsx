@@ -66,6 +66,7 @@ const PlanInversionSection = ({ form, disabled, setField, catalogos, selectedPro
         >
           <option value="">SELECCIONE...</option>
           <option value="SEMANAL">SEMANAL</option>
+          <option value="DECENAL">DECENAL</option>
           <option value="CATORCENAL">CATORCENAL</option>
           <option value="MENSUAL">MENSUAL</option>
         </select>
@@ -108,8 +109,7 @@ const PlanInversionSection = ({ form, disabled, setField, catalogos, selectedPro
           value={form.propuesta}
           onChange={(e) => setField('propuesta', e.target.value)}
           disabled={disabled}
-          min={selectedProductoRange?.min ?? 0.01}
-          max={selectedProductoRange?.max ?? undefined}
+          min="0.01"
           step="0.01"
         />
       </div>

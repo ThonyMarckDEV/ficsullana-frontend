@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ChatBubbleLeftEllipsisIcon,
   DocumentTextIcon,
   HomeModernIcon,
   IdentificationIcon,
@@ -11,12 +10,11 @@ import {
 import { Badge, InfoBlock } from 'pages/admision/components/Modals/detail/DetailShared';
 import {
   EVALUACION_CONSUMO_BADGE_STYLES,
+  formatEvaluacionConsumoState,
   normalizeEvaluacionConsumoState,
 } from 'utilities/pages/evaluacion/consumo/status';
 import {
-  buildAvalAddress,
-  buildAvalFullName,
-  formatDateOrNA,
+  formatShortDateOrNA,
   moneyOrNA,
   textOrNA,
 } from './detailFormatters';
@@ -67,7 +65,7 @@ export const StatusBadge = ({ state }) => {
         EVALUACION_CONSUMO_BADGE_STYLES[normalizedState] || 'bg-slate-100 text-slate-700 border-slate-200'
       }`}
     >
-      {normalizedState}
+      {formatEvaluacionConsumoState(normalizedState)}
     </span>
   );
 };
@@ -180,7 +178,7 @@ export const GarantiaCard = ({ garantia, index, titlePrefix = 'Garantía' }) => 
       <InfoBlock label="Valor comercial" value={moneyOrNA(garantia?.valor_comercial)} />
       <InfoBlock label="Valor realización" value={moneyOrNA(garantia?.valor_realizacion)} />
       <InfoBlock label="Ficha registral" value={textOrNA(garantia?.ficha_registral)} />
-      <InfoBlock label="Fecha última evaluación" value={formatDateOrNA(garantia?.fecha_ultima_evaluacion)} />
+      <InfoBlock label="Fecha última evaluación" value={formatShortDateOrNA(garantia?.fecha_ultima_evaluacion)} />
       <InfoBlock label="Moneda" value={textOrNA(garantia?.moneda?.nombre || garantia?.moneda_id)} />
     </InfoPanel>
 
@@ -193,29 +191,19 @@ export const GarantiaCard = ({ garantia, index, titlePrefix = 'Garantía' }) => 
 
 export const AvalCard = ({ aval, index }) => {
   const garantias = Array.isArray(aval?.garantias) ? aval.garantias : [];
-  const fullName = buildAvalFullName(aval);
-  const documentType = aval?.es_carnet_extranjeria ? 'CE' : 'DNI';
 
   return (
     <article className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase text-slate-600">Aval {index + 1}</p>
-          <h4 className="mt-1 text-base font-black text-slate-900">{textOrNA(fullName)}</h4>
-          <p className="mt-1 text-sm text-slate-500">{documentType}: {textOrNA(aval?.numero_documento)}</p>
-        </div>
+      <InfoPanel title="Identidad" columns="md:grid-cols-2 xl:grid-cols-4" soft accent="red" Icon={IdentificationIcon}>
+        <InfoBlock label="DNI" value={textOrNA(aval?.numero_documento)} />
+        <InfoBlock label="Nombres" value={textOrNA(aval?.nombres)} />
+        <InfoBlock label="Apellido paterno" value={textOrNA(aval?.apellido_paterno)} />
+        <InfoBlock label="Apellido materno" value={textOrNA(aval?.apellido_materno)} />
+      </InfoPanel>
 
-        <div className="flex flex-wrap gap-2">
-          <Badge label={aval?.aval_id ? `Registro #${aval.aval_id}` : 'Registro manual'} tone={aval?.aval_id ? 'green' : 'orange'} />
-          <Badge label={`${garantias.length} ${garantias.length === 1 ? 'garantía' : 'garantías'}`} tone="slate" />
-        </div>
-      </div>
-
-      <InfoPanel title="Identidad y contacto" columns="md:grid-cols-2 xl:grid-cols-4" soft accent="red" Icon={IdentificationIcon}>
-        <InfoBlock label="Tipo de vivienda" value={textOrNA(aval?.tipo_vivienda)} />
-        <InfoBlock label="Teléfono móvil" value={textOrNA(aval?.telefono_movil)} />
+      <InfoPanel title="Contacto" columns="md:grid-cols-2" soft accent="slate" Icon={IdentificationIcon}>
         <InfoBlock label="Teléfono fijo" value={textOrNA(aval?.telefono_fijo)} />
-        <InfoBlock label="Referencia domiciliaria" value={textOrNA(aval?.referencia_domiciliaria)} />
+        <InfoBlock label="Teléfono móvil" value={textOrNA(aval?.telefono_movil)} />
       </InfoPanel>
 
       <InfoPanel title="Domicilio" columns="md:grid-cols-2 xl:grid-cols-4" accent="orange" Icon={HomeModernIcon}>
@@ -226,20 +214,13 @@ export const AvalCard = ({ aval, index }) => {
         <InfoBlock label="Departamento" value={textOrNA(aval?.departamento)} />
         <InfoBlock label="Provincia" value={textOrNA(aval?.provincia)} />
         <InfoBlock label="Distrito" value={textOrNA(aval?.distrito)} />
-        <InfoBlock label="Dirección consolidada" value={textOrNA(buildAvalAddress(aval))} />
+        <InfoBlock label="Referencia domiciliaria" value={textOrNA(aval?.referencia_domiciliaria)} />
+        <InfoBlock label="Tipo de vivienda" value={textOrNA(aval?.tipo_vivienda)} />
       </InfoPanel>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <TextPanel title="Dirección libre" value={aval?.direccion} accent="orange" Icon={MapPinIcon} />
-        <TextPanel title="Referencia domiciliaria" value={aval?.referencia_domiciliaria} accent="red" Icon={ChatBubbleLeftEllipsisIcon} />
-      </div>
-
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <p className="text-xs font-black uppercase text-slate-600">Garantías del aval</p>
-          <span className="text-[11px] font-bold uppercase text-slate-500">
-            {garantias.length} {garantias.length === 1 ? 'registro' : 'registros'}
-          </span>
         </div>
 
         {garantias.length > 0 ? (

@@ -81,6 +81,7 @@ const validateGarantiaRow = ({
 export const validateEvaluacionConsumoForm = (form, options = {}) => {
   const errors = [];
   const maxVecesSueldo = Number(options.maxVecesSueldo || 0);
+  const requiereDiscrecionalidad = Boolean(options.requiereDiscrecionalidad);
   const montoEvaluacion = Number(form.monto || 0);
   const garantias = Array.isArray(form.garantias) ? form.garantias : [];
   const activeAvalSlots = getActiveAvalSlots(garantias);
@@ -114,7 +115,6 @@ export const validateEvaluacionConsumoForm = (form, options = {}) => {
     ['numero_cuotas', 'Debe ingresar el número de cuotas.'],
     ['propuesta', 'Debe ingresar la tasa propuesta %.'],
     ['producto_id', 'Debe seleccionar un producto.'],
-    ['motivos', 'Debe ingresar los motivos.'],
     ['criterio_entorno', 'Debe ingresar el criterio de entorno.'],
     ['criterio_direccion', 'Debe ingresar el criterio de dirección.'],
     ['criterio_capacidad_pago', 'Debe ingresar el criterio de capacidad de pago.'],
@@ -124,6 +124,10 @@ export const validateEvaluacionConsumoForm = (form, options = {}) => {
     ['criterio_colaterales', 'Debe ingresar el criterio de colaterales.'],
     ['criterio_condiciones', 'Debe ingresar el criterio de condiciones.'],
   ];
+
+  if (requiereDiscrecionalidad) {
+    requiredFields.push(['motivos', 'Debe ingresar el motivo de discrecionalidad.']);
+  }
 
   requiredFields.forEach(([field, message]) => {
     const value = form[field];

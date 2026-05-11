@@ -4,6 +4,7 @@ import {
 } from 'utilities/pages/evaluacion/consumo/formState';
 import { createAvalModalState } from 'utilities/pages/evaluacion/consumo/avalWorkflow';
 import {
+  isEvaluacionConsumoEditable,
   isEvaluacionConsumoLocked,
   normalizeEvaluacionConsumoState,
 } from 'utilities/pages/evaluacion/consumo/status';
@@ -29,6 +30,10 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
   const canReject = isEditMode && !isLocked && checkPermission('evaluaciones_consumo.rechazar');
   const canObserve = isEditMode && !isLocked && (canApprove || canReject);
   const canMakeDecision = canObserve || canApprove || canReject;
+  const canSendToReview = isEditMode
+    && canEdit
+    && isEvaluacionConsumoEditable(normalizedState)
+    && !canMakeDecision;
   const isReadonly = !canEdit;
 
   const {
@@ -58,6 +63,7 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
     selectedAdmision,
     selectedProducto,
     selectedProductoRange,
+    selectedProductoPolicy,
     selectedNivelDiscrecionalidad,
     dependienteFormalTipoIngresoIds,
     showBoletasSection,
@@ -214,6 +220,7 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
     removeIngresoRow,
     handleSubmit,
     handleDecision,
+    handleSendToReview,
   } = useEvaluacionConsumoActions({
     id,
     isEditMode,
@@ -224,7 +231,7 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
     setSaving,
     catalogos,
     admisiones,
-    selectedProductoRange,
+    selectedProductoPolicy,
     deriveForm,
     loadAdmisionContext,
     setContexto,
@@ -274,6 +281,7 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
     selectedAdmision,
     selectedProducto,
     selectedProductoRange,
+    selectedProductoPolicy,
     selectedNivelDiscrecionalidad,
     contexto,
     contextLoading,
@@ -284,6 +292,7 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
     isEditMode,
     isReadonly,
     canEdit,
+    canSendToReview,
     canObserve,
     canApprove,
     canReject,
@@ -296,6 +305,7 @@ const useEvaluacionConsumoForm = ({ id, navigate, checkPermission }) => {
     dependienteFormalTipoIngresoIds,
     handleSubmit,
     handleDecision,
+    handleSendToReview,
     totals,
     otrosIngresosLimit,
     avalGroups,

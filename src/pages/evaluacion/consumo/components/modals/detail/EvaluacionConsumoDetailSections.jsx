@@ -3,7 +3,6 @@ import {
   BanknotesIcon,
   BuildingOffice2Icon,
   ChartBarSquareIcon,
-  ChatBubbleLeftEllipsisIcon,
   ClipboardDocumentListIcon,
   DocumentTextIcon,
   HomeModernIcon,
@@ -30,18 +29,25 @@ import {
   textOrNA,
 } from './detailFormatters';
 
-export const ResumenSection = ({ data, productoRange }) => (
-  <div className="space-y-4">
-    <InfoPanel title="Contexto de evaluación" columns="md:grid-cols-2 xl:grid-cols-4" accent="red" Icon={ClipboardDocumentListIcon}>
-      <InfoBlock label="Categoría" value={textOrNA(data?.categoria?.nombre)} />
-      <InfoBlock label="Antigüedad laboral" value={textOrNA(data?.antiguedad_laboral_texto)} />
-      <InfoBlock label="Perfil" value={textOrNA(data?.rol?.nombre)} />
+const PoliticaProductoPanel = ({ data }) => {
+  if (!data?.requiere_discrecionalidad) {
+    return null;
+  }
+
+  return (
+    <InfoPanel title="Discrecionalidad" columns="md:grid-cols-3" soft accent="amber" Icon={ChartBarSquareIcon}>
+      <InfoBlock label="Tasa de interés" value={percentOrNA(data?.tasa_interes_solicitada || data?.propuesta)} />
       <InfoBlock
-        label="Nivel discrecionalidad"
+        label="Nivel"
         value={textOrNA(data?.nivel_discrecionalidad_resuelto?.rol_autorizador?.nombre || 'SIN REGLA APLICABLE')}
       />
+      <InfoBlock label="Motivos" value={textOrNA(data?.motivos)} />
     </InfoPanel>
+  );
+};
 
+export const ResumenSection = ({ data, productoRange }) => (
+  <div className="space-y-4">
     <InfoPanel title="Operación" columns="md:grid-cols-2 xl:grid-cols-4" soft accent="amber" Icon={ChartBarSquareIcon}>
       <InfoBlock label="Moneda" value={textOrNA(data?.moneda?.nombre)} />
       <InfoBlock label="Monto" value={moneyOrNA(data?.monto)} />
@@ -62,10 +68,9 @@ export const ResumenSection = ({ data, productoRange }) => (
       <TextPanel title="Dirección del solicitante" value={data?.direccion_snapshot} accent="amber" Icon={MapPinIcon} />
     </div>
 
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-      <TextPanel title="Motivos" value={data?.motivos} accent="red" Icon={ChatBubbleLeftEllipsisIcon} />
-      <TextPanel title="Comentario de decisión" value={data?.decision_comentario} accent="orange" Icon={ShieldCheckIcon} />
-    </div>
+    <PoliticaProductoPanel data={data} />
+
+    <TextPanel title="Comentario de decisión" value={data?.decision_comentario} accent="orange" Icon={ShieldCheckIcon} />
   </div>
 );
 

@@ -1,22 +1,34 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import Table from 'components/Shared/Tables/Table';
 import LoadingScreen from 'components/Shared/LoadingScreen';
-import { ClipboardDocumentCheckIcon, EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
+import { ClipboardDocumentCheckIcon, EyeIcon, PaperAirplaneIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import { useAuth } from 'context/AuthContext';
 import useEvaluacionConsumoList from '../hooks/useEvaluacionConsumoList';
 import EvaluacionConsumoDetailModal from '../components/modals/EvaluacionConsumoDetailModal';
 import {
   EVALUACION_CONSUMO_BADGE_STYLES,
-  EVALUACION_CONSUMO_STATE_OPTIONS,
+  formatEvaluacionConsumoState,
+  getEvaluacionConsumoStateFilterOptions,
+  isEvaluacionConsumoEditable,
   isEvaluacionConsumoLocked,
   normalizeEvaluacionConsumoState,
 } from 'utilities/pages/evaluacion/consumo/status';
 
 const Index = () => {
   const { checkPermission } = useAuth();
+  const [sendConfirmRow, setSendConfirmRow] = useState(null);
+  const canEditRecords = checkPermission('evaluaciones_consumo.editar');
+  const canApproveRecords = checkPermission('evaluaciones_consumo.aprobar');
+  const canRejectRecords = checkPermission('evaluaciones_consumo.rechazar');
+  const canSeeAllEvaluaciones = canApproveRecords || canRejectRecords;
+  const stateFilterOptions = useMemo(
+    () => getEvaluacionConsumoStateFilterOptions({ canReviewQueue: canSeeAllEvaluaciones }),
+    [canSeeAllEvaluaciones]
+  );
   const {
     loading,
     alert,
@@ -34,12 +46,10 @@ const Index = () => {
     detailData,
     setDetailData,
     handleView,
-  } = useEvaluacionConsumoList();
-
-  const canEditRecords = checkPermission('evaluaciones_consumo.editar');
-  const canApproveRecords = checkPermission('evaluaciones_consumo.aprobar');
-  const canRejectRecords = checkPermission('evaluaciones_consumo.rechazar');
-  const canSeeAllEvaluaciones = canApproveRecords || canRejectRecords;
+    refreshDetail,
+    sendLoadingId,
+    handleSendToReview,
+  } = useEvaluacionConsumoList({ canReviewQueue: canSeeAllEvaluaciones });
 
   const columns = useMemo(() => [
     {
@@ -67,7 +77,7 @@ const Index = () => {
       header: 'Estado',
       render: (row) => (
         <span className={`inline-flex px-2 py-1 text-[10px] font-black uppercase rounded-full border ${EVALUACION_CONSUMO_BADGE_STYLES[normalizeEvaluacionConsumoState(row.estado)] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
-          {normalizeEvaluacionConsumoState(row.estado)}
+          {formatEvaluacionConsumoState(row.estado)}
         </span>
       ),
     },
@@ -75,7 +85,12 @@ const Index = () => {
       header: 'Acciones',
       render: (row) => {
         const isLocked = isEvaluacionConsumoLocked(row.estado);
-        const canOpenEditForm = !isLocked && canEditRecords;
+        const canOpenEditForm = canEditRecords
+          && !canSeeAllEvaluaciones
+          && !isLocked
+          && isEvaluacionConsumoEditable(row.estado);
+        const canSendToReview = canEditRecords && !canSeeAllEvaluaciones && isEvaluacionConsumoEditable(row.estado);
+        const isSending = Number(sendLoadingId) === Number(row.id);
 
         return (
           <div className="flex items-center gap-3">
@@ -91,16 +106,26 @@ const Index = () => {
             {canOpenEditForm && (
               <Link
                 to={`/evaluacion/consumo/editar/${row.id}`}
-                className="inline-flex items-center gap-1 text-xs font-black uppercase text-fic-red hover:text-red-700"
+                className="inline-flex items-center gap-1 text-xs font-black uppercase text-amber-600 hover:text-amber-700"
               >
                 <PencilSquareIcon className="w-4 h-4" /> Editar
               </Link>
+            )}
+            {canSendToReview && (
+              <button
+                type="button"
+                onClick={() => setSendConfirmRow(row)}
+                disabled={isSending}
+                className="inline-flex items-center gap-1 text-xs font-black uppercase text-fic-red hover:text-red-700 disabled:opacity-50"
+              >
+                <PaperAirplaneIcon className="w-4 h-4" /> {isSending ? 'Enviando...' : 'Enviar a revisión'}
+              </button>
             )}
           </div>
         );
       },
     },
-  ], [canEditRecords, checkPermission, handleView]);
+  ], [canEditRecords, canSeeAllEvaluaciones, checkPermission, handleView, sendLoadingId]);
 
   const filterConfig = useMemo(() => [
     {
@@ -114,10 +139,18 @@ const Index = () => {
       name: 'estado',
       type: 'select',
       label: 'Estado',
-      options: EVALUACION_CONSUMO_STATE_OPTIONS,
+      options: stateFilterOptions,
       colSpan: 'md:col-span-4',
     },
-  ], []);
+  ], [stateFilterOptions]);
+
+  const handleDecisionSuccess = useCallback(async (nextData) => {
+    if (!nextData?.id) return;
+
+    setDetailData(nextData);
+    await refreshDetail(nextData.id, nextData);
+    fetchRows(pagination.currentPage).catch(() => {});
+  }, [fetchRows, pagination.currentPage, refreshDetail, setDetailData]);
 
   if (loading && rows.length === 0) return <LoadingScreen />;
 
@@ -145,11 +178,23 @@ const Index = () => {
         onClose={() => setDetailOpen(false)}
         loading={detailLoading}
         data={detailData}
-        onDecisionSuccess={(nextData) => {
-          setDetailData(nextData);
-          fetchRows(pagination.currentPage).catch(() => {});
-        }}
+        onDecisionSuccess={handleDecisionSuccess}
       />
+
+      {sendConfirmRow ? (
+        <ConfirmModal
+          title="Enviar a revisión"
+          message={`¿Deseas enviar la evaluación #${sendConfirmRow.id} a revisión?`}
+          confirmText="Enviar"
+          cancelText="Cancelar"
+          onConfirm={async () => {
+            const targetId = sendConfirmRow.id;
+            setSendConfirmRow(null);
+            await handleSendToReview(targetId);
+          }}
+          onCancel={() => setSendConfirmRow(null)}
+        />
+      ) : null}
 
       <Table
         columns={columns}

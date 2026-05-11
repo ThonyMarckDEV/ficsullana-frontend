@@ -26,6 +26,7 @@ import {
     getTipoEvaluacionLabel,
     buildProductoPayload,
     normalizeProducto,
+    toBoolean,
 } from 'utilities/productos';
 
 const INITIAL_FILTERS = { search: '' };
@@ -66,6 +67,7 @@ const Index = () => {
         fetcher: () => showProducto(id),
         mapData: (response) => {
             const producto = normalizeProducto(response.data.data || response.data);
+            const productoActivo = toBoolean(producto.activo, true);
             const summary = buildProductoConfiguracionSummary(producto);
             const configuraciones = (producto.configuraciones || []).filter((item) => item.legacy !== true);
             
@@ -75,7 +77,7 @@ const Index = () => {
                     icon: CreditCardIcon,
                     items: [
                         { label: "Nombre Comercial", value: producto.nombre, fullWidth: true },
-                        { label: "Estado", value: producto.activo ? 'ACTIVO' : 'INACTIVO' },
+                        { label: "Estado", value: productoActivo ? 'ACTIVO' : 'INACTIVO' },
                         { label: "Rango global", value: summary.overallRangeLabel },
                         { label: "Tipo de Evaluación", value: getTipoEvaluacionLabel(producto.tipo_evaluacion) },
                         { label: "Fecha de Creación", value: new Date(producto.created_at).toLocaleDateString() },
@@ -106,7 +108,7 @@ const Index = () => {
     const handleToggleEstado = useCallback(async () => {
         if (!productoToToggle) return;
 
-        const nuevoEstado = !Boolean(productoToToggle.activo);
+        const nuevoEstado = !toBoolean(productoToToggle.activo, true);
 
         setProductoToToggle(null);
         setLoading(true);
@@ -175,19 +177,23 @@ const Index = () => {
         },
         {
             header: 'Estado',
-            render: (row) => (
-                <button
-                    type="button"
-                    onClick={() => setProductoToToggle(row)}
-                    className={`px-3 py-1 text-[10px] font-black rounded border-b-2 transition-all active:translate-y-0.5 ${
-                        row.activo
-                            ? 'bg-green-600 border-green-800 text-white hover:bg-red-600 hover:border-red-800'
-                            : 'bg-red-600 border-red-800 text-white hover:bg-green-600 hover:border-green-800'
-                    }`}
-                >
-                    {row.activo ? 'ACTIVO' : 'INACTIVO'}
-                </button>
-            )
+            render: (row) => {
+                const activo = toBoolean(row.activo, true);
+
+                return (
+                    <button
+                        type="button"
+                        onClick={() => setProductoToToggle(row)}
+                        className={`px-3 py-1 text-[10px] font-black rounded border-b-2 transition-all active:translate-y-0.5 ${
+                            activo
+                                ? 'bg-green-600 border-green-800 text-white hover:bg-red-600 hover:border-red-800'
+                                : 'bg-red-600 border-red-800 text-white hover:bg-green-600 hover:border-green-800'
+                        }`}
+                    >
+                        {activo ? 'ACTIVO' : 'INACTIVO'}
+                    </button>
+                );
+            }
         },
         {
             header: 'Acciones',
@@ -236,7 +242,7 @@ const Index = () => {
 
             {productoToToggle && (
                 <ConfirmModal
-                    message={`¿Deseas cambiar el estado a ${productoToToggle.activo ? 'INACTIVO' : 'ACTIVO'}?`}
+                    message={`¿Deseas cambiar el estado a ${toBoolean(productoToToggle.activo, true) ? 'INACTIVO' : 'ACTIVO'}?`}
                     onConfirm={handleToggleEstado}
                     onCancel={() => setProductoToToggle(null)}
                 />

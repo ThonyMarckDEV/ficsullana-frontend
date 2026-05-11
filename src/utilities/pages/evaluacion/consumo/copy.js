@@ -16,11 +16,13 @@ export const EVAL_CONSUMO_COPY = {
     APROBAR: 'Aprobar evaluación',
     OBSERVAR: 'Observar evaluación',
     RECHAZAR: 'Rechazar evaluación',
+    ENVIAR_REVISION: 'ENVIAR A REVISIÓN',
     VOLVER: 'Volver al listado',
     IMPRIMIR: 'Imprimir',
   },
   STATES: {
     PENDIENTE: 'PENDIENTE',
+    EN_REVISION: 'EN REVISIÓN',
     OBSERVADO: 'OBSERVADO',
     APROBADO: 'APROBADO',
     RECHAZADO: 'RECHAZADO',
@@ -75,6 +77,7 @@ export const EVAL_CONSUMO_COPY = {
       DIRECCION: 'Dirección',
       MONTO: 'Monto de garantías',
       VALOR_REALIZACION: 'Valor de realización',
+      FICHA_REGISTRAL: 'Ficha registral',
     },
   },
   HISTORY: {

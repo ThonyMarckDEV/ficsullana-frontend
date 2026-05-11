@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import LoadingScreen from 'components/Shared/LoadingScreen';
+import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { useAuth } from 'context/AuthContext';
-import { ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
+import { ClipboardDocumentCheckIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import AvalModal from './modals/AvalModal';
 import SelectAdmisionModal from './modals/SelectAdmisionModal';
 import EncabezadoSection from './sections/EncabezadoSection';
@@ -33,6 +34,8 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user, checkPermission } = useAuth();
+  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
 
   const {
     loading,
@@ -51,6 +54,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     admisionesLoading,
     admisionesError,
     selectedProductoRange,
+    selectedProductoPolicy,
     selectedNivelDiscrecionalidad,
     contexto,
     contextLoading,
@@ -60,6 +64,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     isEditMode,
     isReadonly,
     canEdit,
+    canSendToReview,
     handleSelectAdmision,
     handleIngresoChange,
     addIngresoRow,
@@ -67,6 +72,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     showBoletasSection,
     dependienteFormalTipoIngresoIds,
     handleSubmit,
+    handleSendToReview,
     totals,
     otrosIngresosLimit,
     avalGroups,
@@ -89,6 +95,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     sede: { nombre: jwtUtils.getNombreSede(token) || 'N/A' },
   };
   const hasAvalesActivos = avalGroups.length > 0;
+  const showDiscrecionalidadSection = Boolean(selectedProductoPolicy?.requiereDiscrecionalidad);
   const activeAvalGroup = avalGroups.find((group) => group.slot === avalModalState.activeAvalSlot) || null;
   const financialBlockMessage = useMemo(() => {
     const financialLimits = evaluateFinancialLimits(form);
@@ -110,7 +117,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
       datosGenerales: currentSection++,
       producto: currentSection++,
       planInversion: currentSection++,
-      discrecionalidad: currentSection++,
+      discrecionalidad: showDiscrecionalidadSection ? currentSection++ : null,
       ingresosPrincipales: currentSection++,
       boletas: showBoletasSection ? currentSection++ : null,
       otrosIngresos: currentSection++,
@@ -128,6 +135,7 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
     contexto?.excepciones?.length,
     contexto?.historial_interno?.visible,
     hasAvalesActivos,
+    showDiscrecionalidadSection,
     showBoletasSection,
   ]);
 
@@ -150,7 +158,13 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
         onClose={() => setAlert(null)}
       />
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSaveConfirmOpen(true);
+        }}
+        className="space-y-5"
+      >
         <EncabezadoSection user={authDisplayUser} form={form} sectionNumber={sectionNumbers.encabezado} />
 
         <DatosGeneralesSection
@@ -180,13 +194,15 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
           sectionNumber={sectionNumbers.planInversion}
         />
 
-        <DiscrecionalidadSection
-          form={form}
-          disabled={isReadonly}
-          setField={setField}
-          selectedNivelDiscrecionalidad={selectedNivelDiscrecionalidad}
-          sectionNumber={sectionNumbers.discrecionalidad}
-        />
+        {showDiscrecionalidadSection ? (
+          <DiscrecionalidadSection
+            form={form}
+            disabled={isReadonly}
+            setField={setField}
+            selectedNivelDiscrecionalidad={selectedNivelDiscrecionalidad}
+            sectionNumber={sectionNumbers.discrecionalidad}
+          />
+        ) : null}
 
         <IngresosPrincipalesSection
           form={form}
@@ -288,11 +304,27 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
             <button
               type="submit"
               disabled={saving || Boolean(financialBlockMessage)}
-              className="px-5 py-2.5 bg-fic-red text-white text-xs font-bold uppercase rounded hover:bg-red-700 disabled:opacity-50"
+              className={`px-5 py-2.5 text-white text-xs font-bold uppercase rounded disabled:opacity-50 ${
+                isEditMode
+                  ? 'bg-amber-500 hover:bg-amber-600'
+                  : 'bg-fic-red hover:bg-red-700'
+              }`}
             >
               {saving
                 ? 'Guardando...'
                 : (isEditMode ? EVAL_CONSUMO_COPY.ACTIONS.ACTUALIZAR : EVAL_CONSUMO_COPY.ACTIONS.GUARDAR)}
+            </button>
+          )}
+
+          {canSendToReview && (
+            <button
+              type="button"
+              onClick={() => setSendConfirmOpen(true)}
+              disabled={saving || Boolean(financialBlockMessage)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-fic-red text-white text-xs font-bold uppercase rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              <PaperAirplaneIcon className="h-4 w-4" />
+              {saving ? 'Enviando...' : EVAL_CONSUMO_COPY.ACTIONS.ENVIAR_REVISION}
             </button>
           )}
         </div>
@@ -321,6 +353,36 @@ const EvaluacionConsumoFormPage = ({ mode = 'store' }) => {
         onCancelExit={cancelAvalModalExit}
         onConfirmExit={confirmAvalModalExit}
       />
+
+      {saveConfirmOpen ? (
+        <ConfirmModal
+          title={isEditMode ? 'Actualizar evaluación' : 'Registrar evaluación'}
+          message={isEditMode
+            ? `¿Deseas actualizar la evaluación #${id}?`
+            : '¿Deseas registrar esta evaluación?'}
+          confirmText={isEditMode ? 'Actualizar' : 'Registrar'}
+          cancelText="Cancelar"
+          onConfirm={async () => {
+            setSaveConfirmOpen(false);
+            await handleSubmit({ preventDefault: () => {} });
+          }}
+          onCancel={() => setSaveConfirmOpen(false)}
+        />
+      ) : null}
+
+      {sendConfirmOpen ? (
+        <ConfirmModal
+          title="Enviar a revisión"
+          message={`¿Deseas enviar la evaluación #${id} a revisión?`}
+          confirmText="Enviar"
+          cancelText="Cancelar"
+          onConfirm={async () => {
+            setSendConfirmOpen(false);
+            await handleSendToReview();
+          }}
+          onCancel={() => setSendConfirmOpen(false)}
+        />
+      ) : null}
     </div>
   );
 };

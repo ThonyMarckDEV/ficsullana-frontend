@@ -69,7 +69,7 @@ const GarantiaSimpleFields = ({
 
     <div className="xl:col-span-2">
       <label htmlFor={`evaluacion-garantia-ficha-${index}`} className={labelClass}>
-        Ficha registral
+        {labels.FICHA_REGISTRAL}
       </label>
       <input
         id={`evaluacion-garantia-ficha-${index}`}

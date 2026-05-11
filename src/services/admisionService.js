@@ -77,6 +77,14 @@ export const updateEstado = async (id, data) => {
   return handleResponse(response);
 };
 
+export const enviarRevisionAdmision = async (id) => {
+  const url = `${BASE_URL}/enviar-revision/${id}`;
+  const response = await fetchWithAuth(url, {
+    method: 'PATCH',
+    headers: { 'Accept': 'application/json' }
+  });
+  return handleResponse(response);
+};
 
 export const resolverExcepcionAdmision = async (id, data) => {
   const url = `${BASE_URL}/resolver-excepcion/${id}`;

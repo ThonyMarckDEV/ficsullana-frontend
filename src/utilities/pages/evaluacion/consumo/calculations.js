@@ -2,6 +2,7 @@ import { findTipoIngresoIdsByKey, TIPO_INGRESO_KEYS } from './tipoIngreso';
 
 export const FREQUENCY_VALUE_MAP = {
   SEMANAL: 4,
+  DECENAL: 3,
   CATORCENAL: 2,
   MENSUAL: 1,
 };

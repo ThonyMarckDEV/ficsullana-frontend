@@ -28,6 +28,15 @@ export const showEvaluacionConsumo = async (id) => {
   return handleResponse(response);
 };
 
+export const showImpresionEvaluacionConsumo = async (id) => {
+  const response = await fetchWithAuth(`${BASE_URL}/impresion/${id}`, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+
+  return handleResponse(response);
+};
+
 export const createEvaluacionConsumo = async (payload) => {
   const response = await fetchWithAuth(`${BASE_URL}/store`, {
     method: 'POST',
@@ -53,6 +62,15 @@ export const updateEstadoEvaluacionConsumo = async (id, payload) => {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+};
+
+export const enviarRevisionEvaluacionConsumo = async (id) => {
+  const response = await fetchWithAuth(`${BASE_URL}/enviar-revision/${id}`, {
+    method: 'PATCH',
+    headers: { Accept: 'application/json' },
   });
 
   return handleResponse(response);

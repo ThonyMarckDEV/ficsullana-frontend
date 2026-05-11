@@ -10,10 +10,39 @@ import {
   buildDecisionPlanAdjustmentPayload,
   validateDecisionPlanAdjustments,
 } from 'utilities/pages/evaluacion/consumo/decisionPayload';
-import { normalizeEvaluacionConsumoState } from 'utilities/pages/evaluacion/consumo/status';
+import {
+  isEvaluacionConsumoInReview,
+  normalizeEvaluacionConsumoState,
+} from 'utilities/pages/evaluacion/consumo/status';
 import DecisionSection from '../../sections/DecisionSection';
+import {
+  formatDateOrNA,
+  textOrNA,
+} from './detailFormatters';
 
-const buildDecisionForm = (data) => applyEvaluacionConsumoDerivedFields(mapApiToForm(data || {}));
+const hasValue = (value) => value !== null && value !== undefined && value !== '';
+
+const buildDecisionForm = (data) => {
+  const derivedForm = applyEvaluacionConsumoDerivedFields(mapApiToForm(data || {}));
+
+  return hasValue(data?.cuota)
+    ? { ...derivedForm, cuota: String(data.cuota) }
+    : derivedForm;
+};
+
+const buildDecisionDataKey = (data) => [
+  data?.id || '',
+  data?.estado || '',
+  data?.decision_comentario || '',
+  data?.resolucion_modificada_at || '',
+  data?.monto || '',
+  data?.tipo_frecuencia || '',
+  data?.numero_cuotas || '',
+  data?.propuesta || '',
+  data?.tasa || '',
+  data?.tasa_interes_solicitada || '',
+  data?.cuota || '',
+].join('|');
 
 const DECISION_CONFIRM_COPY = {
   OBSERVADO: {
@@ -41,15 +70,16 @@ const EvaluacionConsumoDecisionTab = ({
   const [alert, setAlert] = useState(null);
   const [saving, setSaving] = useState(false);
   const [pendingDecision, setPendingDecision] = useState(null);
-  const loadedDataIdRef = useRef(data?.id);
+  const loadedDataKeyRef = useRef(buildDecisionDataKey(data));
   const decisionInFlightRef = useRef(false);
 
   useEffect(() => {
-    if (loadedDataIdRef.current === data?.id) {
+    const nextDataKey = buildDecisionDataKey(data);
+    if (loadedDataKeyRef.current === nextDataKey) {
       return;
     }
 
-    loadedDataIdRef.current = data?.id;
+    loadedDataKeyRef.current = nextDataKey;
     decisionInFlightRef.current = false;
     setForm(buildDecisionForm(data));
     setAlert(null);
@@ -77,7 +107,7 @@ const EvaluacionConsumoDecisionTab = ({
     if (decisionComentario === '') {
       setAlert({
         type: 'error',
-        message: 'Debe registrar un comentario para la decisión.',
+        message: 'Debe registrar un comentario para la resolución.',
       });
       return null;
     }
@@ -124,11 +154,12 @@ const EvaluacionConsumoDecisionTab = ({
       const source = response.data || response;
 
       setForm(buildDecisionForm(source));
+      loadedDataKeyRef.current = buildDecisionDataKey(source);
       setAlert({
         type: 'success',
-        message: response.message || `Estado actualizado a ${pendingDecision.estado} correctamente.`,
+        message: response.message || `Resolución actualizada a ${pendingDecision.estado} correctamente.`,
       });
-      onDecisionSuccess?.(source);
+      await onDecisionSuccess?.(source);
     } catch (error) {
       setAlert(handleApiError(error, 'No se pudo registrar la decisión de la evaluación consumo.'));
     } finally {
@@ -140,9 +171,27 @@ const EvaluacionConsumoDecisionTab = ({
   const pendingDecisionCopy = pendingDecision
     ? DECISION_CONFIRM_COPY[pendingDecision.estado]
     : null;
+  const isInReview = isEvaluacionConsumoInReview(data?.estado);
+  const canEditResolution = isInReview;
+  const modifiedBy = data?.resolucion_modificada_por?.username
+    || data?.resolucion_modificada_por?.id
+    || '';
+  const modifiedAt = data?.resolucion_modificada_at;
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+        <div>
+          <p className="text-xs font-black uppercase text-slate-600">Resolución de crédito</p>
+          {modifiedBy || modifiedAt ? (
+            <p className="mt-1 text-xs text-slate-500">
+              Última modificación: {textOrNA(modifiedBy)} · {formatDateOrNA(modifiedAt, true)}
+            </p>
+          ) : null}
+        </div>
+
+      </div>
+
       <AlertMessage
         type={alert?.type}
         message={alert?.message}
@@ -158,9 +207,9 @@ const EvaluacionConsumoDecisionTab = ({
         decisionComment={form.decision_comentario || ''}
         onDecisionCommentChange={(value) => setDecisionField('decision_comentario', value)}
         onPlanFieldChange={setDecisionField}
-        canObserve={canObserve}
-        canApprove={canApprove}
-        canReject={canReject}
+        canObserve={canEditResolution && canObserve}
+        canApprove={canEditResolution && canApprove}
+        canReject={canEditResolution && canReject}
         loading={saving}
         onDecision={handleDecisionRequest}
       />

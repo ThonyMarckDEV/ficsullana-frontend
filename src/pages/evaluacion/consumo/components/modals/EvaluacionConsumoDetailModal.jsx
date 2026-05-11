@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { exportToPdf } from 'utilities/Export/exportUtils';
 import { useAuth } from 'context/AuthContext';
+import { showImpresionEvaluacionConsumo } from 'services/evaluacionConsumoService';
 import { EVAL_CONSUMO_COPY } from 'utilities/pages/evaluacion/consumo/copy';
-import { isEvaluacionConsumoLocked } from 'utilities/pages/evaluacion/consumo/status';
+import { exportEvaluacionConsumoPdf } from 'utilities/pages/evaluacion/consumo/pdfExport';
+import {
+  isEvaluacionConsumoInReview,
+} from 'utilities/pages/evaluacion/consumo/status';
+import { normalizeEvaluacionConsumoPrintPayload } from 'utilities/pages/evaluacion/consumo/viewModel';
 import useModalFocusTrap from '../../hooks/useModalFocusTrap';
 import { BlockSkeleton } from '../shared/InlineSkeleton';
 import EvaluacionConsumoPrintContent from './EvaluacionConsumoPrintContent';
@@ -14,14 +18,18 @@ const EvaluacionConsumoDetailModal = ({ isOpen, onClose, loading, data, onDecisi
   const closeBtnRef = useRef(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const [shouldRenderPrintContent, setShouldRenderPrintContent] = useState(false);
+  const [printData, setPrintData] = useState(null);
+  const [printError, setPrintError] = useState('');
 
   const canPrint = checkPermission('evaluaciones_consumo.imprimir');
   const canApproveDecision = checkPermission('evaluaciones_consumo.aprobar');
   const canRejectDecision = checkPermission('evaluaciones_consumo.rechazar');
-  const decisionLocked = isEvaluacionConsumoLocked(data?.estado);
-  const showDecisionTab = canApproveDecision || canRejectDecision;
+  const canResolveDecision = canApproveDecision || canRejectDecision;
+  const decisionEnabled = isEvaluacionConsumoInReview(data?.estado);
+  const showDecisionTab = canResolveDecision && decisionEnabled;
   const exportId = 'evaluacion-consumo-print-content';
   const copy = EVAL_CONSUMO_COPY.MODALS.DETAIL;
+  const printableId = data?.id;
 
   useModalFocusTrap({
     isOpen,
@@ -34,41 +42,54 @@ const EvaluacionConsumoDetailModal = ({ isOpen, onClose, loading, data, onDecisi
     if (!isOpen) {
       setIsPrinting(false);
       setShouldRenderPrintContent(false);
+      setPrintData(null);
+      setPrintError('');
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isPrinting || !shouldRenderPrintContent || !data) return undefined;
-
-    let cancelled = false;
-    let frameId = null;
-
-    frameId = window.requestAnimationFrame(async () => {
-      try {
-        await exportToPdf(exportId, `EvaluacionConsumo-${data?.id || 'detalle'}.pdf`);
-      } finally {
-        if (!cancelled) {
-          setIsPrinting(false);
-          setShouldRenderPrintContent(false);
-        }
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      if (frameId !== null) {
-        window.cancelAnimationFrame(frameId);
-      }
-    };
-  }, [data, exportId, isPrinting, shouldRenderPrintContent]);
-
   if (!isOpen) return null;
 
-  const handlePrint = () => {
-    if (loading || !data || isPrinting) return;
+  const handlePrint = async () => {
+    if (loading || !printableId || isPrinting) return;
 
-    setShouldRenderPrintContent(true);
     setIsPrinting(true);
+    setPrintError('');
+
+    try {
+      const response = await showImpresionEvaluacionConsumo(printableId);
+      setPrintData(normalizeEvaluacionConsumoPrintPayload(response));
+      setShouldRenderPrintContent(true);
+    } catch (error) {
+      setPrintError(error?.message || 'No se pudo cargar la vista previa de impresión.');
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  const handleExportPrint = async () => {
+    if (!printData || isPrinting) return;
+
+    setIsPrinting(true);
+    setPrintError('');
+
+    try {
+      await exportEvaluacionConsumoPdf(
+        printData,
+        `EvaluacionConsumo-${printData?.evaluacion?.id || printableId || 'detalle'}.pdf`
+      );
+    } catch (error) {
+      setPrintError(error?.message || 'No se pudo generar el PDF.');
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  const handleClosePrintPreview = () => {
+    if (isPrinting) return;
+
+    setShouldRenderPrintContent(false);
+    setPrintData(null);
+    setPrintError('');
   };
 
   return (
@@ -92,7 +113,7 @@ const EvaluacionConsumoDetailModal = ({ isOpen, onClose, loading, data, onDecisi
                 type="button"
                 onClick={handlePrint}
                 className="px-3 py-2 text-xs font-bold uppercase bg-slate-100 text-slate-700 rounded hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={loading || !data || isPrinting}
+                disabled={loading || !printableId || isPrinting}
                 aria-busy={isPrinting}
               >
                 {isPrinting ? copy.PRINTING : EVAL_CONSUMO_COPY.ACTIONS.IMPRIMIR}
@@ -121,18 +142,63 @@ const EvaluacionConsumoDetailModal = ({ isOpen, onClose, loading, data, onDecisi
             <EvaluacionConsumoDetailContent
               data={data}
               showDecisionTab={showDecisionTab}
-              canObserve={!decisionLocked && showDecisionTab}
-              canApprove={!decisionLocked && canApproveDecision}
-              canReject={!decisionLocked && canRejectDecision}
+              canObserve={showDecisionTab}
+              canApprove={showDecisionTab && canApproveDecision}
+              canReject={showDecisionTab && canRejectDecision}
               onDecisionSuccess={onDecisionSuccess}
             />
           )}
         </div>
 
-        {shouldRenderPrintContent && (
-          <EvaluacionConsumoPrintContent data={data} containerId={exportId} />
+        {printError && !shouldRenderPrintContent && (
+          <div className="border-t border-red-100 bg-red-50 px-5 py-3 text-xs font-semibold text-red-700">
+            {printError}
+          </div>
         )}
       </div>
+
+      {shouldRenderPrintContent && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-fic-dark/80 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-3">
+              <div>
+                <p className="text-xs font-black uppercase text-fic-red">Vista previa de impresión</p>
+                <p className="text-sm font-bold text-slate-700">
+                  Evaluación consumo #{printData?.evaluacion?.id || data?.id}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleExportPrint}
+                  className="rounded bg-fic-red px-3 py-2 text-xs font-bold uppercase text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={isPrinting || !printData}
+                >
+                  {isPrinting ? copy.PRINTING : 'Generar PDF'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClosePrintPreview}
+                  className="rounded bg-slate-100 px-3 py-2 text-xs font-bold uppercase text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={isPrinting}
+                >
+                  {EVAL_CONSUMO_COPY.COMMON.CERRAR}
+                </button>
+              </div>
+            </div>
+            {printError && (
+              <div className="border-b border-red-100 bg-red-50 px-5 py-3 text-xs font-semibold text-red-700">
+                {printError}
+              </div>
+            )}
+            <div className="overflow-auto bg-slate-100 p-4">
+              <div className="mx-auto w-[1100px] bg-white shadow">
+                <EvaluacionConsumoPrintContent data={printData} containerId={exportId} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

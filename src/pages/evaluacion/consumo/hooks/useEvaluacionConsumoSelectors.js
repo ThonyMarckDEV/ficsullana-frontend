@@ -9,7 +9,7 @@ import {
   findTipoIngresoIdsByKey,
   TIPO_INGRESO_KEYS,
 } from 'utilities/pages/evaluacion/consumo/tipoIngreso';
-import { resolveProductoConfiguracion } from 'utilities/productos';
+import { evaluarProductoPolitica, resolveProductoConfiguracion } from 'utilities/productos';
 
 const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones, canEdit }) => {
   const selectedAdmision = useMemo(
@@ -31,14 +31,35 @@ const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones, canEdit })
     [form.monto, form.numero_cuotas, form.tipo_frecuencia, selectedProducto]
   );
 
-  const selectedNivelDiscrecionalidad = useMemo(
-    () => resolveNivelDiscrecionalidad(catalogos.niveles_discrecionalidad || [], {
-      tipoEvaluacion: 'CONSUMO',
+  const selectedProductoPolicy = useMemo(
+    () => evaluarProductoPolitica(selectedProducto, {
+      tipoFrecuencia: form.tipo_frecuencia,
       monto: form.monto,
       numeroCuotas: form.numero_cuotas,
       tasa: form.propuesta || form.tasa_interes_solicitada,
     }),
-    [catalogos.niveles_discrecionalidad, form.monto, form.numero_cuotas, form.propuesta, form.tasa_interes_solicitada]
+    [form.monto, form.numero_cuotas, form.propuesta, form.tasa_interes_solicitada, form.tipo_frecuencia, selectedProducto]
+  );
+
+  const selectedNivelDiscrecionalidad = useMemo(
+    () => (
+      selectedProductoPolicy.requiereDiscrecionalidad
+        ? resolveNivelDiscrecionalidad(catalogos.niveles_discrecionalidad || [], {
+          tipoEvaluacion: 'CONSUMO',
+          monto: form.monto,
+          numeroCuotas: form.numero_cuotas,
+          tasa: form.propuesta || form.tasa_interes_solicitada,
+        })
+        : null
+    ),
+    [
+      catalogos.niveles_discrecionalidad,
+      form.monto,
+      form.numero_cuotas,
+      form.propuesta,
+      form.tasa_interes_solicitada,
+      selectedProductoPolicy.requiereDiscrecionalidad,
+    ]
   );
 
   const dependienteFormalTipoIngresoIds = useMemo(
@@ -77,6 +98,7 @@ const useEvaluacionConsumoSelectors = ({ form, catalogos, admisiones, canEdit })
     selectedAdmision,
     selectedProducto,
     selectedProductoRange,
+    selectedProductoPolicy,
     selectedNivelDiscrecionalidad,
     dependienteFormalTipoIngresoIds,
     showBoletasSection,

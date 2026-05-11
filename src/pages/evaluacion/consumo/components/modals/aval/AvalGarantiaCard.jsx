@@ -130,7 +130,7 @@ const AvalGarantiaCard = ({
 
           <div>
             <label htmlFor={`aval-modal-garantia-ficha-${garantia.formIndex}`} className={labelClass}>
-              Ficha registral
+              {labels.FICHA_REGISTRAL}
             </label>
             <input
               id={`aval-modal-garantia-ficha-${garantia.formIndex}`}

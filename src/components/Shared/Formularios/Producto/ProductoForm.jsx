@@ -1,7 +1,7 @@
 import React from 'react';
 import { isTextOnly } from 'utilities/Validations/validations';
 import ProductoConfiguracionesEditor from './ProductoConfiguracionesEditor';
-import { PRODUCTO_TIPO_OPTIONS } from 'utilities/productos';
+import { PRODUCTO_TIPO_OPTIONS, toBoolean } from 'utilities/productos';
 
 const ProductoForm = ({
   data,
@@ -62,7 +62,7 @@ const ProductoForm = ({
           <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Estado</label>
           <select
             name="activo"
-            value={data.activo ? '1' : '0'}
+            value={toBoolean(data.activo, true) ? '1' : '0'}
             onChange={handleInputValidation}
             className={baseInputClass}
             required
