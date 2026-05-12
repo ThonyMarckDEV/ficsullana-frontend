@@ -47,7 +47,7 @@ const Update = () => {
   const tipoSolicitante = header.tipoPersona.includes('PROSPECTO') ? 'PROSPECTO' : 'CLIENTE';
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="w-full px-4 lg:px-8 xl:px-12 py-6">
       <PageHeader
         title={`Editar Admisión #${id}`}
         subtitle={`Solicitante: ${header.solicitanteName}`}
@@ -78,7 +78,7 @@ const Update = () => {
           />
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
+        <div className="w-full">
           <UpdateFinancialEvaluationCard
             deudas={deudas}
             setDeudas={setDeudas}
@@ -92,6 +92,7 @@ const Update = () => {
             loading={loading}
           />
         </div>
+        
       </form>
 
       <ExceptionSelectionModal
