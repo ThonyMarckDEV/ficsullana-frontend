@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ExceptionSelectionModal from '../components/Modals/ExceptionSelectionModal';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
+import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { useAuth } from 'context/AuthContext';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
@@ -16,6 +17,7 @@ const Update = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { checkPermission } = useAuth();
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
 
   const {
     loading,
@@ -38,7 +40,6 @@ const Update = () => {
     handleSubmit,
     handleConfirmException,
     handleToggleExceptionRule,
-    estados,
   } = useUpdateAdmisionForm({ id, navigate, checkPermission });
 
   if (loading) return <LoadingScreen />;
@@ -62,13 +63,17 @@ const Update = () => {
         onClose={() => setAlert(null)}
       />
 
-      <form onSubmit={handleSubmit} className="w-full max-w-[1600px] mx-auto space-y-6">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSubmitConfirmOpen(true);
+        }}
+        className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8"
+      >
+        <div className="lg:col-span-1 space-y-6">
           <ExpedienteInfoCard header={header} />
           <UpdateConfigurationCard
             header={header}
-            estados={estados}
             onHeaderChange={handleHeaderChange}
           />
         </div>
@@ -102,6 +107,20 @@ const Update = () => {
         loading={loading}
         subtitle={ADMISION_COPY_EXCEPTION_MODAL.SELECTION.SUBTITLE_UPDATE}
       />
+
+      {submitConfirmOpen ? (
+        <ConfirmModal
+          title="Actualizar admisión"
+          message={`¿Deseas actualizar la admisión #${id}?`}
+          confirmText="Actualizar"
+          cancelText="Cancelar"
+          onConfirm={async () => {
+            setSubmitConfirmOpen(false);
+            await handleSubmit({ preventDefault: () => {} });
+          }}
+          onCancel={() => setSubmitConfirmOpen(false)}
+        />
+      ) : null}
     </div>
   );
 };

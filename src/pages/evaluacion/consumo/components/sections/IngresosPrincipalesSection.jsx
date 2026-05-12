@@ -51,7 +51,7 @@ const IngresosPrincipalesSection = ({
       </p>
 
       {hasDependienteFormal ? (
-        <div className="max-w-xl rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-[11px] text-amber-900">
+        <div className="w-full rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-[11px] text-amber-900">
           Si selecciona <strong>Dependiente formal</strong>, el ingreso se calcula automáticamente con boleta básica más el promedio de variables de los meses 1 al 3.
         </div>
       ) : null}

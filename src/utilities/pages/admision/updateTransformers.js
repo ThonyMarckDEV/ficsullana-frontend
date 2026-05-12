@@ -1,16 +1,6 @@
-const ESTADOS = {
-  0: { label: 'PENDIENTE', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
-  1: { label: 'APROBADO', color: 'text-green-700 bg-green-50 border-green-200' },
-  2: { label: 'OBSERVADO', color: 'text-orange-700 bg-orange-50 border-orange-200' },
-  3: { label: 'RECHAZADO', color: 'text-red-700 bg-red-50 border-red-200' },
-};
-
-const ESTADO_LABEL_TO_VALUE = {
-  PENDIENTE: 0,
-  APROBADO: 1,
-  OBSERVADO: 2,
-  RECHAZADO: 3,
-};
+import {
+  normalizeAdmisionState,
+} from 'utilities/pages/admision/status';
 
 const toOptionalNumber = (value) => {
   if (value === null || value === undefined || value === '') return '';
@@ -19,12 +9,7 @@ const toOptionalNumber = (value) => {
   return Number.isFinite(numericValue) ? numericValue : '';
 };
 
-const normalizeEstado = (estado) => {
-  if (typeof estado === 'number' && Number.isInteger(estado)) return estado;
-  if (typeof estado === 'string' && /^\d+$/.test(estado)) return Number(estado);
-  if (typeof estado === 'string') return ESTADO_LABEL_TO_VALUE[estado.toUpperCase()] ?? 0;
-  return 0;
-};
+const normalizeEstado = normalizeAdmisionState;
 
 const buildSolicitanteName = (data) => {
   const persona = data?.cliente ? data.cliente?.datos : data?.prospecto;
@@ -93,7 +78,6 @@ const mapProtestosFromAdmision = (protestos) => {
 };
 
 export {
-  ESTADOS,
   mapHeaderFromAdmision,
   mapDeudasFromAdmision,
   mapProtestosFromAdmision,

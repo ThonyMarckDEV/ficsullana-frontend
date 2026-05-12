@@ -1,9 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAdmisiones, showAdmision } from 'services/admisionService';
+import { enviarRevisionAdmision, getAdmisiones, showAdmision } from 'services/admisionService';
 import LoadingScreen from 'components/Shared/LoadingScreen';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import Table from 'components/Shared/Tables/Table';
+import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import usePaginatedIndex from 'hooks/usePaginatedIndex';
 import AdmisionDetailModal from '../components/Modals/AdmisionDetailModal';
 import {
@@ -11,15 +12,19 @@ import {
     EyeIcon,
     UserIcon,
     ClipboardDocumentCheckIcon,
+    PaperAirplaneIcon,
 } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { handleApiError } from 'utilities/Errors/apiErrorHandler';
 import { useAuth } from 'context/AuthContext';
-
-const INITIAL_FILTERS = {
-    search: '',
-    estado: '',
-};
+import {
+    ADMISION_BADGE_STYLES,
+    formatAdmisionState,
+    getAdmisionStateFilterOptions,
+    isAdmisionEditable,
+    normalizeAdmisionListFilters,
+    normalizeAdmisionState,
+} from 'utilities/pages/admision/status';
 
 const buildFullName = (persona, type) => {
     if (!persona) return 'Sin nombre';
@@ -31,34 +36,27 @@ const buildFullName = (persona, type) => {
     return `${persona.nombres || ''} ${persona.apellido_paterno || ''} ${persona.apellido_materno || ''}`.trim() || 'Sin nombre';
 };
 
-const ESTADOS = {
-    0: { label: 'PENDIENTE', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    1: { label: 'APROBADO', color: 'bg-green-100 text-green-800 border-green-200' },
-    2: { label: 'OBSERVADO', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-    3: { label: 'RECHAZADO', color: 'bg-red-100 text-red-800 border-red-200' },
-};
-
-const ESTADO_LABEL_TO_VALUE = {
-    PENDIENTE: 0,
-    APROBADO: 1,
-    OBSERVADO: 2,
-    RECHAZADO: 3,
-};
-
 const EXCEPCION_BADGE = { label: 'EXCEPCIÓN', color: 'bg-orange-100 text-orange-700 border-orange-200' };
-
-const normalizeEstado = (estado) => {
-    if (typeof estado === 'number' && Number.isInteger(estado)) return estado;
-    if (typeof estado === 'string' && /^\d+$/.test(estado)) return Number(estado);
-    if (typeof estado === 'string') return ESTADO_LABEL_TO_VALUE[estado.toUpperCase()] ?? null;
-    return null;
-};
 
 const Index = () => {
     const { checkPermission } = useAuth(); 
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailData, setDetailData] = useState(null);
+    const [sendConfirmRow, setSendConfirmRow] = useState(null);
+    const [sendLoadingId, setSendLoadingId] = useState(null);
+    const canManageState = checkPermission('admisiones.gestionar.estado');
+    const canSeeAllAdmisiones = canManageState
+        || checkPermission('admisiones.excepciones.aprobar')
+        || checkPermission('admisiones.excepciones.rechazar');
+    const stateFilterOptions = useMemo(
+        () => getAdmisionStateFilterOptions({ canReviewQueue: canManageState }),
+        [canManageState]
+    );
+    const fetchListRows = useCallback((page, nextFilters) => getAdmisiones(
+        page,
+        normalizeAdmisionListFilters(nextFilters, { canReviewQueue: canManageState })
+    ), [canManageState]);
     const {
         loading,
         alert,
@@ -71,8 +69,8 @@ const Index = () => {
         handleFilterSubmit,
         handleFilterClear,
     } = usePaginatedIndex({
-        initialFilters: INITIAL_FILTERS,
-        fetcher: getAdmisiones,
+        initialFilters: { search: '', estado: '' },
+        fetcher: fetchListRows,
         onError: (error) => handleApiError(error, 'Error al cargar las admisiones.'),
     });
 
@@ -88,16 +86,10 @@ const Index = () => {
             name: 'estado',
             type: 'select',
             label: 'Estado',
-            options: [
-                { value: '', label: 'Todos' },
-                { value: '0', label: 'Pendiente' },
-                { value: '1', label: 'Aprobado' },
-                { value: '2', label: 'Observado' },
-                { value: '3', label: 'Rechazado' },
-            ],
+            options: stateFilterOptions,
             colSpan: 'md:col-span-4',
         },
-    ], []);
+    ], [stateFilterOptions]);
 
     const handleViewAdmision = useCallback(async (id) => {
         setIsDetailOpen(true);
@@ -113,11 +105,27 @@ const Index = () => {
         }
     }, [setAlert]);
 
+    const handleSendToReview = useCallback(async (id) => {
+        setSendLoadingId(id);
+        setAlert(null);
+
+        try {
+            const response = await enviarRevisionAdmision(id);
+            setAlert({
+                type: 'success',
+                message: response.message || 'Admisión enviada a revisión correctamente.',
+            });
+            await fetchAdmisiones(paginationInfo.currentPage);
+            return response.data || response;
+        } catch (error) {
+            setAlert(handleApiError(error, 'No se pudo enviar la admisión a revisión.'));
+            return null;
+        } finally {
+            setSendLoadingId(null);
+        }
+    }, [fetchAdmisiones, paginationInfo.currentPage, setAlert]);
+
     const hasAnyActionPermission = checkPermission('admisiones.mostrar') || checkPermission('admisiones.editar');
-    const canSeeAllAdmisiones = checkPermission('admisiones.gestionar.estado')
-        || checkPermission('admisiones.excepciones.ver')
-        || checkPermission('admisiones.excepciones.aprobar')
-        || checkPermission('admisiones.excepciones.rechazar');
 
     const columns = useMemo(() => [
         {
@@ -167,16 +175,16 @@ const Index = () => {
         {
             header: 'Estado',
             render: (row) => {
-                const estadoValue = normalizeEstado(row.estado);
-                const config = ESTADOS[estadoValue] || { label: 'DESC.', color: 'bg-gray-100' };
+                const estadoValue = normalizeAdmisionState(row.estado);
+                const badgeClass = ADMISION_BADGE_STYLES[estadoValue] || 'bg-gray-100 text-gray-700 border-gray-200';
                 const excepcionState = Number(row.excepcion_estado || 0);
                 const hasException = excepcionState > 0;
                 const badgeBaseClass = 'inline-flex items-center rounded-full border font-black uppercase leading-none';
 
                 return (
                     <div className="flex flex-col items-start gap-2">
-                        <span className={`${badgeBaseClass} px-3 py-1 text-[10px] ${config.color}`}>
-                            {row.estado_label || config.label}
+                        <span className={`${badgeBaseClass} px-3 py-1 text-[10px] ${badgeClass}`}>
+                            {row.estado_label || formatAdmisionState(row.estado)}
                         </span>
                         {hasException && (
                             <span className={`${badgeBaseClass} px-3 py-1 text-[10px] ${EXCEPCION_BADGE.color}`}>
@@ -189,32 +197,51 @@ const Index = () => {
         },
         hasAnyActionPermission ? {
             header: 'Acciones',
-            render: (row) => (
-                <div className="flex items-center gap-4">
-                    {checkPermission('admisiones.mostrar') && (
-                        <button
-                            onClick={() => handleViewAdmision(row.id)}
-                            className="group flex items-center gap-1 font-black text-slate-500 hover:text-fic-dark transition-colors uppercase text-xs tracking-tighter"
-                        >
-                            <div className="p-1 rounded-full group-hover:bg-slate-200 transition-colors">
-                                <EyeIcon className="w-5 h-5" />
-                            </div>
-                            Ver
-                        </button>
-                    )}
+            render: (row) => {
+                const canOpenEditForm = checkPermission('admisiones.editar')
+                    && !canManageState
+                    && isAdmisionEditable(row.estado);
+                const canSendToReview = checkPermission('admisiones.editar')
+                    && !canManageState
+                    && isAdmisionEditable(row.estado);
+                const isSending = Number(sendLoadingId) === Number(row.id);
 
-                    {(normalizeEstado(row.estado) === 0 || normalizeEstado(row.estado) === 2) && checkPermission('admisiones.editar') ? (
-                        <Link
-                            to={`/gestion/editar-admision/${row.id}`}
-                            className="flex items-center gap-1 font-black text-fic-red hover:text-red-800 transition-colors uppercase text-xs tracking-tighter"
-                        >
-                            <PencilSquareIcon className="w-5 h-5" /> EDITAR
-                        </Link>
-                    ) : null}
-                </div>
-            ),
+                return (
+                    <div className="flex items-center gap-3">
+                        {checkPermission('admisiones.mostrar') && (
+                            <button
+                                type="button"
+                                onClick={() => handleViewAdmision(row.id)}
+                                className="inline-flex items-center gap-1 text-xs font-black uppercase text-slate-600 hover:text-slate-900"
+                            >
+                                <EyeIcon className="w-4 h-4" /> Ver
+                            </button>
+                        )}
+
+                        {canOpenEditForm ? (
+                            <Link
+                                to={`/gestion/editar-admision/${row.id}`}
+                                className="inline-flex items-center gap-1 text-xs font-black uppercase text-amber-600 hover:text-amber-700"
+                            >
+                                <PencilSquareIcon className="w-4 h-4" /> Editar
+                            </Link>
+                        ) : null}
+
+                        {canSendToReview ? (
+                            <button
+                                type="button"
+                                onClick={() => setSendConfirmRow(row)}
+                                disabled={isSending}
+                                className="inline-flex items-center gap-1 text-xs font-black uppercase text-fic-red hover:text-red-700 disabled:opacity-50"
+                            >
+                                <PaperAirplaneIcon className="w-4 h-4" /> {isSending ? 'Enviando...' : 'Enviar a revisión'}
+                            </button>
+                        ) : null}
+                    </div>
+                );
+            },
         } : null
-    ].filter(Boolean), [checkPermission, handleViewAdmision, hasAnyActionPermission]);
+    ].filter(Boolean), [canManageState, checkPermission, handleViewAdmision, hasAnyActionPermission, sendLoadingId]);
 
     if (loading && admisiones.length === 0) return <LoadingScreen />;
 
@@ -239,6 +266,21 @@ const Index = () => {
                 data={detailData}
                 onUpdateSuccess={() => fetchAdmisiones(paginationInfo.currentPage).catch(() => {})}
             />
+
+            {sendConfirmRow ? (
+                <ConfirmModal
+                    title="Enviar a revisión"
+                    message={`¿Deseas enviar la admisión #${sendConfirmRow.id} a revisión?`}
+                    confirmText="Enviar"
+                    cancelText="Cancelar"
+                    onConfirm={async () => {
+                        const targetId = sendConfirmRow.id;
+                        setSendConfirmRow(null);
+                        await handleSendToReview(targetId);
+                    }}
+                    onCancel={() => setSendConfirmRow(null)}
+                />
+            ) : null}
 
             <div className="rounded-xl overflow-hidden">
                 <Table

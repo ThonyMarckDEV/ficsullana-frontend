@@ -61,16 +61,16 @@ const EvaluacionConsumoDetailContent = ({
       { id: 'resumen', label: 'Resumen' },
       { id: 'garantias', label: `Garantías${garantiasSolicitante.length ? ` (${garantiasSolicitante.length})` : ''}` },
       { id: 'avales', label: `Avales${avales.length ? ` (${avales.length})` : ''}` },
-      { id: 'finanzas', label: 'Finanzas' },
+      { id: 'finanzas', label: 'Evaluación de ingresos' },
       { id: 'criterios', label: 'Criterios' },
     ];
 
     if (hasHistorialInterno || hasHistorialExterno) {
-      baseTabs.push({ id: 'historial', label: 'Historial' });
+      baseTabs.push({ id: 'historial', label: 'Historial crediticio' });
     }
 
     if (showDecisionTab) {
-      baseTabs.push({ id: 'decision', label: 'Decisión' });
+      baseTabs.push({ id: 'decision', label: 'Resolución de crédito' });
     }
 
     if (excepciones.length > 0) {

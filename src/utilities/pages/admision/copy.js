@@ -93,8 +93,10 @@ const ADMISION_COPY_EXCEPTION_MODAL = {
     COMENTARIO_REQUERIDO: 'Debe ingresar un comentario para confirmar la decisión.',
     ERROR_PROCESAR: 'No se pudo actualizar el estado de la admisión.',
     DECISION_APROBAR: 'Aprobar admisión',
+    DECISION_OBSERVAR: 'Observar admisión',
     DECISION_RECHAZAR: 'Rechazar admisión',
     CONFIRM_APROBAR: 'Confirmar aprobación',
+    CONFIRM_OBSERVAR: 'Confirmar observación',
     CONFIRM_RECHAZAR: 'Confirmar rechazo',
   },
   SELECTION: {

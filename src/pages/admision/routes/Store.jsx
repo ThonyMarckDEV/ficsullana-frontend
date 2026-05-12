@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'context/AuthContext';
 import ModalCrearProspecto from '../components/Modals/ModalCrearProspecto';
 import ExceptionSelectionModal from '../components/Modals/ExceptionSelectionModal';
 import AlertMessage from 'components/Shared/Errors/AlertMessage';
 import LoadingScreen from 'components/Shared/LoadingScreen';
+import ConfirmModal from 'components/Shared/Modals/ConfirmModal';
 import { ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
 import PageHeader from 'components/Shared/Headers/PageHeader';
 import { ADMISION_COPY_EXCEPTION_MODAL } from 'utilities/pages/admision/copy';
@@ -15,6 +16,7 @@ import StoreFinancialSection from '../components/Store/StoreFinancialSection';
 const Store = () => {
   const navigate = useNavigate();
   const { checkPermission } = useAuth();
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
 
   const {
     loading,
@@ -78,7 +80,13 @@ const Store = () => {
       />
 
       {/* 2. Cambié max-w-7xl por max-w-[1600px] (o puedes usar max-w-screen-2xl) para que el form sea mucho más ancho */}
-      <form onSubmit={handleSubmit} className="w-full max-w-[1700px] mx-auto space-y-6">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSubmitConfirmOpen(true);
+        }}
+        className="w-full max-w-[1700px] mx-auto space-y-6"
+      >
         <StoreSolicitanteSection
           header={header}
           clienteSelected={clienteSelected}
@@ -122,6 +130,20 @@ const Store = () => {
         loading={loading}
         subtitle={ADMISION_COPY_EXCEPTION_MODAL.SELECTION.SUBTITLE}
       />
+
+      {submitConfirmOpen ? (
+        <ConfirmModal
+          title="Registrar admisión"
+          message="¿Deseas registrar esta admisión?"
+          confirmText="Registrar"
+          cancelText="Cancelar"
+          onConfirm={async () => {
+            setSubmitConfirmOpen(false);
+            await handleSubmit({ preventDefault: () => {} });
+          }}
+          onCancel={() => setSubmitConfirmOpen(false)}
+        />
+      ) : null}
     </div>
   );
 };

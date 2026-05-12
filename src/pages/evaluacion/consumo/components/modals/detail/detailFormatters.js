@@ -35,6 +35,27 @@ export const formatDateOrNA = (value, withTime = false) => {
     : parsed.toLocaleDateString('es-PE');
 };
 
+export const formatShortDateOrNA = (value) => {
+  if (!hasValue(value)) {
+    return 'N/A';
+  }
+
+  const isoDateMatch = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoDateMatch) {
+    return `${isoDateMatch[3]}/${isoDateMatch[2]}`;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return textOrNA(value);
+  }
+
+  return parsed.toLocaleDateString('es-PE', {
+    day: '2-digit',
+    month: '2-digit',
+  });
+};
+
 export const boolToYesNo = (value) => (value ? 'SI' : 'NO');
 
 export const buildAvalFullName = (aval = {}) => (
@@ -48,28 +69,3 @@ export const buildAvalFullName = (aval = {}) => (
     .replace(/\s+/g, ' ')
     .trim()
 );
-
-export const buildAvalAddress = (aval = {}) => {
-  if (hasValue(aval?.direccion)) {
-    return String(aval.direccion).trim();
-  }
-
-  const via = [aval?.tipoVia, aval?.nombreVia]
-    .filter((part) => hasValue(part))
-    .join(' ')
-    .trim();
-
-  const principal = [via, aval?.numeroMzLt, aval?.urbanizacion]
-    .filter((part) => hasValue(part))
-    .join(', ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  const ubigeo = [aval?.distrito, aval?.provincia, aval?.departamento]
-    .filter((part) => hasValue(part))
-    .join(', ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return [principal, ubigeo].filter((part) => hasValue(part)).join(', ').trim() || 'N/A';
-};

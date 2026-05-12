@@ -23,13 +23,19 @@ const getReportDate = () => {
 /**
  * EXPORTAR A PDF 
  */
-export const exportToPdf = async (elementId, fileName = 'Reporte_FicSullana.pdf') => {
+export const exportToPdf = async (elementId, fileName = 'Reporte_FicSullana.pdf', options = {}) => {
     const originalElement = document.getElementById(elementId);
-    if (!originalElement) return;
+    if (!originalElement) {
+        throw new Error('No se encontró el contenido que se debe exportar.');
+    }
+
+    let reportContainer = null;
 
     try {
+        const includeDefaultHeader = options.includeDefaultHeader !== false;
+
         // Crear contenedor temporal 
-        const reportContainer = document.createElement('div');
+        reportContainer = document.createElement('div');
         
         Object.assign(reportContainer.style, {
             position: 'fixed',
@@ -71,7 +77,9 @@ export const exportToPdf = async (elementId, fileName = 'Reporte_FicSullana.pdf'
             </div>
         `;
 
-        reportContainer.innerHTML = headerHTML;
+        if (includeDefaultHeader) {
+            reportContainer.innerHTML = headerHTML;
+        }
 
         // Clonar Contenido
         const contentClone = originalElement.cloneNode(true);
@@ -130,12 +138,12 @@ export const exportToPdf = async (elementId, fileName = 'Reporte_FicSullana.pdf'
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
         pdf.save(fileName);
 
-        document.body.removeChild(reportContainer);
-
     } catch (error) {
         console.error("Error al exportar PDF:", error);
-        // Limpieza de emergencia
-        const temp = document.querySelector('div[style*="top: -10000px"]');
-        if (temp) document.body.removeChild(temp);
+        throw new Error(error?.message || 'No se pudo exportar el PDF.');
+    } finally {
+        if (reportContainer?.parentNode) {
+            reportContainer.parentNode.removeChild(reportContainer);
+        }
     }
 };

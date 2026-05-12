@@ -30,7 +30,7 @@ export const buildDecisionPlanAdjustmentPayload = (form = {}) => {
   };
 };
 
-export const validateDecisionPlanAdjustments = (form = {}, selectedProductoRange = {}) => {
+export const validateDecisionPlanAdjustments = (form = {}) => {
   const errors = [];
   const tasa = resolveDecisionRate(form);
   const requiredFields = [
@@ -58,24 +58,6 @@ export const validateDecisionPlanAdjustments = (form = {}, selectedProductoRange
 
   if (!isBlank(tasa) && !isPositiveNumber(tasa)) {
     errors.push('La tasa debe ser mayor a 0 para registrar la decisión.');
-  }
-
-  if (selectedProductoRange?.hasConfiguraciones && !selectedProductoRange?.exactMatch) {
-    errors.push(selectedProductoRange.helperText || 'No existe una configuración activa para el plan de inversión.');
-  }
-
-  const tasaNumber = toNumberOrNull(tasa);
-  if (
-    tasaNumber !== null
-    && selectedProductoRange?.min !== null
-    && selectedProductoRange?.min !== undefined
-    && selectedProductoRange?.max !== null
-    && selectedProductoRange?.max !== undefined
-    && (tasaNumber < selectedProductoRange.min || tasaNumber > selectedProductoRange.max)
-  ) {
-    errors.push(
-      `La tasa debe estar entre ${selectedProductoRange.min}% y ${selectedProductoRange.max}% según el producto seleccionado.`
-    );
   }
 
   return errors;

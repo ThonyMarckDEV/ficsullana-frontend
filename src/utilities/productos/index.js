@@ -24,4 +24,4 @@ export {
 } from './summary';
 export { validateProductoForm } from './validation';
 export { buildProductoPayload } from './payload';
-export { resolveProductoConfiguracion } from './resolver';
+export { evaluarProductoPolitica, resolveProductoConfiguracion } from './resolver';

@@ -146,6 +146,21 @@ describe('validateEvaluacionConsumoForm', () => {
     expect(blockedErrors).toContain('El ingreso neto debe ser mayor que 0.00 luego de descontar los gastos de unidad familiar.');
   });
 
+  it('requires motivos only when product policy needs discretionality', () => {
+    const regularErrors = validateEvaluacionConsumoForm({
+      ...createBaseForm(),
+      motivos: '',
+    }, { maxVecesSueldo: 2, requiereDiscrecionalidad: false });
+
+    const discretionalityErrors = validateEvaluacionConsumoForm({
+      ...createBaseForm(),
+      motivos: '',
+    }, { maxVecesSueldo: 2, requiereDiscrecionalidad: true });
+
+    expect(regularErrors).not.toContain('Debe ingresar el motivo de discrecionalidad.');
+    expect(discretionalityErrors).toContain('Debe ingresar el motivo de discrecionalidad.');
+  });
+
   it('requires aval data when a guarantee is linked to an aval slot', () => {
     const errors = validateEvaluacionConsumoForm({
       ...createBaseForm(),

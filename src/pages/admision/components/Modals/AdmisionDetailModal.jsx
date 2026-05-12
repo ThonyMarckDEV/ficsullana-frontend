@@ -15,6 +15,7 @@ import AdmisionFinancieroTab from './detail/AdmisionFinancieroTab';
 import AdmisionAuditoriaTab from './detail/AdmisionAuditoriaTab';
 import AdmisionExportContent from './detail/AdmisionExportContent';
 import { buildAdmisionViewModel } from '../../../../utilities/pages/admision/viewModel';
+import { isAdmisionInReview } from 'utilities/pages/admision/status';
 
 const AdmisionDetailModal = ({
   isOpen,
@@ -74,6 +75,9 @@ const AdmisionDetailModal = ({
   const canReviewExceptions = canApproveException || canRejectException;
   const isResolvingException = Boolean(resolvingAction);
   const isExceptionCommentEmpty = exceptionComment.trim() === '';
+  const canResolveFinancialDecision = canManageState
+    && financialEnabled
+    && isAdmisionInReview(currentData?.estado);
 
   const availableTabs = useMemo(
     () => ADMISION_COPY_DETAIL_MODAL.TABS.filter((tab) => tab.id !== 'financiero' || financialEnabled),
@@ -208,7 +212,7 @@ const AdmisionDetailModal = ({
               {activeTab === 'financiero' && (
                 <AdmisionFinancieroTab
                   viewModel={viewModel}
-                  canManageState={canManageState}
+                  canManageState={canResolveFinancialDecision}
                   nuevoEstado={nuevoEstado}
                   isUpdating={isUpdating}
                   updateError={updateError}
